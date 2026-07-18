@@ -10,9 +10,6 @@ import AddProduct from "./pages/products/AddProduct";
 import EditProduct from "./pages/products/EditProduct";
 import ProductDetails from "./pages/products/ProductDetails";
 import Categories from "./pages/categories/Categories";
-import Transactions from "./pages/transactions/Transactions";
-import PaymentTransaction from "./pages/transactions/PaymentTransaction";
-import CreditTransaction from "./pages/transactions/CreditTransaction";
 import Invoices from "./pages/invoices/Invoices";
 import InvoiceDetails from "./pages/invoices/InvoiceDetails";
 import PrintInvoice from "./pages/invoices/PrintInvoice";
@@ -42,9 +39,6 @@ const protectedRoutes = [
   { path: "/invoices/create", element: <Navigate to="/billing" replace /> },
   { path: "/invoices/edit/:id", element: <EditInvoice /> },
   { path: "/invoices/:id", element: <InvoiceDetails /> },
-  { path: "/transactions", element: <Transactions /> },
-  { path: "/transactions/payment", element: <PaymentTransaction /> },
-  { path: "/transactions/credit", element: <CreditTransaction /> },
   { path: "/reports", element: <Reports /> },
   { path: "/users", element: <Users /> },
   { path: "/settings", element: <Settings /> },

@@ -21,7 +21,7 @@ export const addProduct = async (req, res) => {
       description,
       sku, metalType, purity, fineness, huid, hallmarked, grossWeight,
       netWeight, stoneWeight, pieces, metalRatePerGram, wastagePercent,
-      makingChargeType, makingCharge, stoneValue,
+      makingChargeType, makingCharge, stoneValue, stoneValueType,
     } = req.body;
 
     // validation
@@ -72,7 +72,7 @@ export const addProduct = async (req, res) => {
       description,
       sku, metalType, purity, fineness, huid, hallmarked,
       grossWeight: grossWeight ?? 0,
-      netWeight: netWeight ?? 0,
+      netWeight: Math.max(Number(grossWeight || 0) - Number(stoneWeight || 0), 0),
       stoneWeight: stoneWeight ?? 0,
       pieces: pieces ?? 1,
       metalRatePerGram: metalRatePerGram ?? 0,
@@ -80,6 +80,7 @@ export const addProduct = async (req, res) => {
       makingChargeType,
       makingCharge: makingCharge ?? 0,
       stoneValue: stoneValue ?? 0,
+      stoneValueType: stoneValueType || "per_piece",
     });
 
     res.status(201).json({
@@ -154,6 +155,12 @@ export const updateProduct = async (req, res) => {
 
     if (req.body.quantity !== undefined && req.body.status === undefined) {
       req.body.status = req.body.quantity <= 0 ? "out_of_stock" : "available";
+    }
+
+    if (req.body.grossWeight !== undefined || req.body.stoneWeight !== undefined) {
+      const gross = Number(req.body.grossWeight ?? product.grossWeight) || 0;
+      const stone = Number(req.body.stoneWeight ?? product.stoneWeight) || 0;
+      req.body.netWeight = Math.max(gross - stone, 0);
     }
 
     const updatedProduct = await Product.findByIdAndUpdate(

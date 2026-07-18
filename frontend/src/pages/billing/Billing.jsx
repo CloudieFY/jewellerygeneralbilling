@@ -20,7 +20,6 @@ import API from "../../services/api";
 import InvoicePreview from "../../components/billing/InvoicePreview";
 import CustomerForm from "../../components/farmers/FarmerForm";
 import {
-  RATE_TYPES,
   calculateInvoiceTotals,
   calculateLine,
   formatCurrency,
@@ -35,7 +34,7 @@ const emptyItem = {
   selectedRate: "",
   gstRate: "",
   wastagePercent: "", makingChargeType: "per_gram", makingCharge: "",
-  stoneValue: "", discount: "",
+  stoneValue: "", stoneValueType: "per_piece", discount: "",
 };
 
 const today = new Date().toISOString().slice(0, 10);
@@ -113,9 +112,6 @@ const Billing = () => {
     getData();
   }, []);
 
-  const selectedCustomer = customers.find(
-    (customer) => customer._id === formData.farmerId
-  );
 
   const summary = useMemo(
     () =>
@@ -143,10 +139,12 @@ const Billing = () => {
       ...item,
       selectedRate: getProductRate(product, rateType),
       gstRate: product.gstRate ?? 0,
-      grossWeight: product.grossWeight ?? "", netWeight: product.netWeight ?? "",
+      grossWeight: product.grossWeight ?? "",
+      netWeight: Math.max(Number(product.grossWeight || 0) - Number(product.stoneWeight || 0), 0),
       stoneWeight: product.stoneWeight ?? "", wastagePercent: product.wastagePercent ?? 0,
       makingChargeType: product.makingChargeType || "per_gram",
       makingCharge: product.makingCharge ?? 0, stoneValue: product.stoneValue ?? 0,
+      stoneValueType: product.stoneValueType || "per_piece",
     };
   };
 
@@ -197,14 +195,6 @@ const Billing = () => {
     }
   };
 
-  const handleRateTypeChange = (rateType) => {
-    setFormData((prev) => ({
-      ...prev,
-      rateType,
-      products: prev.products.map((item) => withProductRate(item, rateType)),
-    }));
-  };
-
   const handlePaymentTypeChange = (billingType) => {
     setFormData((prev) => ({
       ...prev,
@@ -227,10 +217,22 @@ const Billing = () => {
             ...updated,
             selectedRate: product ? getProductRate(product, prev.rateType) : "",
             gstRate: product?.gstRate ?? "", grossWeight: product?.grossWeight ?? "",
-            netWeight: product?.netWeight ?? "", stoneWeight: product?.stoneWeight ?? "",
+            netWeight: Math.max(Number(product?.grossWeight || 0) - Number(product?.stoneWeight || 0), 0),
+            stoneWeight: product?.stoneWeight ?? "",
             wastagePercent: product?.wastagePercent ?? 0,
             makingChargeType: product?.makingChargeType || "per_gram",
             makingCharge: product?.makingCharge ?? 0, stoneValue: product?.stoneValue ?? 0,
+            stoneValueType: product?.stoneValueType || "per_piece",
+          };
+        }
+
+        if (field === "grossWeight" || field === "stoneWeight") {
+          return {
+            ...updated,
+            netWeight: Math.max(
+              Number(updated.grossWeight || 0) - Number(updated.stoneWeight || 0),
+              0,
+            ),
           };
         }
 
@@ -306,7 +308,8 @@ const Billing = () => {
           grossWeight: Number(item.grossWeight), netWeight: Number(item.netWeight),
           stoneWeight: Number(item.stoneWeight), wastagePercent: Number(item.wastagePercent),
           makingChargeType: item.makingChargeType, makingCharge: Number(item.makingCharge),
-          stoneValue: Number(item.stoneValue), discount: Number(item.discount),
+          stoneValue: Number(item.stoneValue), stoneValueType: item.stoneValueType,
+          discount: Number(item.discount),
           quantity: Number(item.quantity),
           selectedRate: Number(item.selectedRate),
           gstRate: gstEnabled ? Number(item.gstRate) : 0,
@@ -501,33 +504,6 @@ const Billing = () => {
 
               <div className="space-y-2">
                 <label className="text-xs font-black uppercase tracking-widest text-slate-600">
-                  Rate Type
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {RATE_TYPES.map((rateType) => (
-                    <button
-                      type="button"
-                      key={rateType}
-                      onClick={() => handleRateTypeChange(rateType)}
-                      className={`rounded-2xl border px-3 py-3 text-xs font-black transition ${
-                        formData.rateType === rateType
-                          ? "border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-200"
-                          : "border-slate-200 bg-white text-slate-600 hover:border-blue-300"
-                      }`}
-                    >
-                      {rateType}
-                    </button>
-                  ))}
-                </div>
-                {selectedCustomer?.defaultRateType && (
-                  <p className="text-xs font-semibold text-slate-500">
-                    Customer default: {selectedCustomer.defaultRateType}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-widest text-slate-600">
                   {isGst ? "Invoice" : "Order"} Date
                 </label>
                 <div className="relative">
@@ -663,7 +639,7 @@ const Billing = () => {
                     className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
                   >
                     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-                      <div className="lg:col-span-4">
+                      <div className="lg:col-span-3">
                         <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-600">
                           Product
                         </label>
@@ -693,11 +669,25 @@ const Billing = () => {
                           min="0"
                           step="0.01"
                           value={item.netWeight}
-                          onChange={(event) =>
-                            handleProductChange(index, "netWeight", event.target.value)
-                          }
                           className="input-field bg-white"
                           required
+                          readOnly
+                        />
+                      </div>
+
+                      <div className="lg:col-span-2">
+                        <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-600">
+                          Stone Wt. (g)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.001"
+                          value={item.stoneWeight}
+                          onChange={(event) =>
+                            handleProductChange(index, "stoneWeight", event.target.value)
+                          }
+                          className="input-field bg-white"
                         />
                       </div>
 
@@ -735,7 +725,7 @@ const Billing = () => {
                         />
                       </div>
 
-                      <div className="flex items-end justify-end lg:col-span-2">
+                      <div className="flex items-end justify-end lg:col-span-1">
                         <button
                           type="button"
                           onClick={() => removeProductRow(index)}

@@ -61,7 +61,7 @@ const Products = () => {
             Product List
           </h1>
           <p className="mt-3 max-w-xl text-sm font-medium leading-6 text-slate-600">
-            Manage flex printing products and their Rate A, Rate B, and Rate C
+            Manage jewellery products, weights, purity and metal pricing
             per sq ft prices.
           </p>
         </div>
@@ -90,10 +90,10 @@ const Products = () => {
         </div>
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <p className="text-xs font-black uppercase tracking-widest text-slate-500">
-            Rate Types
+            Hallmarked Items
           </p>
           <p className="mt-2 text-3xl font-black text-blue-700">
-            3
+            {products.filter((product) => product.hallmarked).length}
           </p>
         </div>
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">

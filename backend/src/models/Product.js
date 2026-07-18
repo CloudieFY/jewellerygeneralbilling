@@ -33,6 +33,11 @@ const productSchema = new mongoose.Schema(
     makingChargeType: { type: String, enum: ["per_gram", "percent", "fixed"], default: "per_gram" },
     makingCharge: { type: Number, default: 0 },
     stoneValue: { type: Number, default: 0 },
+    stoneValueType: {
+      type: String,
+      enum: ["per_piece", "per_gram"],
+      default: "per_piece",
+    },
 
     hsnCode: {
       type: String,

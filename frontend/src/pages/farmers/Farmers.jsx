@@ -46,8 +46,6 @@ const Customers = () => {
         customer.village,
         customer.city,
         customer.gstNumber,
-        customer.status,
-        customer.defaultRateType,
       ]
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(search))
@@ -69,8 +67,7 @@ const Customers = () => {
             Customer List
           </h1>
           <p className="mt-3 max-w-xl text-sm font-medium leading-6 text-slate-600">
-            Manage customer details, default rate type, and outstanding
-            balances.
+            Manage customer contact details and jewellery purchase history.
           </p>
         </div>
 

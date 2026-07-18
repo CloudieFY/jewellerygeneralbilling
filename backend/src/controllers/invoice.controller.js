@@ -168,12 +168,16 @@ export const createInvoice = async (req, res) => {
 
       const quantity = Number(item.quantity) || 1;
       const grossWeight = Number(item.grossWeight ?? product.grossWeight) || 0;
-      const netWeight = Number(item.netWeight ?? product.netWeight) || 0;
       const stoneWeight = Number(item.stoneWeight ?? product.stoneWeight) || 0;
+      const netWeight = Math.max(grossWeight - stoneWeight, 0);
       const wastagePercent = Number(item.wastagePercent ?? product.wastagePercent) || 0;
       const makingChargeType = item.makingChargeType || product.makingChargeType || "per_gram";
       const makingCharge = Number(item.makingCharge ?? product.makingCharge) || 0;
       const stoneValue = Number(item.stoneValue ?? product.stoneValue) || 0;
+      const stoneValueType = item.stoneValueType || product.stoneValueType || "per_piece";
+      const stoneValueAmount = stoneValueType === "per_gram"
+        ? stoneValue * stoneWeight * quantity
+        : stoneValue * quantity;
       const discount = Number(item.discount) || 0;
 
       // GST only applies for GST invoices
@@ -190,7 +194,7 @@ export const createInvoice = async (req, res) => {
       const makingChargeAmount = makingChargeType === "percent"
         ? metalValue * makingCharge / 100
         : makingChargeType === "fixed" ? makingCharge * quantity : makingCharge * netWeight * quantity;
-      const itemTotal = Math.max(metalValue + wastageAmount + makingChargeAmount + stoneValue * quantity - discount, 0);
+      const itemTotal = Math.max(metalValue + wastageAmount + makingChargeAmount + stoneValueAmount - discount, 0);
 
       const gstAmount = (itemTotal * gstRate) / 100;
 
@@ -211,7 +215,8 @@ export const createInvoice = async (req, res) => {
         grossWeight, netWeight, stoneWeight,
         purity: product.purity, fineness: product.fineness, huid: product.huid,
         metalRatePerGram: selectedRate, wastagePercent, wastageAmount,
-        makingChargeType, makingCharge, makingChargeAmount, stoneValue, discount,
+        makingChargeType, makingCharge, makingChargeAmount,
+        stoneValue, stoneValueType, stoneValueAmount, discount,
 
         selectedRate,
 
@@ -482,12 +487,16 @@ export const updateInvoice = async (req, res) => {
 
       const quantity = Number(item.quantity) || 1;
       const grossWeight = Number(item.grossWeight ?? product.grossWeight) || 0;
-      const netWeight = Number(item.netWeight ?? product.netWeight) || 0;
       const stoneWeight = Number(item.stoneWeight ?? product.stoneWeight) || 0;
+      const netWeight = Math.max(grossWeight - stoneWeight, 0);
       const wastagePercent = Number(item.wastagePercent ?? product.wastagePercent) || 0;
       const makingChargeType = item.makingChargeType || product.makingChargeType || "per_gram";
       const makingCharge = Number(item.makingCharge ?? product.makingCharge) || 0;
       const stoneValue = Number(item.stoneValue ?? product.stoneValue) || 0;
+      const stoneValueType = item.stoneValueType || product.stoneValueType || "per_piece";
+      const stoneValueAmount = stoneValueType === "per_gram"
+        ? stoneValue * stoneWeight * quantity
+        : stoneValue * quantity;
       const discount = Number(item.discount) || 0;
 
       if (!product._id || quantity <= 0 || netWeight <= 0 || selectedRate <= 0) {
@@ -510,7 +519,7 @@ export const updateInvoice = async (req, res) => {
           ? makingCharge * quantity
           : makingCharge * netWeight * quantity;
       const itemTotal = Math.max(
-        metalValue + wastageAmount + makingChargeAmount + stoneValue * quantity - discount,
+        metalValue + wastageAmount + makingChargeAmount + stoneValueAmount - discount,
         0,
       );
       const gstAmount = (itemTotal * gstRate) / 100;
@@ -536,6 +545,8 @@ export const updateInvoice = async (req, res) => {
         makingCharge,
         makingChargeAmount,
         stoneValue,
+        stoneValueType,
+        stoneValueAmount,
         discount,
         selectedRate,
         gstRate,

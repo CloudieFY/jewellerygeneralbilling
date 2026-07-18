@@ -210,15 +210,6 @@ const CustomerDetails = () => {
             <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
               <User size={22} />
             </div>
-            {Number(summary.outstandingBalance || customer?.dueAmount || 0) > 0 && (
-              <Link
-                to={`/transactions/payment?customerId=${customer?._id}`}
-                className="statement-print-hidden inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-black text-white shadow-lg shadow-emerald-100 hover:bg-emerald-700"
-              >
-                <ArrowDownLeft size={16} />
-                Receive Payment
-              </Link>
-            )}
           </div>
           <h1 className="text-3xl font-black text-slate-950">
             {customer?.name}
@@ -229,9 +220,6 @@ const CustomerDetails = () => {
           </p>
           <p className="mt-1 text-sm font-semibold text-slate-600">
             Area: {customer?.village}
-          </p>
-          <p className="mt-1 text-sm font-semibold text-slate-600">
-            Default Rate Type: {customer?.defaultRateType || "Rate A"}
           </p>
         </div>
 
@@ -284,8 +272,6 @@ const CustomerDetails = () => {
             <select value={filters.type} onChange={(event) => updateFilter("type", event.target.value)} className="rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold outline-none focus:border-blue-500">
               <option value="all">All transaction types</option>
               <option value="credit">Invoices / Credit</option>
-              <option value="payment">Payments</option>
-              <option value="opening">Opening balance</option>
             </select>
             <select value={filters.item} onChange={(event) => updateFilter("item", event.target.value)} className="rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold outline-none focus:border-blue-500">
               <option value="all">All items</option>

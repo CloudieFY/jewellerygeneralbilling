@@ -51,11 +51,6 @@ const InvoicePreview = ({
               Date
             </p>
             <p className="mt-1 text-sm font-bold text-white">{invoiceDate}</p>
-            <p className={`mt-3 text-xs font-black uppercase tracking-widest ${
-              isGst ? "text-amber-200" : "text-yellow-200"
-            }`}>
-              {formData.rateType}
-            </p>
           </div>
         </div>
       </div>

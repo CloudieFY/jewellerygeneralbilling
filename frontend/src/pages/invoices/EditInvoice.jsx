@@ -20,7 +20,6 @@ import {
 import toast from "react-hot-toast";
 import API from "../../services/api";
 import {
-  RATE_TYPES,
   calculateInvoiceTotals,
   calculateLine,
   getProductRate,
@@ -36,6 +35,7 @@ const emptyItem = {
   makingChargeType: "per_gram",
   makingCharge: 0,
   stoneValue: 0,
+  stoneValueType: "per_piece",
   discount: 0,
   quantity: 1,
   selectedRate: "",
@@ -98,12 +98,13 @@ const EditInvoice = () => {
       selectedRate: getProductRate(product, rateType),
       gstRate: product.gstRate ?? 0,
       grossWeight: product.grossWeight ?? "",
-      netWeight: product.netWeight ?? "",
+      netWeight: Math.max(Number(product.grossWeight || 0) - Number(product.stoneWeight || 0), 0),
       stoneWeight: product.stoneWeight ?? "",
       wastagePercent: product.wastagePercent ?? 0,
       makingChargeType: product.makingChargeType || "per_gram",
       makingCharge: product.makingCharge ?? 0,
       stoneValue: product.stoneValue ?? 0,
+      stoneValueType: product.stoneValueType || "per_piece",
     };
   };
 
@@ -120,16 +121,6 @@ const EditInvoice = () => {
     }));
   };
 
-  const handleRateTypeChange = (rateType) => {
-    setFormData((prev) => ({
-      ...prev,
-      rateType,
-      products: prev.products.map((item) =>
-        item.product ? withProductRate(item, rateType) : item
-      ),
-    }));
-  };
-
   const handleProductChange = (index, field, value) => {
     setFormData((prev) => {
       const products = prev.products.map((item, itemIndex) => {
@@ -142,12 +133,22 @@ const EditInvoice = () => {
             selectedRate: product ? getProductRate(product, prev.rateType) : "",
             gstRate: product?.gstRate ?? "",
             grossWeight: product?.grossWeight ?? "",
-            netWeight: product?.netWeight ?? "",
+            netWeight: Math.max(Number(product?.grossWeight || 0) - Number(product?.stoneWeight || 0), 0),
             stoneWeight: product?.stoneWeight ?? "",
             wastagePercent: product?.wastagePercent ?? 0,
             makingChargeType: product?.makingChargeType || "per_gram",
             makingCharge: product?.makingCharge ?? 0,
             stoneValue: product?.stoneValue ?? 0,
+            stoneValueType: product?.stoneValueType || "per_piece",
+          };
+        }
+        if (field === "grossWeight" || field === "stoneWeight") {
+          return {
+            ...updated,
+            netWeight: Math.max(
+              Number(updated.grossWeight || 0) - Number(updated.stoneWeight || 0),
+              0,
+            ),
           };
         }
         return updated;
@@ -243,6 +244,7 @@ const EditInvoice = () => {
           makingChargeType: item.makingChargeType,
           makingCharge: Number(item.makingCharge),
           stoneValue: Number(item.stoneValue),
+          stoneValueType: item.stoneValueType,
           discount: Number(item.discount),
           quantity: Number(item.quantity),
           selectedRate: Number(item.selectedRate),
@@ -293,12 +295,13 @@ const EditInvoice = () => {
               invoiceData.products?.map((item) => ({
                 product: item.product?._id || item.product,
                 grossWeight: item.grossWeight || "",
-                netWeight: item.netWeight || "",
+                netWeight: Math.max(Number(item.grossWeight || 0) - Number(item.stoneWeight || 0), 0),
                 stoneWeight: item.stoneWeight || "",
                 wastagePercent: item.wastagePercent || 0,
                 makingChargeType: item.makingChargeType || "per_gram",
                 makingCharge: item.makingCharge || 0,
                 stoneValue: item.stoneValue || 0,
+                stoneValueType: item.stoneValueType || "per_piece",
                 discount: item.discount || 0,
                 quantity: item.quantity || 1,
                 selectedRate: item.selectedRate || "",
@@ -331,7 +334,6 @@ const EditInvoice = () => {
   const accentActive = gstEnabled
     ? "border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-200"
     : "border-orange-500 bg-orange-500 text-white shadow-lg shadow-orange-200";
-  const accentHover = gstEnabled ? "hover:border-blue-300" : "hover:border-orange-300";
   const accentSubmit = gstEnabled
     ? "bg-blue-600 shadow-blue-200 hover:bg-blue-700"
     : "bg-orange-500 shadow-orange-200 hover:bg-orange-600";
@@ -470,28 +472,6 @@ const EditInvoice = () => {
             </div>
           </div>
 
-          {/* Rate Type */}
-          <div className="mt-5">
-            <p className="mb-2 text-xs font-black uppercase tracking-widest text-slate-600">
-              Rate Type
-            </p>
-            <div className="grid grid-cols-3 gap-2 sm:max-w-md">
-              {RATE_TYPES.map((rateType) => (
-                <button
-                  type="button"
-                  key={rateType}
-                  onClick={() => handleRateTypeChange(rateType)}
-                  className={`rounded-2xl border px-3 py-3 text-xs font-black transition ${
-                    formData.rateType === rateType
-                      ? accentActive
-                      : `border-slate-200 bg-white text-slate-600 ${accentHover}`
-                  }`}
-                >
-                  {rateType}
-                </button>
-              ))}
-            </div>
-          </div>
         </section>
 
         {/* ── 3. Payment Details ── */}
@@ -641,7 +621,7 @@ const EditInvoice = () => {
 
                   {/* Main fields row */}
                   <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-                    <div className="lg:col-span-4">
+                    <div className="lg:col-span-2">
                       <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-600">
                         Product
                       </label>
@@ -663,9 +643,16 @@ const EditInvoice = () => {
                     </div>
 
                     <NumberField
-                      label="Net Wt. (g)"
+                      label="Net Wt. (Auto)"
                       value={item.netWeight}
-                      onChange={(value) => handleProductChange(index, "netWeight", value)}
+                      onChange={() => {}}
+                      readOnly
+                    />
+                    <NumberField
+                      label="Stone Wt. (g)"
+                      value={item.stoneWeight}
+                      onChange={(value) => handleProductChange(index, "stoneWeight", value)}
+                      step="0.001"
                     />
                     <NumberField
                       label="Gross Wt. (g)"
@@ -840,7 +827,7 @@ const EditInvoice = () => {
   );
 };
 
-const NumberField = ({ label, value, onChange, min = "0", step = "0.01" }) => (
+const NumberField = ({ label, value, onChange, min = "0", step = "0.01", readOnly = false }) => (
   <div className="lg:col-span-2">
     <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-600">
       {label}
@@ -851,6 +838,7 @@ const NumberField = ({ label, value, onChange, min = "0", step = "0.01" }) => (
       step={step}
       value={value}
       onChange={(event) => onChange(event.target.value)}
+      readOnly={readOnly}
       className="input-field bg-white"
       required
     />

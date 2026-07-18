@@ -15,9 +15,7 @@ const ProductsTable = ({ products, deleteProduct }) => {
               {[
                 "Product Name",
                 "Category",
-                "Rate A",
-                "Rate B",
-                "Rate C",
+                "Metal Rate / g",
                 "GST %",
                 "Actions",
               ].map((heading) => (
@@ -35,7 +33,7 @@ const ProductsTable = ({ products, deleteProduct }) => {
           <tbody className="divide-y divide-slate-100">
             {products?.length === 0 ? (
               <tr>
-                <td colSpan="7" className="px-5 py-16 text-center">
+                <td colSpan="5" className="px-5 py-16 text-center">
                   <div className="flex flex-col items-center gap-3 text-slate-400">
                     <Package size={42} />
                     <p className="text-sm font-bold">No products found.</p>
@@ -62,19 +60,12 @@ const ProductsTable = ({ products, deleteProduct }) => {
                     {product.category}
                   </td>
 
-                  {[product.cashRate, product.creditRate, product.wholesaleRate].map(
-                    (rate, index) => (
-                      <td
-                        key={index}
-                        className="px-5 py-5 text-sm font-black text-slate-900"
-                      >
-                        <span className="inline-flex items-center gap-1">
-                          <IndianRupee size={13} className="text-blue-600" />
-                          {Number(rate || 0).toLocaleString("en-IN")}
-                        </span>
-                      </td>
-                    )
-                  )}
+                  <td className="px-5 py-5 text-sm font-black text-slate-900">
+                    <span className="inline-flex items-center gap-1">
+                      <IndianRupee size={13} className="text-blue-600" />
+                      {Number(product.metalRatePerGram || product.cashRate || 0).toLocaleString("en-IN")}
+                    </span>
+                  </td>
 
                   <td className="px-5 py-5 text-sm font-semibold text-slate-600">
                     {product.gstRate || 0}%

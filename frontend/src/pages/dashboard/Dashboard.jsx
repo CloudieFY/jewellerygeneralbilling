@@ -4,7 +4,6 @@ import {
   Clock3,
   FileText,
   IndianRupee,
-  Receipt,
   TrendingUp,
   Users,
 } from "lucide-react";
@@ -92,7 +91,6 @@ const Dashboard = () => {
       cashSales: Number(accountingSummary.cashSales || 0),
       creditSales: Number(accountingSummary.creditSales || 0),
       outstandingAmount: Number(accountingSummary.outstandingAmount || 0),
-      totalReceipts: Number(accountingSummary.totalReceipts || 0),
       totalCustomers: Number(accountingSummary.totalCustomers || customers.length),
     };
   }, [accountingSummary, customers, invoices]);
@@ -121,12 +119,6 @@ const Dashboard = () => {
       value: formatCurrency(dashboard.outstandingAmount),
       icon: <Clock3 size={22} />,
       color: "bg-orange-50 text-orange-700",
-    },
-    {
-      label: "Total Receipts",
-      value: formatCurrency(dashboard.totalReceipts),
-      icon: <Receipt size={22} />,
-      color: "bg-blue-50 text-blue-700",
     },
     {
       label: "Total Customers",
@@ -163,8 +155,7 @@ const Dashboard = () => {
           Business Overview
         </h1>
         <p className="mt-3 max-w-xl text-sm font-medium leading-6 text-slate-600">
-          A quick view of sales, orders, outstanding payments, and recent
-          invoices.
+          A quick view of jewellery sales, orders, customers and recent invoices.
         </p>
       </div>
 
@@ -245,9 +236,7 @@ const Dashboard = () => {
                 >
                   <div>
                     <p className="font-black text-slate-950">{customer.name}</p>
-                    <p className="text-sm font-semibold text-slate-500">
-                      {customer.defaultRateType || "Rate A"}
-                    </p>
+                    <p className="text-sm font-semibold text-slate-500">Jewellery customer</p>
                   </div>
                   <p className="font-black text-blue-700">
                     {formatCurrency(customer.dueAmount)}

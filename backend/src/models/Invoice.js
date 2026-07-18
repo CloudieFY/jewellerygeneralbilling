@@ -81,6 +81,8 @@ const invoiceSchema = new mongoose.Schema(
         makingCharge: { type: Number, default: 0 },
         makingChargeAmount: { type: Number, default: 0 },
         stoneValue: { type: Number, default: 0 },
+        stoneValueType: { type: String, default: "per_piece" },
+        stoneValueAmount: { type: Number, default: 0 },
         discount: { type: Number, default: 0 },
 
         selectedRate: {

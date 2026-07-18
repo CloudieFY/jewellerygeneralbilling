@@ -6,7 +6,7 @@ const defaults = {
   fineness: "916", huid: "", hallmarked: false, hsnCode: "7113", unit: "gram",
   grossWeight: "", netWeight: "", stoneWeight: "", pieces: 1,
   metalRatePerGram: "", wastagePercent: "", makingChargeType: "per_gram",
-  makingCharge: "", stoneValue: "", gstRate: 3, quantity: 1, description: "",
+  makingCharge: "", stoneValue: "", stoneValueType: "per_piece", gstRate: 3, quantity: 1, description: "",
 };
 
 const ProductForm = ({ initialData = {}, onSubmit, loading }) => {
@@ -14,11 +14,26 @@ const ProductForm = ({ initialData = {}, onSubmit, loading }) => {
   useEffect(() => {
     // Existing edit pages load their product asynchronously.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (Object.keys(initialData).length) setFormData({ ...defaults, ...initialData });
+    if (Object.keys(initialData).length) setFormData({
+      ...defaults,
+      ...initialData,
+      netWeight: Math.max(
+        Number(initialData.grossWeight || 0) - Number(initialData.stoneWeight || 0),
+        0,
+      ),
+    });
   }, [initialData]);
-  const change = ({ target }) => setFormData((p) => ({
-    ...p, [target.name]: target.type === "checkbox" ? target.checked : target.value,
-  }));
+  const change = ({ target }) => setFormData((p) => {
+    const value = target.type === "checkbox" ? target.checked : target.value;
+    const next = { ...p, [target.name]: value };
+    if (target.name === "grossWeight" || target.name === "stoneWeight") {
+      next.netWeight = Math.max(
+        Number(next.grossWeight || 0) - Number(next.stoneWeight || 0),
+        0,
+      ).toFixed(3).replace(/\.?0+$/, "");
+    }
+    return next;
+  });
   const field = (name, label, type = "text", props = {}) => (
     <label className="space-y-2 text-xs font-black uppercase tracking-wider text-slate-600">
       {label}
@@ -44,7 +59,7 @@ const ProductForm = ({ initialData = {}, onSubmit, loading }) => {
     <section><h3 className="mb-4 text-lg font-black">Weight & Stock</h3><div className="grid grid-cols-1 gap-5 md:grid-cols-4">
       {field("grossWeight", "Gross Weight (g)", "number", { min: 0, step: .001 })}
       {field("stoneWeight", "Stone Weight (g)", "number", { min: 0, step: .001 })}
-      {field("netWeight", "Net Metal Weight (g)", "number", { min: 0, step: .001, required: true })}
+      {field("netWeight", "Net Metal Weight (Auto)", "number", { min: 0, step: .001, required: true, readOnly: true })}
       {field("pieces", "Pieces", "number", { min: 1, step: 1 })}
     </div></section>
     <section><h3 className="mb-4 text-lg font-black">Jewellery Pricing</h3><div className="grid grid-cols-1 gap-5 md:grid-cols-3">
@@ -53,6 +68,7 @@ const ProductForm = ({ initialData = {}, onSubmit, loading }) => {
       <label className="space-y-2 text-xs font-black uppercase tracking-wider text-slate-600">Making Charge Type<select name="makingChargeType" value={formData.makingChargeType} onChange={change} className="input-field normal-case"><option value="per_gram">Per gram</option><option value="percent">% of metal value</option><option value="fixed">Fixed amount</option></select></label>
       {field("makingCharge", "Making Charge", "number", { min: 0, step: .01 })}
       {field("stoneValue", "Stone / Diamond Value", "number", { min: 0, step: .01 })}
+      <label className="space-y-2 text-xs font-black uppercase tracking-wider text-slate-600">Stone Value Calculation<select name="stoneValueType" value={formData.stoneValueType} onChange={change} className="input-field normal-case"><option value="per_piece">Per piece</option><option value="per_gram">Per gram</option></select></label>
       {field("gstRate", "GST %", "number", { min: 0, step: .01 })}
     </div></section>
     <label className="block space-y-2 text-xs font-black uppercase tracking-wider text-slate-600">Description<textarea name="description" value={formData.description} onChange={change} className="input-field min-h-24 normal-case" /></label>

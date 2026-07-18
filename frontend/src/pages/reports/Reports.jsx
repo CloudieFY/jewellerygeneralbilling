@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import {
   BookOpen,
   CalendarDays,
-  CreditCard,
   FileText,
   IndianRupee,
   Receipt,
@@ -14,9 +13,7 @@ import { formatCurrency } from "../../utils/billing";
 const reportTabs = [
   { key: "outstanding", label: "Outstanding Report" },
   { key: "sales", label: "Sales Register" },
-  { key: "receipts", label: "Receipt Register" },
   { key: "purchases", label: "Purchase Register" },
-  { key: "payments", label: "Payment Register" },
   { key: "dayBook", label: "Day Book" },
   { key: "cashBook", label: "Cash Book" },
 ];
@@ -27,9 +24,7 @@ const Reports = () => {
   const [reports, setReports] = useState({
     outstanding: [],
     sales: [],
-    receipts: [],
     purchases: [],
-    payments: [],
     dayBook: [],
     cashBook: [],
   });
@@ -42,18 +37,14 @@ const Reports = () => {
           dashboardRes,
           outstandingRes,
           salesRes,
-          receiptRes,
           purchaseRes,
-          paymentRes,
           dayBookRes,
           cashBookRes,
         ] = await Promise.all([
           API.get("/reports/dashboard"),
           API.get("/reports/outstanding"),
           API.get("/reports/sales-register"),
-          API.get("/reports/receipt-register"),
           API.get("/reports/purchase-register"),
-          API.get("/reports/payment-register"),
           API.get("/reports/day-book"),
           API.get("/reports/cash-book"),
         ]);
@@ -62,9 +53,7 @@ const Reports = () => {
         setReports({
           outstanding: outstandingRes.data.rows || [],
           sales: salesRes.data.rows || [],
-          receipts: receiptRes.data.rows || [],
           purchases: purchaseRes.data.rows || [],
-          payments: paymentRes.data.rows || [],
           dayBook: dayBookRes.data.rows || [],
           cashBook: cashBookRes.data.rows || [],
         });
@@ -84,7 +73,6 @@ const Reports = () => {
       cashSales: Number(dashboard.cashSales || 0),
       creditSales: Number(dashboard.creditSales || 0),
       outstanding: Number(dashboard.outstandingAmount || dashboard.pendingPayments || 0),
-      receipts: Number(dashboard.totalReceipts || 0),
       customers: Number(dashboard.totalCustomers || dashboard.totalFarmers || 0),
     };
   }, [dashboard]);
@@ -110,17 +98,16 @@ const Reports = () => {
         </h1>
         <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-600">
           Customer ledger and vendor ledger are maintained automatically from
-          invoices, receipts, purchases, and payments.
+          jewellery invoices and purchases.
         </p>
       </div>
 
-      <section className="grid grid-cols-1 gap-5 md:grid-cols-3 xl:grid-cols-6">
+      <section className="grid grid-cols-1 gap-5 md:grid-cols-3 xl:grid-cols-5">
         {[
           { label: "Total Sales", value: formatCurrency(totals.totalSales), icon: <IndianRupee size={21} /> },
           { label: "Cash Sales", value: formatCurrency(totals.cashSales), icon: <Receipt size={21} /> },
           { label: "Credit Sales", value: formatCurrency(totals.creditSales), icon: <FileText size={21} /> },
           { label: "Outstanding", value: formatCurrency(totals.outstanding), icon: <Users size={21} /> },
-          { label: "Receipts", value: formatCurrency(totals.receipts), icon: <CreditCard size={21} /> },
           { label: "Customers", value: totals.customers, icon: <Users size={21} /> },
         ].map((card) => (
           <div key={card.label} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">

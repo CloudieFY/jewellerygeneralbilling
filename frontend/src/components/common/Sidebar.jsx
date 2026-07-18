@@ -1,8 +1,6 @@
 import {
-  ArrowDownLeft,
   BarChart3,
   Boxes,
-  CreditCard,
   FolderTree,
   LayoutDashboard,
   LogOut,
@@ -25,8 +23,6 @@ const menuItems = [
   { name: "Categories", path: "/categories", icon: <FolderTree size={21} /> },
   { name: "Create Bill", path: "/billing", icon: <ShoppingBag size={21} /> },
   { name: "Invoices & Orders", path: "/invoices", icon: <Receipt size={21} /> },
-  { name: "Receipts", path: "/transactions", icon: <CreditCard size={21} /> },
-  { name: "Payment", path: "/transactions/payment", icon: <ArrowDownLeft size={21} /> },
   { name: "Reports", path: "/reports", icon: <BarChart3 size={21} /> },
   { name: "Users", path: "/users", icon: <UserCog size={21} /> },
   { name: "Settings", path: "/settings", icon: <Settings size={21} /> },
