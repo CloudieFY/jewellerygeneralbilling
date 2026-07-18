@@ -14,7 +14,7 @@ const MainLayout = ({ children }) => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-slate-50">
+    <div className="min-h-screen overflow-x-hidden bg-transparent">
       <div className="flex min-h-screen">
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
@@ -35,7 +35,7 @@ const MainLayout = ({ children }) => {
               >
                 <Menu size={20} />
               </button>
-              <div className="text-lg font-black text-slate-900">⚡ Cloudify</div>
+              <div className="text-lg font-black text-amber-950">◆ JewelFlow</div>
             </div>
 
             <Navbar />
@@ -43,8 +43,8 @@ const MainLayout = ({ children }) => {
             <div>{children}</div>
           </div>
 
-          <footer className="flex flex-col gap-4 border-t border-slate-100 bg-white/70 px-4 py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 md:flex-row md:items-center md:justify-between md:px-8">
-            <span>Copyright 2026 Cloudify — General Billing Software</span>
+          <footer className="flex flex-col gap-4 border-t border-amber-200 bg-amber-50/70 px-4 py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-amber-900/60 md:flex-row md:items-center md:justify-between md:px-8">
+            <span>Copyright 2026 JewelFlow — Jewellery Billing Software</span>
             <div className="flex flex-wrap gap-4">
               <a href="#" className="transition-colors hover:text-blue-600">
                 Privacy

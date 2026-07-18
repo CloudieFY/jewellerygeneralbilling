@@ -29,8 +29,14 @@ import {
 
 const emptyItem = {
   product: "",
-  length: "",
-  width: "",
+  grossWeight: "",
+  netWeight: "",
+  stoneWeight: "",
+  wastagePercent: 0,
+  makingChargeType: "per_gram",
+  makingCharge: 0,
+  stoneValue: 0,
+  discount: 0,
   quantity: 1,
   selectedRate: "",
   gstRate: "",
@@ -91,6 +97,13 @@ const EditInvoice = () => {
       ...item,
       selectedRate: getProductRate(product, rateType),
       gstRate: product.gstRate ?? 0,
+      grossWeight: product.grossWeight ?? "",
+      netWeight: product.netWeight ?? "",
+      stoneWeight: product.stoneWeight ?? "",
+      wastagePercent: product.wastagePercent ?? 0,
+      makingChargeType: product.makingChargeType || "per_gram",
+      makingCharge: product.makingCharge ?? 0,
+      stoneValue: product.stoneValue ?? 0,
     };
   };
 
@@ -128,6 +141,13 @@ const EditInvoice = () => {
             ...updated,
             selectedRate: product ? getProductRate(product, prev.rateType) : "",
             gstRate: product?.gstRate ?? "",
+            grossWeight: product?.grossWeight ?? "",
+            netWeight: product?.netWeight ?? "",
+            stoneWeight: product?.stoneWeight ?? "",
+            wastagePercent: product?.wastagePercent ?? 0,
+            makingChargeType: product?.makingChargeType || "per_gram",
+            makingCharge: product?.makingCharge ?? 0,
+            stoneValue: product?.stoneValue ?? 0,
           };
         }
         return updated;
@@ -186,15 +206,14 @@ const EditInvoice = () => {
       const line = calculateLine(item, product, formData.rateType, gstEnabled);
       return (
         !item.product ||
-        line.length <= 0 ||
-        line.width <= 0 ||
+        line.netWeight <= 0 ||
         line.quantity <= 0 ||
         line.rate <= 0
       );
     });
 
     if (invalidItem) {
-      toast.error("Select product and enter valid size, quantity, and rate");
+      toast.error("Select product and enter valid net weight, quantity, and metal rate");
       return;
     }
 
@@ -217,8 +236,14 @@ const EditInvoice = () => {
         remarks: formData.remarks,
         products: formData.products.map((item) => ({
           product: item.product,
-          length: Number(item.length),
-          width: Number(item.width),
+          grossWeight: Number(item.grossWeight),
+          netWeight: Number(item.netWeight),
+          stoneWeight: Number(item.stoneWeight),
+          wastagePercent: Number(item.wastagePercent),
+          makingChargeType: item.makingChargeType,
+          makingCharge: Number(item.makingCharge),
+          stoneValue: Number(item.stoneValue),
+          discount: Number(item.discount),
           quantity: Number(item.quantity),
           selectedRate: Number(item.selectedRate),
           gstRate: gstEnabled ? Number(item.gstRate) : 0,
@@ -267,8 +292,14 @@ const EditInvoice = () => {
             products:
               invoiceData.products?.map((item) => ({
                 product: item.product?._id || item.product,
-                length: item.length || "",
-                width: item.width || "",
+                grossWeight: item.grossWeight || "",
+                netWeight: item.netWeight || "",
+                stoneWeight: item.stoneWeight || "",
+                wastagePercent: item.wastagePercent || 0,
+                makingChargeType: item.makingChargeType || "per_gram",
+                makingCharge: item.makingCharge || 0,
+                stoneValue: item.stoneValue || 0,
+                discount: item.discount || 0,
                 quantity: item.quantity || 1,
                 selectedRate: item.selectedRate || "",
                 gstRate: item.gstRate || "",
@@ -564,7 +595,7 @@ const EditInvoice = () => {
             <div>
               <h2 className="text-xl font-black text-slate-950">Items</h2>
               <p className="mt-1 text-sm font-medium text-slate-500">
-                Size in feet · Qty in pieces · Amount auto-calculates live
+                Jewellery weight, metal rate and making charges calculate automatically
               </p>
             </div>
             <button
@@ -581,7 +612,7 @@ const EditInvoice = () => {
             {formData.products.map((item, index) => {
               const product = productsList.find((entry) => entry._id === item.product);
               const line = calculateLine(item, product, formData.rateType, gstEnabled);
-              const hasContent = line.sqFt > 0;
+              const hasContent = line.netWeight > 0;
 
               return (
                 <div
@@ -632,14 +663,14 @@ const EditInvoice = () => {
                     </div>
 
                     <NumberField
-                      label="Width (ft)"
-                      value={item.width}
-                      onChange={(value) => handleProductChange(index, "width", value)}
+                      label="Net Wt. (g)"
+                      value={item.netWeight}
+                      onChange={(value) => handleProductChange(index, "netWeight", value)}
                     />
                     <NumberField
-                      label="Length (ft)"
-                      value={item.length}
-                      onChange={(value) => handleProductChange(index, "length", value)}
+                      label="Gross Wt. (g)"
+                      value={item.grossWeight}
+                      onChange={(value) => handleProductChange(index, "grossWeight", value)}
                     />
                     <NumberField
                       label="Qty (pcs)"
@@ -652,7 +683,7 @@ const EditInvoice = () => {
                     {/* Rate */}
                     <div className="lg:col-span-2">
                       <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-600">
-                        Rate / Sq.Ft
+                        Metal Rate / g
                       </label>
                       <div className="relative">
                         <IndianRupee size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -697,17 +728,17 @@ const EditInvoice = () => {
                     }`}
                   >
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Sq. Ft.</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Net Metal Wt.</p>
                       <p className={`mt-2 flex items-center gap-1 text-sm font-black ${accentHighlight}`}>
                         <Ruler size={13} className={accentIcon} />
-                        {line.sqFt.toLocaleString("en-IN")}
+                        {line.netWeight.toLocaleString("en-IN")} g
                       </p>
                     </div>
 
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Size</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Making Charges</p>
                       <p className="mt-2 text-sm font-black text-slate-800">
-                        {line.width > 0 && line.length > 0 ? `${line.width} × ${line.length}` : "—"}
+                        ₹{line.makingChargeAmount.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
                       </p>
                     </div>
 

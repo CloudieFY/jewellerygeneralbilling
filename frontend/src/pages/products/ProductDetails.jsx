@@ -67,6 +67,8 @@ const ProductDetails = () => {
       value: `${product.gstRate || 0}%`,
       icon: <Percent size={20} />,
     },
+    { label: "Metal", value: product.metalType || "Gold", icon: <Package size={20} /> },
+    { label: "Purity / Fineness", value: `${product.purity || "-"} / ${product.fineness || "-"}`, icon: <Tag size={20} /> },
   ];
 
   return (
@@ -84,7 +86,7 @@ const ProductDetails = () => {
             {product.productName}
           </h1>
           <p className="mt-2 text-sm font-semibold text-slate-500">
-            {product.unit || "Sq Ft"} product
+            {product.metalType || "Jewellery"} · {product.purity || "Purity not set"}
           </p>
         </div>
 
@@ -97,7 +99,7 @@ const ProductDetails = () => {
         </Link>
       </div>
 
-      <section className="grid grid-cols-1 gap-5 md:grid-cols-2">
+      <section className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => (
           <div
             key={card.label}
@@ -117,19 +119,22 @@ const ProductDetails = () => {
       </section>
 
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-black text-slate-950">Sq Ft Rates</h2>
+        <h2 className="text-xl font-black text-slate-950">Jewellery Value & Weight</h2>
         <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-3">
           {[
-            ["Rate A", product.cashRate],
-            ["Rate B", product.creditRate],
-            ["Rate C", product.wholesaleRate],
+            ["Metal Rate / Gram", formatCurrency(product.metalRatePerGram || product.cashRate)],
+            ["Gross Weight", `${product.grossWeight || 0} g`],
+            ["Net Weight", `${product.netWeight || 0} g`],
+            ["Stone Weight", `${product.stoneWeight || 0} g`],
+            ["Making Charge", `${formatCurrency(product.makingCharge)} ${product.makingChargeType === "percent" ? "%" : product.makingChargeType === "per_gram" ? "/ g" : "fixed"}`],
+            ["HUID", product.huid || "Not assigned"],
           ].map(([label, value]) => (
             <div key={label} className="rounded-2xl bg-slate-50 p-5">
               <p className="text-xs font-black uppercase tracking-widest text-slate-500">
-                {label} / Sq Ft
+                {label}
               </p>
               <p className="mt-2 text-2xl font-black text-blue-700">
-                {formatCurrency(value)}
+                {value}
               </p>
             </div>
           ))}

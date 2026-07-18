@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 import toast from "react-hot-toast";
 
-import { FileText, Mail, Lock, ShieldCheck, ArrowRight, Loader2 } from "lucide-react";
+import { Gem, User, Lock, ShieldCheck, ArrowRight, Loader2 } from "lucide-react";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -39,17 +39,17 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 relative overflow-hidden px-4 py-10 md:px-6">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-amber-50 via-[#fffdf5] to-yellow-100 px-4 py-10 md:px-6">
       <div className="relative w-full max-w-md px-4 py-8 sm:px-8 sm:py-10">
         {/* Brand Identity */}
         <div className="flex flex-col items-center mb-12">
-          <div className="w-20 h-20 bg-blue-600 rounded-[2rem] flex items-center justify-center shadow-2xl shadow-blue-500/20 mb-6 group hover:scale-110 transition-transform duration-500">
-            <FileText size={40} className="text-white" />
+          <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] bg-gradient-to-br from-amber-900 via-amber-700 to-yellow-500 shadow-2xl shadow-amber-700/20 transition-transform duration-500 group hover:scale-110">
+            <Gem size={40} className="text-amber-50" />
           </div>
           <h1 className="text-4xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            BILL<span className="text-blue-600">FLOW</span>
+            JEWEL<span className="text-amber-700">FLOW</span>
           </h1>
-          <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.4em] mt-2">Billing & Invoicing Platform</p>
+          <p className="mt-2 text-[10px] font-black uppercase tracking-[0.35em] text-amber-800">Fine Jewellery Billing Suite</p>
         </div>
 
         {/* Authentication Console */}
@@ -61,13 +61,13 @@ const Login = () => {
 
           <form onSubmit={handleSubmit} className="space-y-8">
             <div className="space-y-2">
-              <label className="block text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] ml-1">Email</label>
+              <label className="block text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] ml-1">Username</label>
               <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-blue-500 transition-colors" size={18} />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-blue-500 transition-colors" size={18} />
                 <input
-                  type="email"
+                  type="text"
                   name="email"
-                  placeholder="admin@yourcompany.com"
+                  placeholder="admin"
                   value={formData.email}
                   onChange={handleChange}
                   className="input-field pl-12"
@@ -122,7 +122,7 @@ const Login = () => {
         </div>
 
         <p className="mt-12 text-center text-[10px] font-black text-slate-600 uppercase tracking-[0.3em]">
-          Flex Printing Billing Software
+          Jewellery Inventory & Billing Software
         </p>
       </div>
     </div>

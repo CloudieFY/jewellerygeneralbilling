@@ -91,7 +91,7 @@ const App = () => {
                 Page Not Found
               </h1>
               <p className="text-sm font-semibold text-slate-600">
-                Go back to the Cloudify dashboard.
+                Go back to the JewelFlow dashboard.
               </p>
               <a
                 href="/dashboard"

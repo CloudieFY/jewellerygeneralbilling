@@ -28,31 +28,31 @@ const InvoicePreview = ({
   const balanceDue = Math.max(summary.grandTotal - receivedAmount, 0);
 
   return (
-    <div className="xl:sticky xl:top-8 rounded-3xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-200 p-6">
+    <div className="xl:sticky xl:top-8 overflow-hidden rounded-3xl border border-amber-200 bg-gradient-to-b from-amber-50/80 to-white shadow-lg shadow-amber-100/60">
+      <div className="border-b border-amber-200 bg-gradient-to-r from-amber-950 via-yellow-900 to-amber-800 p-6 text-white">
         <div className="flex items-start justify-between gap-4">
           <div>
             <div
               className={`mb-3 inline-flex h-11 w-11 items-center justify-center rounded-2xl ${
-                isGst ? "bg-blue-50 text-blue-600" : "bg-orange-50 text-orange-600"
+                isGst ? "bg-amber-100 text-amber-800" : "bg-yellow-100 text-yellow-800"
               }`}
             >
               {isGst ? <FileCheck size={22} /> : <FileText size={22} />}
             </div>
-            <h2 className="text-2xl font-black text-slate-950">Cloudify</h2>
+            <h2 className="text-2xl font-black text-amber-50">Jewellery Invoice</h2>
             <p className={`mt-1 text-xs font-bold uppercase tracking-widest ${
-              isGst ? "text-blue-600" : "text-orange-600"
+              isGst ? "text-amber-200" : "text-yellow-200"
             }`}>
               {isGst ? "GST Invoice Preview" : "Order Preview (Kaccha Bill)"}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-xs font-black uppercase tracking-widest text-slate-500">
+            <p className="text-xs font-black uppercase tracking-widest text-amber-200">
               Date
             </p>
-            <p className="mt-1 text-sm font-bold text-slate-900">{invoiceDate}</p>
+            <p className="mt-1 text-sm font-bold text-white">{invoiceDate}</p>
             <p className={`mt-3 text-xs font-black uppercase tracking-widest ${
-              isGst ? "text-blue-600" : "text-orange-600"
+              isGst ? "text-amber-200" : "text-yellow-200"
             }`}>
               {formData.rateType}
             </p>
@@ -93,10 +93,10 @@ const InvoicePreview = ({
                     Product
                   </th>
                   <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                    Size
+                    Purity / HUID
                   </th>
                   <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                    Sq Ft
+                    Weight (g)
                   </th>
                   <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500">
                     Rate
@@ -146,13 +146,14 @@ const InvoicePreview = ({
                           {product.productName}
                         </td>
                         <td className="px-4 py-4 text-sm font-semibold text-slate-600">
-                          {line.length} x {line.width} ft
+                          {product.purity || "-"}{product.huid ? ` / ${product.huid}` : ""}
                         </td>
                         <td className="px-4 py-4 text-sm font-semibold text-slate-600">
-                          {line.sqFt}
+                          <span className="block">Net {line.netWeight}</span>
+                          <span className="block text-xs text-slate-400">Gross {line.grossWeight}</span>
                         </td>
                         <td className="px-4 py-4 text-sm font-semibold text-slate-600">
-                          {formatCurrency(line.rate)}
+                          {formatCurrency(line.rate)}/g
                         </td>
                         <td className="px-4 py-4 text-sm font-semibold text-slate-600">
                           {line.quantity}

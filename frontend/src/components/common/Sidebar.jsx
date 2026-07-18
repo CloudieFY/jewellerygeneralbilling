@@ -12,7 +12,7 @@ import {
   UserCog,
   Users,
   X,
-  Zap,
+  Gem,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useContext } from "react";
@@ -38,28 +38,28 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-200 bg-white shadow-xl transition-transform duration-300 md:w-[280px] md:translate-x-0 ${
+      className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-amber-800/30 bg-gradient-to-b from-amber-950 via-stone-950 to-amber-950 text-amber-50 shadow-2xl transition-transform duration-300 md:w-[280px] md:translate-x-0 ${
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       }`}
     >
       {/* Brand */}
-      <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-6">
+      <div className="flex items-center justify-between gap-3 border-b border-amber-700/30 p-6">
         <div className="flex items-center gap-3">
           <div
             className="flex h-11 w-11 items-center justify-center rounded-2xl shadow-lg"
             style={{
-              background: "linear-gradient(135deg, #6366f1, #3b82f6)",
-              boxShadow: "0 4px 14px rgba(99,102,241,0.4)",
+              background: "linear-gradient(135deg, #fef3c7, #d97706)",
+              boxShadow: "0 4px 18px rgba(245,158,11,0.3)",
             }}
           >
-            <Zap size={22} className="text-white" fill="white" />
+            <Gem size={23} className="text-amber-950" />
           </div>
           <div>
-            <h1 className="text-lg font-black tracking-tight text-slate-950">
-              Cloudify
+            <h1 className="text-lg font-black tracking-tight text-amber-50">
+              JewelFlow
             </h1>
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-              Jewellery Billing Software
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-300">
+              Fine Jewellery Billing
             </p>
           </div>
         </div>
@@ -84,14 +84,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
               `flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-black transition ${
                 isActive
                   ? "text-white shadow-lg"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-indigo-700"
+                  : "text-amber-100/75 hover:bg-amber-100/10 hover:text-amber-200"
               }`
             }
             style={({ isActive }) =>
               isActive
                 ? {
-                    background: "linear-gradient(135deg, #6366f1, #3b82f6)",
-                    boxShadow: "0 4px 14px rgba(99,102,241,0.35)",
+                    background: "linear-gradient(135deg, #92400e, #d97706)",
+                    boxShadow: "0 5px 18px rgba(217,119,6,0.26)",
                   }
                 : {}
             }
@@ -103,13 +103,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       </nav>
 
       {/* Sign Out */}
-      <div className="border-t border-slate-100 p-4">
+      <div className="border-t border-amber-700/30 p-4">
         <button
           onClick={() => {
             logout();
             navigate("/login");
           }}
-          className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-black text-slate-600 transition hover:bg-red-50 hover:text-red-600"
+          className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-black text-amber-100/70 transition hover:bg-red-950/40 hover:text-red-300"
         >
           <LogOut size={20} />
           Sign Out

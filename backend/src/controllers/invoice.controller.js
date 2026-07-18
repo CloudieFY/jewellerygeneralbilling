@@ -469,7 +469,7 @@ export const updateInvoice = async (req, res) => {
         });
       }
 
-      let selectedRate = product.cashRate;
+      let selectedRate = product.metalRatePerGram || product.cashRate || 0;
       if (activeRateType === "Rate B") {
         selectedRate = product.creditRate;
       } else if (activeRateType === "Rate C") {
@@ -481,13 +481,18 @@ export const updateInvoice = async (req, res) => {
       }
 
       const quantity = Number(item.quantity) || 1;
-      const length = Number(item.length) || 0;
-      const width = Number(item.width) || 0;
-      const sqFt = length * width;
+      const grossWeight = Number(item.grossWeight ?? product.grossWeight) || 0;
+      const netWeight = Number(item.netWeight ?? product.netWeight) || 0;
+      const stoneWeight = Number(item.stoneWeight ?? product.stoneWeight) || 0;
+      const wastagePercent = Number(item.wastagePercent ?? product.wastagePercent) || 0;
+      const makingChargeType = item.makingChargeType || product.makingChargeType || "per_gram";
+      const makingCharge = Number(item.makingCharge ?? product.makingCharge) || 0;
+      const stoneValue = Number(item.stoneValue ?? product.stoneValue) || 0;
+      const discount = Number(item.discount) || 0;
 
-      if (!product._id || quantity <= 0 || length <= 0 || width <= 0 || selectedRate <= 0) {
+      if (!product._id || quantity <= 0 || netWeight <= 0 || selectedRate <= 0) {
         return res.status(400).json({
-          message: "Invoice items must have valid product, size, quantity, and rate",
+          message: "Invoice items must have valid product, net weight, quantity, and metal rate",
         });
       }
 
@@ -497,7 +502,17 @@ export const updateInvoice = async (req, res) => {
           : product.gstRate || 0
         : 0;
 
-      const itemTotal = sqFt * selectedRate * quantity;
+      const metalValue = netWeight * selectedRate * quantity;
+      const wastageAmount = metalValue * wastagePercent / 100;
+      const makingChargeAmount = makingChargeType === "percent"
+        ? metalValue * makingCharge / 100
+        : makingChargeType === "fixed"
+          ? makingCharge * quantity
+          : makingCharge * netWeight * quantity;
+      const itemTotal = Math.max(
+        metalValue + wastageAmount + makingChargeAmount + stoneValue * quantity - discount,
+        0,
+      );
       const gstAmount = (itemTotal * gstRate) / 100;
       const finalAmount = itemTotal + gstAmount;
 
@@ -508,9 +523,20 @@ export const updateInvoice = async (req, res) => {
         product: product._id,
         hsnCode: product.hsnCode || "",
         quantity,
-        length,
-        width,
-        sqFt,
+        grossWeight,
+        netWeight,
+        stoneWeight,
+        purity: product.purity,
+        fineness: product.fineness,
+        huid: product.huid,
+        metalRatePerGram: selectedRate,
+        wastagePercent,
+        wastageAmount,
+        makingChargeType,
+        makingCharge,
+        makingChargeAmount,
+        stoneValue,
+        discount,
         selectedRate,
         gstRate,
         baseAmount: itemTotal,

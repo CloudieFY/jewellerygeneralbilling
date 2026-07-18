@@ -375,7 +375,7 @@ const Billing = () => {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="mb-2 text-xs font-black uppercase tracking-[0.25em] text-indigo-600">
-            Cloudify — General Billing Software
+            JewelFlow — Jewellery Billing Software
           </p>
           <h1 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
             {isGst ? "Create GST Invoice" : "Create Order (Kaccha Bill)"}

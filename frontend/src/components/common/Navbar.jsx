@@ -13,7 +13,11 @@ const Navbar = () => {
   };
 
   return (
-    <div className="glass-panel sticky top-6 z-40 flex justify-end rounded-[2rem] px-4 py-4 shadow-premium sm:px-6 sm:py-5">
+    <div className="glass-panel sticky top-6 z-40 flex items-center justify-between rounded-[2rem] px-4 py-4 shadow-premium sm:px-6 sm:py-5">
+      <div className="hidden md:block">
+        <p className="text-[10px] font-black uppercase tracking-[0.28em] text-amber-700">Jewellery Management Suite</p>
+        <p className="mt-1 text-sm font-bold text-stone-600">Crafted for precious business</p>
+      </div>
       <div className="flex w-full items-center justify-end gap-4 md:w-auto">
         <div className="flex items-center gap-3">
           <div className="text-right hidden sm:block">
@@ -21,7 +25,7 @@ const Navbar = () => {
             <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Admin</p>
           </div>
           <div className="relative group cursor-pointer">
-            <div className="w-11 h-11 bg-blue-50 border-2 border-blue-100 rounded-2xl flex items-center justify-center text-blue-600 font-black shadow-sm group-hover:shadow-md transition-all">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-100 to-yellow-50 font-black text-amber-800 shadow-sm transition-all group-hover:shadow-md">
               {user?.name?.charAt(0) || <User size={20} />}
             </div>
 

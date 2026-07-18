@@ -213,18 +213,18 @@ const InvoiceDetails = () => {
           <h2 className="text-xl font-black text-slate-950">{docLabel} Items</h2>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] text-left">
-            <thead className="bg-slate-50">
+          <table className="w-full min-w-[1050px] text-left">
+            <thead className="bg-amber-50">
               <tr>
                 {[
                   "Product",
-                  ...(isGst ? ["HSN Code"] : []),
-                  "Length",
-                  "Width",
-                  "Sq Ft",
-                  "Rate / Sq Ft",
+                  ...(isGst ? ["HSN / GST"] : []),
+                  "Purity / HUID",
+                  "Gross Wt.",
+                  "Net Wt.",
+                  "Metal Rate / g",
+                  "Making Charges",
                   "Quantity",
-                  ...(isGst ? ["GST"] : []),
                   "Amount",
                 ].map((heading) => (
                   <th
@@ -238,11 +238,7 @@ const InvoiceDetails = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {invoice.products?.map((item) => {
-                const sqFt =
-                  item.sqFt ?? toNumber(item.length) * toNumber(item.width);
-                const amount =
-                  item.baseAmount ??
-                  sqFt * toNumber(item.selectedRate) * toNumber(item.quantity, 1);
+                const amount = item.baseAmount ?? item.totalAmount ?? 0;
                 const hsnCode = item.hsnCode || item.product?.hsnCode || "-";
 
                 return (
@@ -252,29 +248,30 @@ const InvoiceDetails = () => {
                     </td>
                     {isGst && (
                       <td className="px-5 py-4 font-semibold text-slate-600">
-                        {hsnCode}
+                        {hsnCode} / {toNumber(item.gstRate)}%
                       </td>
                     )}
                     <td className="px-5 py-4 font-semibold text-slate-600">
-                      {item.length || 0} ft
+                      {item.purity || item.product?.purity || "-"}
+                      {(item.huid || item.product?.huid) && (
+                        <span className="block text-xs text-amber-700">HUID: {item.huid || item.product?.huid}</span>
+                      )}
                     </td>
                     <td className="px-5 py-4 font-semibold text-slate-600">
-                      {item.width || 0} ft
+                      {toNumber(item.grossWeight)} g
                     </td>
                     <td className="px-5 py-4 font-semibold text-slate-600">
-                      {sqFt}
+                      {toNumber(item.netWeight)} g
                     </td>
                     <td className="px-5 py-4 font-semibold text-slate-600">
-                      {formatCurrency(item.selectedRate)}
+                      {formatCurrency(item.metalRatePerGram || item.selectedRate)}
+                    </td>
+                    <td className="px-5 py-4 font-semibold text-slate-600">
+                      {formatCurrency(item.makingChargeAmount || item.makingCharge)}
                     </td>
                     <td className="px-5 py-4 font-semibold text-slate-600">
                       {item.quantity}
                     </td>
-                    {isGst && (
-                      <td className="px-5 py-4 font-semibold text-slate-600">
-                        {item.gstRate}% ({formatCurrency(item.gstAmount)})
-                      </td>
-                    )}
                     <td className="px-5 py-4 font-black text-slate-950">
                       {formatCurrency(amount)}
                     </td>

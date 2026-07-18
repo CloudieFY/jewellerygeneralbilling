@@ -11,7 +11,7 @@ const COMPANY_DISPLAY_NAME = "Walia's Creative";
 const FALLBACK_SHOP = {
   shopName: COMPANY_DISPLAY_NAME,
   businessLine:
-    "Eco Solvent Print, Flex Banners, Hoardings, Glow Signs, Inshop Branding, Acrylic LED Boards.",
+    "Gold, Silver & Diamond Jewellery · Hallmarked Ornaments · Custom Designs",
   shopAddress: "Kelkar Para, Station Road, Raipur (C.G.)",
   shopMobile: "+91 9981111199",
   shopEmail: "waliascreative@gmail.com",
@@ -27,8 +27,8 @@ const FALLBACK_SHOP = {
 const ORDER_PAYMENT_QR = "/payment-qr-crop.jpeg";
 const ORDER_LOGO_NAME = "Walia's Creative";
 const ORDER_SERVICES = ["Solvent", "Eco-Solvent", "Glow Sign Board", "Signage Solutions"];
-const GST_COLUMN_WIDTHS = [6, 26, 10, 8, 12, 10, 8, 10, 10];
-const ORDER_COLUMN_WIDTHS = [6, 32, 14, 12, 12, 12, 12];
+const GST_COLUMN_WIDTHS = [5, 23, 11, 13, 13, 7, 10, 9, 9];
+const ORDER_COLUMN_WIDTHS = [6, 29, 15, 16, 9, 12, 13];
 const MIN_COLUMN_WIDTH = 4;
 const DESIGN_EDITABLE_SELECTOR = [
   // GST Invoice elements
@@ -63,7 +63,7 @@ const DESIGN_EDITABLE_SELECTOR = [
 
 const A4_PRINT_STYLE = `
 .invoice-shell {
-  background: #eef2f7;
+  background: #fffbeb;
 }
 
 .invoice-scroll {
@@ -103,7 +103,7 @@ const A4_PRINT_STYLE = `
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  border: 1.4px solid #111827;
+  border: 1.4px solid #78350f;
   display: flex;
   flex-direction: column;
   background: #ffffff;
@@ -410,7 +410,7 @@ const A4_PRINT_STYLE = `
 .invoice-table tfoot td {
   background: #ffffff;
   border-top: 1.2px solid #111827;
-  border-bottom: 1.2px solid #111827;
+  border-bottom: 1.2px solid #b45309;
   font-weight: 900;
   text-align: center;
 }
@@ -1660,8 +1660,8 @@ const ItemsTable = ({
   showPageTotal,
 }) => {
   const headings = isGst
-    ? ["S. No.", "Particulars", "HSN/SAC", "GST %", "Size", "Sq.Ft.", "Qty.", "Rate", "Amount"]
-    : ["S. No.", "Particulars", "Size", "Sq.Ft.", "Qty.", "Rate", "Amount"];
+    ? ["S. No.", "Jewellery", "HSN / GST", "Purity / HUID", "Gross / Net Wt.", "Qty.", "Rate / g", "Making", "Amount"]
+    : ["S. No.", "Jewellery", "Purity / HUID", "Gross / Net Wt.", "Qty.", "Rate / g", "Amount"];
 
   return (
     <table className="invoice-table">
@@ -1696,9 +1696,9 @@ const ItemsTable = ({
       <tbody>
         {pageItems.map((item, idx) => {
           const quantity = toNumber(item.quantity, 1);
-          const sqFt = toNumber(item.sqFt) || toNumber(item.length) * toNumber(item.width);
-          const amount =
-            item.baseAmount ?? sqFt * quantity * toNumber(item.selectedRate);
+          const amount = item.baseAmount ?? item.totalAmount ?? 0;
+          const purity = item.purity || item.product?.purity || "-";
+          const huid = item.huid || item.product?.huid;
 
           return (
             <tr key={item._id || `${item.product?._id}-${idx}`}>
@@ -1708,29 +1708,27 @@ const ItemsTable = ({
               </td>
               {!isGst && (
                 <td className="center-cell">
-                  {toNumber(item.width) > 0 && toNumber(item.length) > 0
-                    ? `${formatCompactNumber(item.width)} \u00d7 ${formatCompactNumber(item.length)}`
-                    : "-"}
+                  {purity}{huid ? ` / ${huid}` : ""}
                 </td>
               )}
               {isGst && (
                 <td className="center-cell">
-                  {item.hsnCode || item.product?.hsnCode || "-"}
-                </td>
-              )}
-              {isGst && (
-                <td className="center-cell gst-rate-cell">
-                  {formatCompactNumber(item.gstRate)}
+                  {item.hsnCode || item.product?.hsnCode || "-"} / {formatCompactNumber(item.gstRate)}%
                 </td>
               )}
               {isGst && (
                 <td className="center-cell">
-                  {formatCompactNumber(item.width)} x {formatCompactNumber(item.length)}
+                  {purity}{huid ? ` / ${huid}` : ""}
                 </td>
               )}
-              <td className="center-cell">{formatCompactNumber(sqFt)}</td>
+              <td className="center-cell">
+                {formatCompactNumber(item.grossWeight)} / {formatCompactNumber(item.netWeight)} g
+              </td>
               <td className="center-cell">{formatCompactNumber(quantity)}</td>
-              <td className="rate-cell numeric-highlight">{formatNumber(item.selectedRate)}</td>
+              <td className="rate-cell numeric-highlight">{formatNumber(item.metalRatePerGram || item.selectedRate)}</td>
+              {isGst && (
+                <td className="rate-cell">{formatNumber(item.makingChargeAmount || item.makingCharge)}</td>
+              )}
               <td className="amount-cell amount-highlight">{formatNumber(amount)}</td>
             </tr>
           );

@@ -173,7 +173,7 @@ const Settings = () => {
                 value={settings.invoiceBusinessLine || ""}
                 onChange={handleChange}
                 className={inputClass}
-                placeholder="Eco Solvent Print, Flex Banners, Hoardings..."
+                placeholder="Gold, silver and diamond jewellery · Hallmarked ornaments..."
               />
             </div>
 
