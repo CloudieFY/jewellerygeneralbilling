@@ -15,9 +15,11 @@ export const calculateLine = (item, product, _rateType, gstEnabled = true) => {
   const wastageAmount = metalValue * wastagePercent / 100;
   const makingCharge = toNumber(item?.makingCharge ?? product?.makingCharge);
   const makingChargeType = item?.makingChargeType || "per_gram";
-  const makingChargeAmount = makingChargeType === "per_piece"
-    ? makingCharge * quantity
-    : makingChargeType === "fixed" ? makingCharge : makingCharge * netWeight;
+  const makingChargeAmount = makingChargeType === "percent"
+    ? metalValue * makingCharge / 100
+    : makingChargeType === "per_piece"
+      ? makingCharge * quantity
+      : makingChargeType === "fixed" ? makingCharge : makingCharge * netWeight;
   const stoneValue = toNumber(item?.stoneValue ?? product?.stoneValue);
   const stoneValueType = item?.stoneValueType || "per_piece";
   const stoneValueAmount = stoneValueType === "per_gram"

@@ -560,16 +560,18 @@ const Billing = () => {
 
                       <div className="lg:col-span-2">
                         <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-600">
-                          Net Wt. (g)
+                          Gross Wt. (g)
                         </label>
                         <input
                           type="number"
                           min="0"
                           step="0.01"
-                          value={item.netWeight}
+                          value={item.grossWeight}
+                          onChange={(event) =>
+                            handleProductChange(index, "grossWeight", event.target.value)
+                          }
                           className="input-field bg-white"
                           required
-                          readOnly
                         />
                       </div>
 
@@ -591,18 +593,16 @@ const Billing = () => {
 
                       <div className="lg:col-span-2">
                         <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-600">
-                          Gross Wt. (g)
+                          Net Wt. (g)
                         </label>
                         <input
                           type="number"
                           min="0"
                           step="0.01"
-                          value={item.grossWeight}
-                          onChange={(event) =>
-                            handleProductChange(index, "grossWeight", event.target.value)
-                          }
+                          value={item.netWeight}
                           className="input-field bg-white"
                           required
+                          readOnly
                         />
                       </div>
 
@@ -654,6 +654,7 @@ const Billing = () => {
                         Making Charge Type
                         <select value={item.makingChargeType} onChange={(event) => handleProductChange(index, "makingChargeType", event.target.value)} className="input-field bg-white normal-case">
                           <option value="per_gram">Per gram</option>
+                          <option value="percent">Percentage (%)</option>
                           <option value="per_piece">Per piece</option>
                           <option value="fixed">Fixed price</option>
                         </select>

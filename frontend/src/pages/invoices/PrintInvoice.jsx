@@ -21,16 +21,16 @@ const FALLBACK_SHOP = {
   bankBranch: "Budhapara Branch, Raipur (C.G.)",
   accountNumber: "0926050051323",
   ifscCode: "PUNB0092620",
-  paymentUpiId: "ahluwaliaharmansingh@okicici",
+  paymentUpiId: "7898088910@hdfc",
 };
 
 const ORDER_PAYMENT_QR = "/payment-qr-crop.jpeg";
 const ORDER_LOGO_NAME = "Walia's Creative";
 const ORDER_SERVICES = ["Solvent", "Eco-Solvent", "Glow Sign Board", "Signage Solutions"];
-const GST_COLUMN_WIDTHS = [4, 20, 10, 12, 12, 6, 9, 9, 9, 9];
+const GST_COLUMN_WIDTHS = [5, 18, 7, 7, 7, 8, 10, 7, 10, 9, 12];
 const ORDER_COLUMN_WIDTHS = [5, 23, 13, 14, 7, 10, 10, 9, 9];
 const MIN_COLUMN_WIDTH = 4;
-const DESIGN_SCHEMA_VERSION = 2;
+const DESIGN_SCHEMA_VERSION = 3;
 const DESIGN_EDITABLE_SELECTOR = [
   // GST Invoice elements
   ".invoice-document-heading",
@@ -153,6 +153,36 @@ const A4_PRINT_STYLE = `
   color: #70420d;
   background: #fff8e7;
 }
+
+.invoice-letterhead-image {
+  position: relative;
+  height: 61mm;
+  overflow: hidden;
+  border-bottom: 1px solid #7b7057;
+  background: #eee9dc;
+}
+
+.invoice-letterhead-image img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  display: block;
+  max-width: none;
+}
+
+.invoice-sale-title {
+  padding: 4mm 0 2mm;
+  text-align: center;
+  color: #741326;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.invoice-sale-title span { display: block; margin-top: 2px; color: #1f1a17; font: 800 9px Arial, sans-serif; }
 
 .invoice-document-heading {
   font-size: 18px;
@@ -775,6 +805,173 @@ const A4_PRINT_STYLE = `
   cursor: not-allowed;
   outline: 2px solid #ef4444;
 }
+
+/* Jewellery letterhead template inspired by the supplied Parasmani invoice. */
+.invoice-sheet {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #c8b77f;
+  background: linear-gradient(105deg, #fffdf4 0%, #fffef9 48%, #f8f3df 100%);
+  box-shadow: none;
+}
+
+.invoice-sheet::before,
+.invoice-sheet::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  width: 86mm;
+  height: 86mm;
+  border: 1.5px solid rgba(190, 145, 39, 0.18);
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(circle, transparent 0 7mm, rgba(190, 145, 39, 0.12) 7.2mm 7.8mm),
+    repeating-conic-gradient(from 0deg, rgba(190, 145, 39, 0.11) 0deg 4deg, transparent 4deg 12deg);
+  pointer-events: none;
+}
+
+.invoice-sheet::before { left: -51mm; top: 47mm; }
+.invoice-sheet::after { right: -48mm; bottom: 32mm; }
+.invoice-sheet > * { position: relative; z-index: 1; }
+
+.invoice-top-line {
+  min-height: 8mm;
+  border: 0;
+  background: #742538;
+  color: #fff8df;
+  padding: 4px 11px;
+  font-size: 9px;
+}
+
+.invoice-document-heading {
+  color: #f2c549;
+  font-size: 13px;
+  letter-spacing: 2px;
+}
+
+.invoice-title {
+  grid-template-columns: 31mm minmax(0, 1fr) 47mm;
+  min-height: 24mm;
+  padding: 4px 9px;
+  background: #742538;
+}
+
+.invoice-brand-mark {
+  width: 24mm;
+  height: 18mm;
+  padding: 2px;
+  border-radius: 2px;
+  background: #fffaf0;
+}
+
+.invoice-title h1 {
+  color: #f3c33f;
+  font-size: 34px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.invoice-title p { color: #fff8e4; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; }
+
+.invoice-business-line {
+  border: 0;
+  border-bottom: 1px solid #b8a77a;
+  background: rgba(255,255,255,.76);
+  color: #3d2430;
+  font-size: 15px;
+  padding: 6px 12px 2px;
+}
+
+.invoice-contact-line {
+  min-height: 6mm;
+  padding: 2px 12px 5px;
+  border-bottom: 1px solid #8a7c58;
+  background: rgba(255,255,255,.76);
+  color: #352b25;
+  font-size: 10px;
+}
+
+.invoice-party-grid {
+  grid-template-columns: 61% 39%;
+  border-bottom: 1px solid #756c55;
+  background: rgba(255,255,255,.64);
+}
+
+.invoice-buyer-box, .invoice-meta-box { position: relative; min-height: 30mm; padding: 8mm 4mm 3mm; margin: 3mm 5mm; border: 1px solid #d3ad6a; border-radius: 2.5mm; }
+.invoice-buyer-name { font-size: 15px; text-transform: uppercase; }
+.invoice-buyer-label { font-size: 11px; font-weight: 900; text-transform: uppercase; }
+.invoice-buyer-details, .invoice-meta-row { font-size: 10px; }
+.invoice-meta-row { padding: 2px 0; }
+.invoice-meta-row strong:last-child { font-size: 10.5px; }
+.parasmani-card-title { position: absolute; top: -3mm; left: 4mm; min-width: 28mm; padding: 3px 10px; border-radius: 2px; background: #741326; color: white; font-size: 9px; font-weight: 900; text-transform: uppercase; }
+
+.invoice-table-area { flex: 0 0 auto; padding: 0 6mm; }
+.invoice-table { flex: none; height: auto; background: rgba(255,255,255,.68); font-size: 9px; }
+.gst-invoice-page .invoice-table { min-height: 38mm; }
+.gst-invoice-page .invoice-table tbody td { vertical-align: top; padding-top: 5px; }
+.invoice-table th {
+  padding: 4px 2px;
+  border: 1px solid #5f5a4e;
+  background: rgba(255,255,255,.9);
+  color: #24211d;
+  font-size: 9px;
+  white-space: normal;
+  line-height: 1.1;
+}
+.invoice-table td { height: 6mm; padding: 3px; border: 1px solid #716b5d; }
+.invoice-table .numeric-highlight, .invoice-table .gst-rate-cell, .invoice-table .amount-highlight { font-size: 9.5px; }
+.invoice-filler-row { display: none; }
+.invoice-table tfoot td { background: transparent; color: #29251f; border: 0; border-top: 1px solid #716b5d; }
+
+.invoice-footer { flex: 1 1 auto; border: 0; padding: 3mm 6mm 0; }
+.invoice-footer-grid { margin-left: auto; width: 58%; border: 0; grid-template-columns: 0 0 100% !important; }
+.invoice-footer-cell { min-height: 0; border: 0; padding: 0; font-size: 9px; }
+.invoice-footer-cell:nth-child(1), .invoice-footer-cell:nth-child(2) { display: none; }
+.invoice-total-row { padding: 2px 8px; border-bottom: 1px solid #817762; font-size: 10px; }
+.invoice-total-row span:last-child { font-size: 10px; }
+.invoice-total-row.net { margin: 0; padding: 4px 8px; background: rgba(116,37,56,.08); color: #3a2027; font-size: 12px; }
+.invoice-total-row.net span:last-child { font-size: 12px; }
+.invoice-signature-row { min-height: 25mm; padding: 10px 8px; grid-template-columns: 1fr 1fr; }
+.invoice-amount-words::after { content: "Customer Signatory"; display: block; margin-top: 16mm; font-size: 10px; font-weight: 900; }
+.invoice-signature { font-size: 9px; }
+.invoice-signature img { height: 42px; }
+
+.invoice-page-body::after {
+  content: none;
+}
+
+.parasmani-summary {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr) 1.15fr;
+  margin-top: 3mm;
+  border: 1px solid #c89235;
+  background: rgba(255,255,255,.76);
+}
+.parasmani-summary > div { padding: 4px; border-right: 1px solid #dfbd78; text-align: center; font-size: 8px; }
+.parasmani-summary > div:last-child { border: 0; background: #741326; color: white; }
+.parasmani-summary strong { display: block; margin-top: 3px; font-size: 9px; }
+.parasmani-summary-label { position: absolute; margin-top: -6mm; padding: 3px 12px; border-radius: 3px 3px 0 0; background: #b87917; color: white; font-size: 8px; font-weight: 900; }
+
+.parasmani-lower-grid { display: grid; grid-template-columns: 38% 62%; gap: 5mm; margin-top: 3mm; }
+.parasmani-words { min-height: 30mm; padding: 4mm; border: 1px solid #d5ad67; border-radius: 3mm; font-size: 9px; line-height: 1.5; }
+.parasmani-box-title { color: #741326; font-weight: 900; text-transform: uppercase; }
+.parasmani-signatures { display: flex; justify-content: space-around; margin-top: 13mm; font-size: 7px; text-decoration: overline; }
+.parasmani-for { margin-top: 3mm; text-align: center; color: #741326; font-size: 9px; font-weight: 900; }
+.parasmani-totals { border-collapse: collapse; width: 100%; font-size: 9px; }
+.parasmani-totals td { padding: 3px 8px; border-bottom: 1px solid #dec79e; }
+.parasmani-totals td:last-child { text-align: right; font-weight: 900; }
+.parasmani-totals .total { background: #741326; color: white; font-weight: 900; }
+.parasmani-totals .net { color: #741326; font-size: 11px; font-weight: 900; }
+.parasmani-info-grid { display: grid; grid-template-columns: 20% 32% 48%; gap: 4mm; margin-top: 4mm; }
+.parasmani-info-box { min-height: 25mm; padding: 4mm; border: 1px solid #d5ad67; border-radius: 2mm; font-size: 8px; line-height: 1.45; }
+.parasmani-info-box h4 { margin: -4mm -4mm 3mm; padding: 3px 8px; border-radius: 2mm 2mm 0 0; background: #741326; color: white; text-align: center; font-size: 8px; }
+.parasmani-qr { display: flex; align-items: center; gap: 4mm; }
+.parasmani-qr img { width: 19mm; height: 19mm; object-fit: contain; }
+.parasmani-legal { display: grid; grid-template-columns: 34% 66%; margin-top: 3mm; border-top: 1px solid #d5ad67; border-bottom: 1px solid #d5ad67; font-size: 7px; }
+.parasmani-legal > div { padding: 3mm; border-right: 1px solid #dfbd78; }
+.parasmani-legal > div:last-child { border: 0; }
+.parasmani-legal ol { margin: 2px 0 0; padding-left: 12px; }
+.parasmani-hallmark { margin-top: 2mm; text-align: center; color: #741326; font-size: 8px; font-weight: 900; }
 
 @media print {
   @page {
@@ -1514,7 +1711,7 @@ const PrintInvoice = () => {
 
             return (
               <div
-                className="invoice-page"
+                className={`invoice-page ${isGst ? "gst-invoice-page" : "order-invoice-page"}`}
                 key={`invoice-page-${pageIndex}`}
                 style={invoicePageStyle}
               >
@@ -1529,6 +1726,7 @@ const PrintInvoice = () => {
                   />
 
                   <div className="invoice-page-body">
+                    {isGst && <div className="invoice-sale-title">GST INVOICE<span>GOLD SALE</span></div>}
                     <div className="invoice-table-area">
                       <ItemsTable
                         columnWidths={tableColumnWidths}
@@ -1558,6 +1756,7 @@ const PrintInvoice = () => {
                         shop={shop}
                         taxBreakup={taxBreakup}
                         termsList={termsList}
+                        pageCount={pages.length}
                       />
                     )}
                   </div>
@@ -1571,7 +1770,7 @@ const PrintInvoice = () => {
   );
 };
 
-const InvoiceHeader = ({ docHeading, invoice, isGst, pageIndex, pageCount, shop }) => {
+const InvoiceHeader = ({ invoice, isGst, shop }) => {
   if (!isGst) {
     return <OrderHeader invoice={invoice} shop={shop} />;
   }
@@ -1585,45 +1784,14 @@ const InvoiceHeader = ({ docHeading, invoice, isGst, pageIndex, pageCount, shop 
 
   return (
     <>
-      <div className="invoice-top-line">
-        <span />
-        <span className="invoice-document-heading">{docHeading}</span>
-        <span style={{ textAlign: "right" }}>
-          Page {pageIndex + 1} of {pageCount}
-        </span>
-      </div>
-
-      <div className="invoice-title">
-        <img
-          className="invoice-brand-mark"
-          src="/walia-logo.png"
-          alt="Walia's Creative logo"
-        />
-        <div className="invoice-title-copy">
-          <h1
-            data-design-locked="true"
-            data-design-movable="true"
-            data-design-special-id="company-name"
-            title="Company name is locked; position can be changed"
-          >
-            {shop.shopName}
-          </h1>
-          <p>{shop.shopAddress}</p>
-        </div>
-        <span aria-hidden="true" />
-      </div>
-
-      <div className="invoice-business-line">{shop.businessLine}</div>
-
-      <div className="invoice-contact-line">
-        Mobile : {shop.shopMobile}
-        {shop.shopEmail ? ` | Email : ${shop.shopEmail}` : ""}
-        {shop.gstNumber ? ` | GSTIN : ${shop.gstNumber}` : ""}
+      <div className="invoice-letterhead-image">
+        <img src="/parasmani-invoice-reference.png" alt="Parasmani jewellery letterhead" />
       </div>
 
       <div className="invoice-party-grid">
         <div className="invoice-buyer-box">
-          <span className="invoice-muted-label invoice-buyer-label">Bill To:</span>
+          <span className="parasmani-card-title">Bill To</span>
+          <span className="invoice-muted-label invoice-buyer-label">Name:</span>
           <div className="invoice-buyer-content">
             <p className="invoice-buyer-name">{invoice?.farmer?.name || "-"}</p>
             <div className="invoice-buyer-details">
@@ -1635,6 +1803,7 @@ const InvoiceHeader = ({ docHeading, invoice, isGst, pageIndex, pageCount, shop 
         </div>
 
         <div className="invoice-meta-box">
+          <span className="parasmani-card-title">Invoice Details</span>
           <div className="invoice-meta-row">
             <strong>Invoice No.</strong>
             <strong>{invoice?.invoiceNumber}</strong>
@@ -1697,7 +1866,7 @@ const ItemsTable = ({
   showPageTotal,
 }) => {
   const headings = isGst
-    ? ["S. No.", "Jewellery", "HSN / GST", "Purity", "Gross / Net Wt.", "Pcs.", "Rate / g", "Making", "Stone", "Amount"]
+    ? ["SR NO", "PRODUCT DESCRIPTION", "GS WT.", "LESS WT.", "NT WT.", "PURITY", "RATE (₹)", "MAKING (%)", "MAKING AMT (₹)", "STONE CHG. (₹)", "FINAL AMT (₹)"]
     : ["S. No.", "Jewellery", "Purity", "Gross / Net Wt.", "Pcs.", "Rate / g", "Making", "Stone", "Amount"];
 
   return (
@@ -1743,29 +1912,38 @@ const ItemsTable = ({
               <td className="product-cell">
                 {item.product?.productName || item.product || "-"}
               </td>
+              {isGst && (
+                <>
+                  <td className="center-cell">{formatCompactNumber(item.grossWeight)}</td>
+                  <td className="center-cell">{formatCompactNumber(item.stoneWeight)}</td>
+                  <td className="center-cell">{formatCompactNumber(item.netWeight)}</td>
+                  <td className="center-cell">{purity}{huid ? ` / ${huid}` : ""}</td>
+                  <td className="rate-cell numeric-highlight">{formatNumber(item.metalRatePerGram || item.selectedRate)}</td>
+                  <td className="rate-cell">
+                    {item.makingChargeType === "percent"
+                      ? `${formatCompactNumber(item.makingCharge)}%`
+                      : "-"}
+                  </td>
+                  <td className="rate-cell">{formatNumber(item.makingChargeAmount || item.makingCharge)}</td>
+                  <td className="rate-cell">{formatNumber(item.stoneValueAmount || item.stoneValue)}</td>
+                  <td className="amount-cell amount-highlight">{formatNumber(amount)}</td>
+                </>
+              )}
               {!isGst && (
                 <td className="center-cell">
                   {purity}{huid ? ` / ${huid}` : ""}
                 </td>
               )}
-              {isGst && (
-                <td className="center-cell">
-                  {item.hsnCode || item.product?.hsnCode || "-"} / {formatCompactNumber(item.gstRate)}%
-                </td>
+              {!isGst && (
+                <>
+                  <td className="center-cell">{formatCompactNumber(item.grossWeight)} / {formatCompactNumber(item.netWeight)} g</td>
+                  <td className="center-cell">{formatCompactNumber(quantity)}</td>
+                  <td className="rate-cell numeric-highlight">{formatNumber(item.metalRatePerGram || item.selectedRate)}</td>
+                  <td className="rate-cell">{formatNumber(item.makingChargeAmount || item.makingCharge)}</td>
+                  <td className="rate-cell">{formatNumber(item.stoneValueAmount || item.stoneValue)}</td>
+                  <td className="amount-cell amount-highlight">{formatNumber(amount)}</td>
+                </>
               )}
-              {isGst && (
-                <td className="center-cell">
-                  {purity}{huid ? ` / ${huid}` : ""}
-                </td>
-              )}
-              <td className="center-cell">
-                {formatCompactNumber(item.grossWeight)} / {formatCompactNumber(item.netWeight)} g
-              </td>
-              <td className="center-cell">{formatCompactNumber(quantity)}</td>
-              <td className="rate-cell numeric-highlight">{formatNumber(item.metalRatePerGram || item.selectedRate)}</td>
-              <td className="rate-cell">{formatNumber(item.makingChargeAmount || item.makingCharge)}</td>
-              <td className="rate-cell">{formatNumber(item.stoneValueAmount || item.stoneValue)}</td>
-              <td className="amount-cell amount-highlight">{formatNumber(amount)}</td>
             </tr>
           );
         })}
@@ -1774,15 +1952,7 @@ const ItemsTable = ({
       {showPageTotal && isGst && (
         <tfoot>
           <tr>
-            <td />
-            <td>Total Taxable Amount</td>
-            <td />
-            <td />
-            <td />
-            <td />
-            <td />
-            <td />
-            <td />
+            <td colSpan={10}>Total Taxable Amount</td>
             <td className="amount-cell amount-highlight">{formatNumber(invoice?.subTotal)}</td>
           </tr>
         </tfoot>
@@ -1818,106 +1988,67 @@ const InvoiceFooter = ({
   shop,
   taxBreakup,
   termsList,
+  pageCount,
 }) => {
   if (!isGst) {
     return <OrderFooter grandTotalRounded={grandTotalRounded} shop={shop} />;
   }
 
+  const receivedAmount = toNumber(invoice?.receivedAmount ?? invoice?.paidAmount);
+  const balanceAmount = Math.max(grandTotalRounded - receivedAmount, 0);
+  const cgstAmount = toNumber(invoice?.totalGST) / 2;
+  const gstRate = taxBreakup[0]?.rate || 0;
+  const products = invoice?.products || [];
+  const grossTotal = products.reduce((sum, item) => sum + toNumber(item.grossWeight) * toNumber(item.quantity, 1), 0);
+  const stoneWeightTotal = products.reduce((sum, item) => sum + toNumber(item.stoneWeight) * toNumber(item.quantity, 1), 0);
+  const netWeightTotal = products.reduce((sum, item) => sum + toNumber(item.netWeight) * toNumber(item.quantity, 1), 0);
+  const makingTotal = products.reduce((sum, item) => sum + toNumber(item.makingChargeAmount), 0);
+  const stoneChargeTotal = products.reduce((sum, item) => sum + toNumber(item.stoneValueAmount), 0);
+  const summaryPurity = products[0]?.purity || products[0]?.product?.purity || "-";
+
   return (
     <div className="invoice-footer">
-      <div className="invoice-footer-grid" style={{ gridTemplateColumns: "45% 31% 24%" }}>
-        <div className="invoice-footer-cell">
-          <table className="invoice-tax-table">
-            <thead>
-              <tr>
-                <th>GST</th>
-                <th>Taxable</th>
-                <th>CGST</th>
-                <th>SGST</th>
-              </tr>
-            </thead>
-            <tbody>
-              {taxBreakup.map((row) => (
-                <tr key={row.rate}>
-                  <td style={{ fontWeight: 800, textAlign: "center" }}>
-                    {formatCompactNumber(row.rate)}%
-                  </td>
-                  <td style={{ textAlign: "center" }}>{formatNumber(row.taxable)}</td>
-                  <td style={{ textAlign: "center" }}>{formatNumber(row.gstAmount / 2)}</td>
-                  <td style={{ textAlign: "center" }}>{formatNumber(row.gstAmount / 2)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <span className="invoice-section-title">Terms & Conditions</span>
-          <ol className="invoice-terms">
-            {termsList.map((term) => (
-              <li key={term}>{term}</li>
-            ))}
-          </ol>
+      <div className="parasmani-summary-label">GOLD SUMMARY</div>
+      <div className="parasmani-summary">
+        <div>GROSS WT.<strong>{formatCompactNumber(grossTotal)}</strong></div>
+        <div>LESS WT.<strong>{formatCompactNumber(stoneWeightTotal)}</strong></div>
+        <div>NET WT.<strong>{formatCompactNumber(netWeightTotal)}</strong></div>
+        <div>PURITY<strong>{summaryPurity}</strong></div>
+        <div>MAKING AMT.<strong>{formatNumber(makingTotal)}</strong></div>
+        <div>STONE CHG.<strong>{formatNumber(stoneChargeTotal)}</strong></div>
+        <div>FINAL AMOUNT<strong>₹ {formatNumber(invoice?.subTotal)}</strong></div>
+      </div>
+      <div className="parasmani-lower-grid">
+        <div className="parasmani-words">
+          <div className="parasmani-box-title">Amount chargeable in words</div>
+          <div>Rupees {amountInWords} Only</div>
+          <div className="parasmani-signatures"><span>Customer Signatory</span><span>Authorized Signatory</span></div>
+          <div className="parasmani-for">For : PARASMANI</div>
         </div>
-
-        <div className="invoice-footer-cell">
-          <span className="invoice-section-title">Bank Details</span>
-          <div>A/c Name: <strong>{shop.accountHolderName}</strong></div>
-          <div>A/c No.: <strong>{shop.accountNumber}</strong></div>
-          <div>Bank: <strong>{shop.bankName}</strong></div>
-          <div>Branch: <strong>{shop.bankBranch}</strong></div>
-          <div>IFSC: <strong>{shop.ifscCode}</strong></div>
-        </div>
-
-        <div className="invoice-footer-cell">
-          <div className="invoice-total-row">
-            <span>Total</span>
-            <span>{formatNumber(invoice?.subTotal)}</span>
-          </div>
-          <div className="invoice-total-row">
-            <span>CGST</span>
-            <span>{formatNumber(toNumber(invoice?.totalGST) / 2)}</span>
-          </div>
-          <div className="invoice-total-row">
-            <span>SGST</span>
-            <span>{formatNumber(toNumber(invoice?.totalGST) / 2)}</span>
-          </div>
-          <div className="invoice-total-row">
-            <span>Add GST</span>
-            <span>{formatNumber(invoice?.totalGST)}</span>
-          </div>
-          {Math.abs(roundOff) >= 0.01 && (
-            <div className="invoice-total-row">
-              <span>Round Off</span>
-              <span>{formatNumber(roundOff)}</span>
-            </div>
-          )}
-          <div className="invoice-total-row net">
-            <span>Net Total</span>
-            <span>{formatNumber(grandTotalRounded)}</span>
-          </div>
-        </div>
+        <table className="parasmani-totals"><tbody>
+          <tr><td>Taxable Amount</td><td>₹ {formatNumber(invoice?.subTotal)}</td></tr>
+          <tr><td>CGST ({formatCompactNumber(gstRate / 2)}%)</td><td>₹ {formatNumber(cgstAmount)}</td></tr>
+          <tr><td>SGST ({formatCompactNumber(gstRate / 2)}%)</td><td>₹ {formatNumber(cgstAmount)}</td></tr>
+          <tr><td>Round Off</td><td>₹ {formatNumber(roundOff)}</td></tr>
+          <tr className="total"><td>Total Amount</td><td>₹ {formatNumber(grandTotalRounded)}</td></tr>
+          <tr><td>Amount Received</td><td>₹ {formatNumber(receivedAmount)}</td></tr>
+          <tr className="net"><td>Net Receivable Amount</td><td>₹ {formatNumber(balanceAmount)} DR</td></tr>
+        </tbody></table>
       </div>
 
-      <div className="invoice-signature-row">
-        <div className="invoice-amount-words">
-          <span className="invoice-muted-label">Amount Chargeable in Words</span>
-          <div>
-            <strong>Rs. {amountInWords} Only</strong>
-          </div>
-        </div>
-        <div className="invoice-signature">
-          <div className="invoice-signature-for">FOR</div>
-          <div className="invoice-signature-company">
-            {shop.accountHolderName || shop.shopName}
-          </div>
-          <img
-            src="/signature.png"
-            alt="Authorized signature"
-            data-design-movable="true"
-            data-design-special-id="signature"
-            title="Signature size and position can be changed"
-          />
-          <div>Proprietor / Authorised Signatory</div>
-        </div>
+      <div className="parasmani-info-grid">
+        <div className="parasmani-info-box"><h4>Mode of Payment</h4><strong>{invoice?.paymentMode || invoice?.billingType || "Cash"}</strong><br/>₹ {formatNumber(receivedAmount)}</div>
+        <div className="parasmani-info-box"><h4>Company Bank Details</h4>Bank Name : <strong>{shop.bankName}</strong><br/>A/c Holder : <strong>{shop.accountHolderName}</strong><br/>A/c No. : <strong>{shop.accountNumber}</strong><br/>Branch : <strong>{shop.bankBranch}</strong><br/>IFSC Code : <strong>{shop.ifscCode}</strong></div>
+        <div className="parasmani-info-box"><h4>Scan QR Code With UPI Apps To Pay</h4><div className="parasmani-qr"><img src={ORDER_PAYMENT_QR} alt="Payment QR"/><div><strong>UPI ID</strong><br/>{shop.paymentUpiId}</div></div></div>
+      </div>
+
+      <div className="parasmani-legal">
+        <div><div className="parasmani-box-title">Declaration</div>We declare that this invoice shows the actual price of the goods described and all particulars are true and correct.</div>
+        <div><div className="parasmani-box-title">Terms & Conditions</div><ol>{termsList.map((term) => <li key={term}>{term}</li>)}<li>Exchange of item is permissible within 2 days.</li><li>This is a computer generated invoice, no signature required.</li></ol></div>
+      </div>
+      <div className="parasmani-hallmark">
+        BIS CERTIFIED HALLMARK
+        <span style={{ float: "right" }}>Page {pageCount} of {pageCount}</span>
       </div>
     </div>
   );
