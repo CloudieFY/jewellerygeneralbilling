@@ -8,11 +8,6 @@ const productSchema = new mongoose.Schema(
       trim: true,
     },
 
-    category: {
-      type: String,
-      required: true,
-    },
-
     unit: { type: String, default: "gram" },
     sku: { type: String, default: "", trim: true },
     metalType: {
@@ -20,6 +15,7 @@ const productSchema = new mongoose.Schema(
       enum: ["gold", "silver", "platinum", "diamond", "imitation", "other"],
       default: "gold",
     },
+    inventoryWeight: { type: Number, default: 0, min: 0 },
     purity: { type: String, default: "22K" },
     fineness: { type: String, default: "916" },
     huid: { type: String, default: "", trim: true, uppercase: true },

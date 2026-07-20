@@ -36,7 +36,7 @@ const InvoiceDetails = () => {
   const handleDelete = async () => {
     if (!invoice) return;
     const isGst = invoice?.documentType !== "order" && invoice?.gstEnabled !== false;
-    const docLabel = isGst ? "Invoice" : "Order";
+    const docLabel = isGst ? "Invoice" : "Estimate Order";
 
     if (!window.confirm(`Delete this ${docLabel.toLowerCase()} record?`)) return;
 
@@ -66,14 +66,7 @@ const InvoiceDetails = () => {
   }
 
   const isGst = invoice?.documentType !== "order" && invoice?.gstEnabled !== false;
-  const docLabel = isGst ? "Invoice" : "Order";
-  const paymentStatusLabel =
-    invoice.paymentStatus === "paid"
-      ? "Paid"
-      : invoice.paymentStatus === "partially_paid"
-        ? "Partially Paid"
-        : "Unpaid";
-
+  const docLabel = isGst ? "Invoice" : "Estimate Order";
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -97,7 +90,7 @@ const InvoiceDetails = () => {
             ) : (
               <span className="inline-flex items-center gap-1.5 rounded-xl bg-orange-50 px-3 py-1.5 text-xs font-black text-orange-700">
                 <FileText size={13} />
-                Non-GST Order
+                Estimate Order
               </span>
             )}
           </div>
@@ -192,14 +185,9 @@ const InvoiceDetails = () => {
             {formatCurrency(invoice.grandTotal)}
           </h2>
           <p className="mt-2 text-sm font-black text-slate-700">
-            Status: {paymentStatusLabel}
+            Order Flow: {invoice.workflowStatus === "inventory_reserved" ? "Inventory Reserved" : "Invoiced"}
           </p>
-          <p className="mt-1 text-sm font-semibold text-emerald-700">
-            Paid: {formatCurrency(invoice.paidAmount)}
-          </p>
-          <p className="text-sm font-semibold text-red-600">
-            Balance: {formatCurrency(invoice.balanceDue)}
-          </p>
+          {!isGst && <p className="mt-1 text-xs font-semibold text-amber-700">Use Edit Estimate and switch to GST Invoice when the customer confirms.</p>}
           {isGst && (
             <p className="mt-1 text-sm font-semibold text-slate-600">
               GST {formatCurrency(invoice.totalGST)}
@@ -224,6 +212,8 @@ const InvoiceDetails = () => {
                   "Net Wt.",
                   "Metal Rate / g",
                   "Making Charges",
+                  "Stone Charges",
+                  "Hallmark (Internal)",
                   "Quantity",
                   "Amount",
                 ].map((heading) => (
@@ -268,6 +258,12 @@ const InvoiceDetails = () => {
                     </td>
                     <td className="px-5 py-4 font-semibold text-slate-600">
                       {formatCurrency(item.makingChargeAmount || item.makingCharge)}
+                    </td>
+                    <td className="px-5 py-4 font-semibold text-slate-600">
+                      {formatCurrency(item.stoneValueAmount || item.stoneValue)}
+                    </td>
+                    <td className="px-5 py-4 font-semibold text-amber-700">
+                      {formatCurrency(item.hallmarkCharge)}
                     </td>
                     <td className="px-5 py-4 font-semibold text-slate-600">
                       {item.quantity}

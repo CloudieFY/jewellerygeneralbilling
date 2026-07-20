@@ -81,7 +81,7 @@ const Invoices = () => {
 
       return [
         invoice.invoiceNumber,
-        isGst ? "GST Invoice" : "Order",
+        isGst ? "GST Invoice" : "Estimate Order",
         invoice.farmer?.name,
         invoice.farmer?.mobileNumber,
         invoice.paymentStatus,
@@ -112,7 +112,7 @@ const Invoices = () => {
       color: "text-blue-700 bg-blue-50",
     },
     {
-      label: "Orders Total",
+      label: "Estimates Total",
       value: stats.orderAmount,
       icon: <FileText size={22} />,
       color: "text-orange-700 bg-orange-50",
@@ -124,13 +124,13 @@ const Invoices = () => {
       <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="mb-2 text-xs font-black uppercase tracking-[0.25em] text-blue-600">
-            Invoices & Orders
+            Invoices & Estimates
           </p>
           <h1 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
             Invoice List
           </h1>
           <p className="mt-3 max-w-xl text-sm font-medium leading-6 text-slate-600">
-            GST Invoices and Non-GST Orders — all billing records in one place.
+            GST Invoices and Estimate Orders — all billing records in one place.
           </p>
         </div>
 
@@ -139,7 +139,7 @@ const Invoices = () => {
           className="inline-flex items-center justify-center gap-3 rounded-2xl bg-blue-600 px-5 py-3 font-black text-white shadow-lg shadow-blue-200 hover:bg-blue-700"
         >
           <FilePlus2 size={20} />
-          Create Invoice / Order
+          Create Invoice / Estimate
           <ArrowRight size={18} />
         </Link>
       </div>
@@ -201,7 +201,7 @@ const Invoices = () => {
           }`}
         >
           <FileText size={16} />
-          Orders ({orderCount})
+          Estimates ({orderCount})
         </button>
       </div>
 

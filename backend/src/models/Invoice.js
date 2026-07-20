@@ -17,6 +17,11 @@ const invoiceSchema = new mongoose.Schema(
       enum: ["gst_invoice", "order"],
       default: "gst_invoice",
     },
+    workflowStatus: {
+      type: String,
+      enum: ["inventory_reserved", "invoiced"],
+      default: "inventory_reserved",
+    },
 
     farmer: {
       type: mongoose.Schema.Types.ObjectId,
@@ -74,6 +79,7 @@ const invoiceSchema = new mongoose.Schema(
         purity: { type: String, default: "" },
         fineness: { type: String, default: "" },
         huid: { type: String, default: "" },
+        hallmarkCharge: { type: Number, default: 0 },
         metalRatePerGram: { type: Number, default: 0 },
         wastagePercent: { type: Number, default: 0 },
         wastageAmount: { type: Number, default: 0 },

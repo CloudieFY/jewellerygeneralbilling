@@ -27,9 +27,10 @@ const FALLBACK_SHOP = {
 const ORDER_PAYMENT_QR = "/payment-qr-crop.jpeg";
 const ORDER_LOGO_NAME = "Walia's Creative";
 const ORDER_SERVICES = ["Solvent", "Eco-Solvent", "Glow Sign Board", "Signage Solutions"];
-const GST_COLUMN_WIDTHS = [5, 23, 11, 13, 13, 7, 10, 9, 9];
-const ORDER_COLUMN_WIDTHS = [6, 29, 15, 16, 9, 12, 13];
+const GST_COLUMN_WIDTHS = [4, 20, 10, 12, 12, 6, 9, 9, 9, 9];
+const ORDER_COLUMN_WIDTHS = [5, 23, 13, 14, 7, 10, 10, 9, 9];
 const MIN_COLUMN_WIDTH = 4;
+const DESIGN_SCHEMA_VERSION = 2;
 const DESIGN_EDITABLE_SELECTOR = [
   // GST Invoice elements
   ".invoice-document-heading",
@@ -63,7 +64,7 @@ const DESIGN_EDITABLE_SELECTOR = [
 
 const A4_PRINT_STYLE = `
 .invoice-shell {
-  background: #fffbeb;
+  background: radial-gradient(circle at 10% 5%, rgba(217, 119, 6, 0.14), transparent 28rem), #fffaf0;
 }
 
 .invoice-scroll {
@@ -86,10 +87,10 @@ const A4_PRINT_STYLE = `
   padding: var(--invoice-margin-top, 8mm) var(--invoice-margin-right, 8mm) var(--invoice-margin-bottom, 8mm) var(--invoice-margin-left, 8mm);
   box-sizing: border-box;
   background: #ffffff;
-  color: #111827;
+  color: #35200d;
   font-family: "Segoe UI", Arial, sans-serif;
   font-weight: 700;
-  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.16);
+  box-shadow: 0 22px 55px rgba(92, 49, 12, 0.18);
   page-break-after: always;
   break-after: page;
 }
@@ -103,10 +104,11 @@ const A4_PRINT_STYLE = `
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  border: 1.4px solid #78350f;
+  border: 1.5px solid #8b5a18;
   display: flex;
   flex-direction: column;
-  background: #ffffff;
+  background: linear-gradient(180deg, #fffef9 0%, #ffffff 18%, #ffffff 100%);
+  box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 4px #e8c777;
 }
 
 .invoice-document.pdf-render {
@@ -142,26 +144,29 @@ const A4_PRINT_STYLE = `
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 8px;
-  border-bottom: 1.2px solid #111827;
-  padding: 4px 9px;
+  border-bottom: 1px solid #c99a43;
+  padding: 5px 11px;
   font-size: 14px;
   font-weight: 800;
   letter-spacing: 0;
   line-height: 1.3;
+  color: #70420d;
+  background: #fff8e7;
 }
 
 .invoice-document-heading {
   font-size: 18px;
   font-weight: 900;
   text-transform: uppercase;
+  letter-spacing: 1.8px;
 }
 
 .invoice-title {
   display: grid;
   grid-template-columns: 46mm minmax(0, 1fr) 18mm;
   align-items: center;
-  min-height: 28mm;
-  padding: 3px 10px 5px;
+  min-height: 30mm;
+  padding: 5px 12px 6px;
   text-align: center;
 }
 
@@ -178,8 +183,8 @@ const A4_PRINT_STYLE = `
 }
 
 .invoice-brand-mark {
-  width: 34mm;
-  height: 20mm;
+  width: 36mm;
+  height: 22mm;
   margin: 0 auto;
   display: block;
   object-fit: contain;
@@ -191,29 +196,33 @@ const A4_PRINT_STYLE = `
 
 .invoice-title h1 {
   margin: 0 0 1px;
-  font-family: Arial, sans-serif;
-  font-size: 38px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 39px;
   line-height: 1;
-  letter-spacing: -1.5px;
+  letter-spacing: -0.8px;
+  color: #6f3f0b;
   text-transform: none;
 }
 
 .invoice-title p {
   margin: 0;
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 900;
   line-height: 1.25;
+  color: #725426;
 }
 
 .invoice-business-line {
-  border-top: 1.2px solid #111827;
-  border-bottom: 1.2px solid #111827;
-  background: #ffffff;
+  border-top: 1px solid #c99a43;
+  border-bottom: 1px solid #c99a43;
+  background: linear-gradient(90deg, #fff8e7, #f8e7b9, #fff8e7);
   padding: 5px 12px;
   text-align: center;
   font-size: 12px;
   font-weight: 800;
   line-height: 1.3;
+  color: #68400e;
+  letter-spacing: 0.35px;
 }
 
 .invoice-contact-line {
@@ -223,27 +232,28 @@ const A4_PRINT_STYLE = `
   min-height: 8mm;
   padding: 6px 14px;
   text-align: center;
-  border-bottom: 1.2px solid #111827;
-  font-size: 14px;
+  border-bottom: 1px solid #c99a43;
+  font-size: 12.5px;
   font-weight: 800;
   line-height: 1.45;
+  color: #5f431c;
 }
 
 .invoice-party-grid {
   display: grid;
   grid-template-columns: 58% 42%;
-  border-bottom: 1.2px solid #111827;
+  border-bottom: 1px solid #b9852f;
   font-size: 13px;
 }
 
 .invoice-buyer-box,
 .invoice-meta-box {
-  min-height: 30mm;
-  padding: 8px 10px;
+  min-height: 29mm;
+  padding: 9px 11px;
 }
 
 .invoice-buyer-box {
-  border-right: 1.2px solid #111827;
+  border-right: 1px solid #b9852f;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-content: start;
@@ -259,7 +269,7 @@ const A4_PRINT_STYLE = `
 }
 
 .invoice-muted-label {
-  color: #475569;
+  color: #8a6224;
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
@@ -291,7 +301,7 @@ const A4_PRINT_STYLE = `
   display: grid;
   grid-template-columns: 45% 55%;
   gap: 8px;
-  padding: 5px 0;
+  padding: 4px 0;
   align-items: center;
   font-size: 13px;
   line-height: 1.35;
@@ -299,6 +309,7 @@ const A4_PRINT_STYLE = `
 
 .invoice-meta-row strong:first-child {
   font-weight: 900;
+  color: #79571f;
 }
 
 .invoice-meta-row strong:last-child {
@@ -330,9 +341,10 @@ const A4_PRINT_STYLE = `
 }
 
 .invoice-table th {
-  background: #ffffff;
-  border-right: 1px solid #111827;
-  border-bottom: 1.2px solid #111827;
+  background: #70420d;
+  color: #fffaf0;
+  border-right: 1px solid #bd914c;
+  border-bottom: 1px solid #70420d;
   padding: 6px 5px;
   text-align: center;
   font-size: 12px;
@@ -373,7 +385,8 @@ const A4_PRINT_STYLE = `
 
 .invoice-table td {
   height: 7.2mm;
-  border-right: 1px solid #111827;
+  border-right: 1px solid #d7bd8b;
+  border-bottom: 1px solid #eee1c7;
   padding: 4px 5px;
   vertical-align: middle;
   line-height: 1.28;
@@ -408,8 +421,9 @@ const A4_PRINT_STYLE = `
 }
 
 .invoice-table tfoot td {
-  background: #ffffff;
-  border-top: 1.2px solid #111827;
+  background: #fff5dc;
+  color: #5f3508;
+  border-top: 1px solid #a66c18;
   border-bottom: 1.2px solid #b45309;
   font-weight: 900;
   text-align: center;
@@ -430,22 +444,25 @@ const A4_PRINT_STYLE = `
 
 .invoice-footer {
   margin-top: 0;
-  border-top: 1.2px solid #111827;
+  border-top: 1.2px solid #8b5a18;
   flex: 0 0 auto;
 }
 
 .invoice-footer-grid {
   display: grid;
-  border-bottom: 1.2px solid #111827;
+  border-bottom: 1px solid #b9852f;
+  align-items: stretch;
 }
 
 .invoice-footer-cell {
+  min-width: 0;
   min-height: 38mm;
-  border-right: 1.2px solid #111827;
+  border-right: 1px solid #caa25e;
   padding: 8px;
   font-size: 12px;
   font-weight: 700;
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .invoice-footer-cell:last-child {
@@ -457,8 +474,10 @@ const A4_PRINT_STYLE = `
   margin-bottom: 5px;
   font-size: 12px;
   font-weight: 900;
-  text-decoration: underline;
+  text-decoration: none;
   text-transform: uppercase;
+  color: #74480f;
+  letter-spacing: 0.7px;
 }
 
 .invoice-tax-table {
@@ -470,7 +489,7 @@ const A4_PRINT_STYLE = `
 
 .invoice-tax-table th,
 .invoice-tax-table td {
-  border: 1px solid #111827;
+  border: 1px solid #c7a56b;
   padding: 6px 5px;
   text-align: center;
   vertical-align: middle;
@@ -479,7 +498,8 @@ const A4_PRINT_STYLE = `
 }
 
 .invoice-tax-table th {
-  background: #f3f6fb;
+  background: #fff3d1;
+  color: #65400f;
   font-size: 12.5px;
   font-weight: 900;
 }
@@ -519,13 +539,18 @@ const A4_PRINT_STYLE = `
 
 .invoice-total-row span:last-child {
   font-size: 13px;
+  white-space: nowrap;
+  text-align: right;
 }
 
 .invoice-total-row.net {
   margin-top: 5px;
-  border-top: 1px solid #111827;
-  padding-top: 6px;
-  color: #991b1b;
+  border-top: 1px solid #9b671c;
+  padding: 6px 8px 4px;
+  margin-left: -8px;
+  margin-right: -8px;
+  color: #6f3f0b;
+  background: #fff4d8;
   font-size: 15px;
 }
 
@@ -538,15 +563,17 @@ const A4_PRINT_STYLE = `
   grid-template-columns: 1fr 230px;
   align-items: end;
   gap: 14px;
-  padding: 10px 14px 8px;
+  padding: 10px 16px 8px;
   min-height: 35mm;
 }
 
 .invoice-amount-words {
   align-self: end;
+  min-width: 0;
   font-size: 13px;
   font-weight: 700;
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .invoice-signature {
@@ -568,6 +595,7 @@ const A4_PRINT_STYLE = `
 .invoice-signature-company {
   font-size: 13px;
   font-weight: 900;
+  color: #6f3f0b;
 }
 
 .invoice-signature img {
@@ -894,7 +922,12 @@ const PrintInvoice = () => {
       const orderDocument = invoice?.documentType === "order" || invoice?.gstEnabled === false;
       const templateKey = orderDocument ? "order" : "gst_invoice";
       // Load template design for this document type (applies to ALL invoices of same type)
-      const savedDesign = settings.invoiceDesign?.templates?.[templateKey] || {};
+      const storedDesign = settings.invoiceDesign?.templates?.[templateKey] || {};
+      // Older templates used positional element indexes. After invoice columns changed,
+      // those indexes could apply text and sizing to the wrong cells and break alignment.
+      const savedDesign = storedDesign.schemaVersion === DESIGN_SCHEMA_VERSION
+        ? storedDesign
+        : {};
       const expectedColumnCount = orderDocument
         ? ORDER_COLUMN_WIDTHS.length
         : GST_COLUMN_WIDTHS.length;
@@ -906,16 +939,20 @@ const PrintInvoice = () => {
       );
       const elements = [...root.querySelectorAll(DESIGN_EDITABLE_SELECTOR)];
       elements.forEach((element, index) => {
+        element.removeAttribute("style");
         element.dataset.designId = `text-${index}`;
         const saved = savedDesign.elements?.[`text-${index}`];
-        if (saved?.text !== undefined) element.textContent = saved.text;
         if (saved?.style) element.style.cssText = saved.style;
       });
       const logo = root.querySelector(".invoice-brand-mark");
+      logo?.removeAttribute("style");
       if (logo && savedDesign.logoStyle) {
         logo.style.cssText = savedDesign.logoStyle;
       }
       root.querySelectorAll('[data-design-special-id]').forEach((element) => {
+        element.removeAttribute("style");
+        delete element.dataset.moveX;
+        delete element.dataset.moveY;
         const savedStyle = savedDesign.specialStyles?.[element.dataset.designSpecialId];
         if (savedStyle) {
           element.style.cssText = savedStyle;
@@ -933,8 +970,8 @@ const PrintInvoice = () => {
   }, [id, invoice, settings.invoiceDesign]);
 
   const isGst = invoice?.documentType !== "order" && invoice?.gstEnabled !== false;
-  const docLabel = isGst ? "Invoice" : "Order";
-  const docHeading = isGst ? "Tax Invoice" : "Estimate / Order";
+  const docLabel = isGst ? "Invoice" : "Estimate Order";
+  const docHeading = isGst ? "Tax Invoice" : "Estimate Order";
 
   const shop = useMemo(
     () => ({
@@ -1000,7 +1037,7 @@ const PrintInvoice = () => {
   const amountInWords = numberToWords(grandTotalRounded);
 
   const getExportFilename = (extension) =>
-    `${isGst ? "GST-Invoice" : "Order"}-${invoice?.invoiceNumber || "bill"}.${extension}`;
+    `${isGst ? "GST-Invoice" : "Estimate"}-${invoice?.invoiceNumber || "bill"}.${extension}`;
 
   const withCaptureRender = async (element, action) => {
     if (document.fonts?.ready) await document.fonts.ready;
@@ -1210,7 +1247,6 @@ const PrintInvoice = () => {
     const elements = {};
     root.querySelectorAll("[data-design-id]").forEach((element) => {
       elements[element.dataset.designId] = {
-        text: element.textContent,
         style: element.style.cssText,
       };
     });
@@ -1226,6 +1262,7 @@ const PrintInvoice = () => {
       templates: {
         ...(settings.invoiceDesign?.templates || {}),
         [templateKey]: {
+          schemaVersion: DESIGN_SCHEMA_VERSION,
           elements,
           logoStyle: logo?.style.cssText || "",
           specialStyles,
@@ -1237,7 +1274,7 @@ const PrintInvoice = () => {
       await API.put("/settings", { ...settings, shopName: COMPANY_DISPLAY_NAME, invoiceDesign });
       setSettings((current) => ({ ...current, invoiceDesign }));
       setDesignEditing(false);
-      alert(`${isGst ? "GST Invoice" : "Non-GST Order"} template saved! Yeh design ab saare ${isGst ? "GST Invoices" : "Orders"} mein apply hoga.`);
+      alert(`${isGst ? "GST Invoice" : "Estimate Order"} template saved! Yeh design ab saare ${isGst ? "GST Invoices" : "Estimates"} mein apply hoga.`);
     } catch (error) {
       alert(error.response?.data?.message || "Design save nahi ho paya.");
     }
@@ -1374,10 +1411,10 @@ const PrintInvoice = () => {
         <div className="print:hidden sticky top-2 z-50 mx-auto flex max-w-5xl flex-wrap items-end gap-2 rounded-2xl border border-violet-200 bg-white p-3 shadow-xl">
           <div className="mr-2 min-w-52">
             <div className="text-[10px] font-black uppercase tracking-widest text-violet-600">
-              Template Editor — {isGst ? "GST Invoice" : "Non-GST Order"}
+              Template Editor — {isGst ? "GST Invoice" : "Estimate Order"}
             </div>
             <div className="text-[10px] font-semibold text-amber-600">
-              ⚡ Save karoge toh saare {isGst ? "GST Invoices" : "Orders"} update honge
+              ⚡ Save karoge toh saare {isGst ? "GST Invoices" : "Estimates"} update honge
             </div>
             <div className="mt-1 max-w-56 truncate text-xs font-bold text-slate-700">
               {selectedDesignLabel}
@@ -1458,7 +1495,7 @@ const PrintInvoice = () => {
               Save as Default Template
             </button>
             <span className="text-[10px] font-bold text-violet-500">
-              Applies to all {isGst ? "GST Invoices" : "Non-GST Orders"}
+              Applies to all {isGst ? "GST Invoices" : "Estimate Orders"}
             </span>
           </div>
         </div>
@@ -1660,8 +1697,8 @@ const ItemsTable = ({
   showPageTotal,
 }) => {
   const headings = isGst
-    ? ["S. No.", "Jewellery", "HSN / GST", "Purity / HUID", "Gross / Net Wt.", "Qty.", "Rate / g", "Making", "Amount"]
-    : ["S. No.", "Jewellery", "Purity / HUID", "Gross / Net Wt.", "Qty.", "Rate / g", "Amount"];
+    ? ["S. No.", "Jewellery", "HSN / GST", "Purity", "Gross / Net Wt.", "Pcs.", "Rate / g", "Making", "Stone", "Amount"]
+    : ["S. No.", "Jewellery", "Purity", "Gross / Net Wt.", "Pcs.", "Rate / g", "Making", "Stone", "Amount"];
 
   return (
     <table className="invoice-table">
@@ -1726,9 +1763,8 @@ const ItemsTable = ({
               </td>
               <td className="center-cell">{formatCompactNumber(quantity)}</td>
               <td className="rate-cell numeric-highlight">{formatNumber(item.metalRatePerGram || item.selectedRate)}</td>
-              {isGst && (
-                <td className="rate-cell">{formatNumber(item.makingChargeAmount || item.makingCharge)}</td>
-              )}
+              <td className="rate-cell">{formatNumber(item.makingChargeAmount || item.makingCharge)}</td>
+              <td className="rate-cell">{formatNumber(item.stoneValueAmount || item.stoneValue)}</td>
               <td className="amount-cell amount-highlight">{formatNumber(amount)}</td>
             </tr>
           );
@@ -1740,6 +1776,7 @@ const ItemsTable = ({
           <tr>
             <td />
             <td>Total Taxable Amount</td>
+            <td />
             <td />
             <td />
             <td />
@@ -1759,9 +1796,11 @@ const FillerRow = ({ isGst }) => (
     <td />
     <td />
     {!isGst && <td />}
+    {!isGst && <td />}
     {isGst && <td />}
     {isGst && <td />}
     {isGst && <td />}
+    <td />
     <td />
     <td />
     <td />

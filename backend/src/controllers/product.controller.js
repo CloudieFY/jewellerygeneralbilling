@@ -6,7 +6,6 @@ export const addProduct = async (req, res) => {
   try {
     const {
       productName,
-      category,
       unit,
       hsnCode,
       quantity,
@@ -22,13 +21,13 @@ export const addProduct = async (req, res) => {
       sku, metalType, purity, fineness, huid, hallmarked, grossWeight,
       netWeight, stoneWeight, pieces, metalRatePerGram, wastagePercent,
       makingChargeType, makingCharge, stoneValue, stoneValueType,
+      inventoryWeight,
     } = req.body;
 
     // validation
 
     if (
-      !productName ||
-      !category
+      !productName
     ) {
       return res.status(400).json({
         message: "All required fields are required",
@@ -39,7 +38,6 @@ export const addProduct = async (req, res) => {
 
     const existingProduct = await Product.findOne({
       productName: productName.toLowerCase().trim(),
-      category: category.toLowerCase().trim(),
     });
 
     if (existingProduct) {
@@ -57,7 +55,6 @@ export const addProduct = async (req, res) => {
 
     const product = await Product.create({
       productName: productName.toLowerCase().trim(),
-      category: category.toLowerCase().trim(),
       unit,
       hsnCode,
       quantity: quantity ?? 0,
@@ -71,6 +68,7 @@ export const addProduct = async (req, res) => {
       status: productStatus,
       description,
       sku, metalType, purity, fineness, huid, hallmarked,
+      inventoryWeight: Math.max(Number(inventoryWeight || 0), 0),
       grossWeight: grossWeight ?? 0,
       netWeight: Math.max(Number(grossWeight || 0) - Number(stoneWeight || 0), 0),
       stoneWeight: stoneWeight ?? 0,
@@ -229,12 +227,6 @@ export const searchProducts = async (req, res) => {
           },
         },
 
-        {
-          category: {
-            $regex: keyword,
-            $options: "i",
-          },
-        },
       ],
     });
 

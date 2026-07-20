@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Edit3, Eye, IndianRupee, Package, Trash2 } from "lucide-react";
+import { Edit3, Eye, Package, Scale, Trash2 } from "lucide-react";
 import { useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
 
@@ -14,8 +14,7 @@ const ProductsTable = ({ products, deleteProduct }) => {
             <tr>
               {[
                 "Product Name",
-                "Category",
-                "Metal Rate / g",
+                "Inventory Weight",
                 "GST %",
                 "Actions",
               ].map((heading) => (
@@ -33,7 +32,7 @@ const ProductsTable = ({ products, deleteProduct }) => {
           <tbody className="divide-y divide-slate-100">
             {products?.length === 0 ? (
               <tr>
-                <td colSpan="5" className="px-5 py-16 text-center">
+                <td colSpan="4" className="px-5 py-16 text-center">
                   <div className="flex flex-col items-center gap-3 text-slate-400">
                     <Package size={42} />
                     <p className="text-sm font-bold">No products found.</p>
@@ -56,14 +55,10 @@ const ProductsTable = ({ products, deleteProduct }) => {
                     </div>
                   </td>
 
-                  <td className="px-5 py-5 text-sm font-semibold capitalize text-slate-600">
-                    {product.category}
-                  </td>
-
                   <td className="px-5 py-5 text-sm font-black text-slate-900">
                     <span className="inline-flex items-center gap-1">
-                      <IndianRupee size={13} className="text-blue-600" />
-                      {Number(product.metalRatePerGram || product.cashRate || 0).toLocaleString("en-IN")}
+                      <Scale size={13} className="text-blue-600" />
+                      {Number(product.inventoryWeight || 0).toLocaleString("en-IN", { maximumFractionDigits: 3 })} g
                     </span>
                   </td>
 

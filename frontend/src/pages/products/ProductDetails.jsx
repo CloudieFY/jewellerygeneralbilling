@@ -1,14 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import {
-  ArrowLeft,
-  Edit3,
-  Package,
-  Percent,
-  Tag,
-} from "lucide-react";
+import { ArrowLeft, Edit3, Package, Scale } from "lucide-react";
 import API from "../../services/api";
-import { formatCurrency } from "../../utils/billing";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -16,139 +9,39 @@ const ProductDetails = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const getProduct = async () => {
-      try {
-        const { data } = await API.get(`/products/${id}`);
-        setProduct(data.product);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getProduct();
+    API.get(`/products/${id}`)
+      .then(({ data }) => setProduct(data.product))
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, [id]);
 
-  if (loading) {
-    return (
-      <div className="rounded-3xl bg-white p-10 text-center font-bold text-slate-600 shadow-sm">
-        Loading product...
-      </div>
-    );
-  }
-
-  if (!product) {
-    return (
-      <div className="rounded-3xl bg-white p-10 text-center shadow-sm">
-        <Package size={48} className="mx-auto mb-4 text-slate-300" />
-        <h1 className="text-2xl font-black text-slate-950">
-          Product not found
-        </h1>
-        <Link
-          to="/products"
-          className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-black text-white"
-        >
-          <ArrowLeft size={18} />
-          Back to Products
-        </Link>
-      </div>
-    );
-  }
-
-  const cards = [
-    {
-      label: "Category",
-      value: product.category,
-      icon: <Tag size={20} />,
-    },
-    {
-      label: "GST %",
-      value: `${product.gstRate || 0}%`,
-      icon: <Percent size={20} />,
-    },
-    { label: "Metal", value: product.metalType || "Gold", icon: <Package size={20} /> },
-    { label: "Purity / Fineness", value: `${product.purity || "-"} / ${product.fineness || "-"}`, icon: <Tag size={20} /> },
-  ];
+  if (loading) return <div className="rounded-3xl bg-white p-10 text-center font-bold">Loading product...</div>;
+  if (!product) return <div className="rounded-3xl bg-white p-10 text-center font-bold">Product not found.</div>;
 
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <Link
-            to="/products"
-            className="mb-4 inline-flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-blue-600"
-          >
-            <ArrowLeft size={16} />
-            Back to Products
-          </Link>
-          <h1 className="text-3xl font-black text-slate-950 sm:text-4xl">
-            {product.productName}
-          </h1>
-          <p className="mt-2 text-sm font-semibold text-slate-500">
-            {product.metalType || "Jewellery"} · {product.purity || "Purity not set"}
-          </p>
+          <Link to="/products" className="mb-4 inline-flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-amber-700"><ArrowLeft size={16} /> Back to Products</Link>
+          <h1 className="text-3xl font-black text-slate-950 sm:text-4xl">{product.productName}</h1>
+          <p className="mt-2 text-sm font-semibold capitalize text-slate-500">{product.metalType || "Jewellery"} inventory</p>
         </div>
-
-        <Link
-          to={`/products/edit/${product._id}`}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-black text-white shadow-lg shadow-blue-200 hover:bg-blue-700"
-        >
-          <Edit3 size={18} />
-          Edit Product
-        </Link>
+        <Link to={`/products/edit/${product._id}`} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-700 px-5 py-3 font-black text-white"><Edit3 size={18} /> Edit Product</Link>
       </div>
 
-      <section className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-        {cards.map((card) => (
-          <div
-            key={card.label}
-            className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
-          >
-            <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-              {card.icon}
-            </div>
-            <p className="text-xs font-black uppercase tracking-widest text-slate-500">
-              {card.label}
-            </p>
-            <p className="mt-2 text-xl font-black capitalize text-slate-950">
-              {card.value}
-            </p>
+      <section className="grid grid-cols-1 gap-5 md:grid-cols-3">
+        {[
+          ["Available Inventory", `${Number(product.inventoryWeight || 0).toLocaleString("en-IN", { maximumFractionDigits: 3 })} g`, <Scale size={21} />],
+          ["HSN / GST", `${product.hsnCode || "-"} / ${product.gstRate || 0}%`, <Package size={21} />],
+        ].map(([label, value, icon]) => (
+          <div key={label} className="rounded-3xl border border-amber-200 bg-white p-6 shadow-sm">
+            <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-amber-700">{icon}</div>
+            <p className="text-xs font-black uppercase tracking-widest text-slate-500">{label}</p>
+            <p className="mt-2 text-xl font-black capitalize text-slate-950">{value}</p>
           </div>
         ))}
       </section>
-
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-black text-slate-950">Jewellery Value & Weight</h2>
-        <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-3">
-          {[
-            ["Metal Rate / Gram", formatCurrency(product.metalRatePerGram || product.cashRate)],
-            ["Gross Weight", `${product.grossWeight || 0} g`],
-            ["Net Weight", `${product.netWeight || 0} g`],
-            ["Stone Weight", `${product.stoneWeight || 0} g`],
-            ["Making Charge", `${formatCurrency(product.makingCharge)} ${product.makingChargeType === "percent" ? "%" : product.makingChargeType === "per_gram" ? "/ g" : "fixed"}`],
-            ["HUID", product.huid || "Not assigned"],
-          ].map(([label, value]) => (
-            <div key={label} className="rounded-2xl bg-slate-50 p-5">
-              <p className="text-xs font-black uppercase tracking-widest text-slate-500">
-                {label}
-              </p>
-              <p className="mt-2 text-2xl font-black text-blue-700">
-                {value}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {product.description && (
-        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-xl font-black text-slate-950">Details</h2>
-          <p className="mt-3 text-sm font-medium leading-6 text-slate-600">
-            {product.description}
-          </p>
-        </section>
-      )}
+      {product.description && <section className="rounded-3xl border border-amber-200 bg-white p-6"><h2 className="text-xl font-black">Details</h2><p className="mt-3 text-slate-600">{product.description}</p></section>}
     </div>
   );
 };

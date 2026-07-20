@@ -15,6 +15,7 @@ const CustomerForm = ({ initialData = {}, onSubmit, loading }) => {
     city: "",
     address: "",
     gstNumber: "",
+    panNumber: "",
   });
 
   useEffect(() => {
@@ -29,6 +30,7 @@ const CustomerForm = ({ initialData = {}, onSubmit, loading }) => {
       city: initialData.city || "",
       address: initialData.address || "",
       gstNumber: initialData.gstNumber || "",
+      panNumber: initialData.panNumber || "",
     });
   }, [initialData]);
 
@@ -133,6 +135,21 @@ const CustomerForm = ({ initialData = {}, onSubmit, loading }) => {
             value={formData.gstNumber}
             onChange={handleChange}
             className="input-field uppercase"
+          />
+        </div>
+
+        <div>
+          <label className={labelClasses}>PAN Card Optional</label>
+          <input
+            type="text"
+            name="panNumber"
+            placeholder="ABCDE1234F"
+            value={formData.panNumber}
+            onChange={handleChange}
+            className="input-field uppercase"
+            maxLength={10}
+            pattern="[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}"
+            title="Enter a valid 10-character PAN, for example ABCDE1234F"
           />
         </div>
 

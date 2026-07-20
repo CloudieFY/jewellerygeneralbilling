@@ -12,24 +12,16 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "../../utils/billing";
 
-const getPaymentStatusMeta = (status) => {
-  if (status === "paid") {
+const getWorkflowStatusMeta = (invoice) => {
+  if (invoice.documentType !== "order") {
     return {
-      label: "Paid",
+      label: "Invoiced",
       className: "bg-emerald-50 text-emerald-700",
     };
   }
-
-  if (status === "partially_paid") {
-    return {
-      label: "Partially Paid",
-      className: "bg-amber-50 text-amber-700",
-    };
-  }
-
   return {
-    label: "Unpaid",
-    className: "bg-red-50 text-red-700",
+    label: "Inventory Reserved",
+    className: "bg-amber-50 text-amber-700",
   };
 };
 
@@ -43,7 +35,7 @@ const InvoiceTable = ({ invoices }) => {
             <thead className="bg-slate-50">
               <tr>
                 {[
-                  "Invoice / Order",
+                  "Invoice / Estimate",
                   "Type",
                   "Customer",
                   "Grand Total",
@@ -77,7 +69,7 @@ const InvoiceTable = ({ invoices }) => {
                   const isGst =
                     invoice.documentType !== "order" &&
                     invoice.gstEnabled !== false;
-                  const statusMeta = getPaymentStatusMeta(invoice.paymentStatus);
+                  const statusMeta = getWorkflowStatusMeta(invoice);
 
                   return (
                     <tr key={invoice._id} className="transition hover:bg-slate-50">
@@ -87,7 +79,7 @@ const InvoiceTable = ({ invoices }) => {
                           #{invoice.invoiceNumber}
                         </p>
                         <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                          {isGst ? "GST Invoice" : "Order"}
+                          {isGst ? "GST Invoice" : "Estimate"}
                         </p>
                       </td>
 
@@ -101,7 +93,7 @@ const InvoiceTable = ({ invoices }) => {
                         ) : (
                           <span className="inline-flex items-center gap-1.5 rounded-xl bg-orange-50 px-3 py-1.5 text-xs font-black text-orange-700">
                             <FileText size={13} />
-                            Order
+                            Estimate
                           </span>
                         )}
                       </td>
@@ -208,7 +200,7 @@ const InvoiceTable = ({ invoices }) => {
             const isGst =
               invoice.documentType !== "order" &&
               invoice.gstEnabled !== false;
-            const statusMeta = getPaymentStatusMeta(invoice.paymentStatus);
+            const statusMeta = getWorkflowStatusMeta(invoice);
 
             return (
               <div
@@ -230,7 +222,7 @@ const InvoiceTable = ({ invoices }) => {
                   ) : (
                     <span className="inline-flex items-center gap-1 rounded-xl bg-orange-50 px-2.5 py-1 text-xs font-black text-orange-700">
                       <FileText size={12} />
-                      Order
+                      Estimate
                     </span>
                   )}
                 </div>

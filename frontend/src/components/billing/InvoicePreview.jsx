@@ -1,5 +1,5 @@
 import { FileCheck, FileText, MapPin, Phone } from "lucide-react";
-import { calculateLine, formatCurrency, toNumber } from "../../utils/billing";
+import { calculateLine, formatCurrency } from "../../utils/billing";
 
 const InvoicePreview = ({
   formData,
@@ -21,11 +21,6 @@ const InvoicePreview = ({
     : new Date().toLocaleDateString("en-IN");
 
   const isGst = documentType === "gst_invoice";
-  const receivedAmount =
-    formData.billingType === "cash"
-      ? summary.grandTotal
-      : Math.min(toNumber(formData.receivedAmount), summary.grandTotal);
-  const balanceDue = Math.max(summary.grandTotal - receivedAmount, 0);
 
   return (
     <div className="xl:sticky xl:top-8 overflow-hidden rounded-3xl border border-amber-200 bg-gradient-to-b from-amber-50/80 to-white shadow-lg shadow-amber-100/60">
@@ -43,7 +38,7 @@ const InvoicePreview = ({
             <p className={`mt-1 text-xs font-bold uppercase tracking-widest ${
               isGst ? "text-amber-200" : "text-yellow-200"
             }`}>
-              {isGst ? "GST Invoice Preview" : "Order Preview (Kaccha Bill)"}
+              {isGst ? "GST Invoice Preview" : "Estimate Order Preview"}
             </p>
           </div>
           <div className="text-right">
@@ -56,7 +51,7 @@ const InvoicePreview = ({
       </div>
 
       <div className="space-y-6 p-6">
-        <section className="rounded-2xl bg-slate-50 p-4">
+        <section className="rounded-2xl border border-amber-100 bg-amber-50/50 p-4">
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
             Customer
           </p>
@@ -183,27 +178,11 @@ const InvoicePreview = ({
           )}
           <div className="border-t border-slate-200 pt-4">
             <div className="flex items-center justify-between">
-              <span className={`text-sm font-black uppercase tracking-widest ${isGst ? "text-blue-600" : "text-orange-600"}`}>
+              <span className="text-sm font-black uppercase tracking-widest text-amber-800">
                 Grand Total
               </span>
-              <span className="text-2xl font-black text-slate-950">
+              <span className="text-2xl font-black tabular-nums text-amber-950">
                 {formatCurrency(summary.grandTotal)}
-              </span>
-            </div>
-          </div>
-          <div className="border-t border-slate-200 pt-4">
-            <div className="flex items-center justify-between text-sm font-bold text-slate-600">
-              <span>Payment Type</span>
-              <span className="capitalize">{formData.billingType || "cash"}</span>
-            </div>
-            <div className="mt-2 flex items-center justify-between text-sm font-bold text-slate-600">
-              <span>Received</span>
-              <span>{formatCurrency(receivedAmount)}</span>
-            </div>
-            <div className="mt-2 flex items-center justify-between text-sm font-black">
-              <span>Balance Due</span>
-              <span className={balanceDue > 0 ? "text-red-600" : "text-emerald-700"}>
-                {formatCurrency(balanceDue)}
               </span>
             </div>
           </div>

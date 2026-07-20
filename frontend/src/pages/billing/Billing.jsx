@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   CalendarDays,
   ChevronRight,
   FilePlus2,
-  IndianRupee,
   Plus,
   Receipt,
   Ruler,
@@ -23,24 +22,24 @@ import {
   calculateInvoiceTotals,
   calculateLine,
   formatCurrency,
-  getProductRate,
-  toNumber,
 } from "../../utils/billing";
 
 const emptyItem = {
   product: "",
   grossWeight: "", netWeight: "", stoneWeight: "",
   quantity: 1,
+  purity: "22K / 916",
   selectedRate: "",
   gstRate: "",
-  wastagePercent: "", makingChargeType: "per_gram", makingCharge: "",
-  stoneValue: "", stoneValueType: "per_piece", discount: "",
+  wastagePercent: 0, makingChargeType: "per_gram", makingCharge: "",
+  stoneValue: "", stoneValueType: "per_gram", hallmarkCharge: "", discount: "",
 };
 
 const today = new Date().toISOString().slice(0, 10);
 
 const Billing = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [customers, setCustomers] = useState([]);
   const [productsList, setProductsList] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -56,10 +55,8 @@ const Billing = () => {
 
   const [formData, setFormData] = useState({
     farmerId: "",
+    invoiceNumber: "",
     rateType: "Rate A",
-    billingType: "cash",
-    receivedAmount: "",
-    paymentMode: "cash",
     invoiceDate: today,
     products: [{ ...emptyItem }],
   });
@@ -101,6 +98,12 @@ const Billing = () => {
 
         setCustomers(customerRes.data.farmers || []);
         setProductsList(productRes.data.products || []);
+        const linkedCustomerId = searchParams.get("customerId");
+        const linkedType = searchParams.get("type");
+        if (linkedCustomerId) {
+          setFormData((previous) => ({ ...previous, farmerId: linkedCustomerId }));
+        }
+        if (linkedType === "estimate") setDocumentType("order");
       } catch (error) {
         console.error(error);
         toast.error("Failed to load billing data");
@@ -110,7 +113,7 @@ const Billing = () => {
     };
 
     getData();
-  }, []);
+  }, [searchParams]);
 
 
   const summary = useMemo(
@@ -124,28 +127,9 @@ const Billing = () => {
     [formData.products, formData.rateType, productsList, gstEnabled]
   );
 
-  const receivedAmount =
-    formData.billingType === "cash"
-      ? summary.grandTotal
-      : Math.min(toNumber(formData.receivedAmount), summary.grandTotal);
-  const balanceDue = Math.max(summary.grandTotal - receivedAmount, 0);
-
   const withProductRate = (item, rateType = formData.rateType) => {
-    const product = productsList.find((entry) => entry._id === item.product);
-
-    if (!product) return item;
-
-    return {
-      ...item,
-      selectedRate: getProductRate(product, rateType),
-      gstRate: product.gstRate ?? 0,
-      grossWeight: product.grossWeight ?? "",
-      netWeight: Math.max(Number(product.grossWeight || 0) - Number(product.stoneWeight || 0), 0),
-      stoneWeight: product.stoneWeight ?? "", wastagePercent: product.wastagePercent ?? 0,
-      makingChargeType: product.makingChargeType || "per_gram",
-      makingCharge: product.makingCharge ?? 0, stoneValue: product.stoneValue ?? 0,
-      stoneValueType: product.stoneValueType || "per_piece",
-    };
+    void rateType;
+    return item;
   };
 
   const handleCustomerChange = (customerId) => {
@@ -195,14 +179,6 @@ const Billing = () => {
     }
   };
 
-  const handlePaymentTypeChange = (billingType) => {
-    setFormData((prev) => ({
-      ...prev,
-      billingType,
-      receivedAmount: billingType === "cash" ? "" : prev.receivedAmount,
-    }));
-  };
-
   const handleProductChange = (index, field, value) => {
     setFormData((prev) => {
       const products = prev.products.map((item, itemIndex) => {
@@ -215,14 +191,11 @@ const Billing = () => {
 
           return {
             ...updated,
-            selectedRate: product ? getProductRate(product, prev.rateType) : "",
-            gstRate: product?.gstRate ?? "", grossWeight: product?.grossWeight ?? "",
-            netWeight: Math.max(Number(product?.grossWeight || 0) - Number(product?.stoneWeight || 0), 0),
-            stoneWeight: product?.stoneWeight ?? "",
-            wastagePercent: product?.wastagePercent ?? 0,
-            makingChargeType: product?.makingChargeType || "per_gram",
-            makingCharge: product?.makingCharge ?? 0, stoneValue: product?.stoneValue ?? 0,
-            stoneValueType: product?.stoneValueType || "per_piece",
+            selectedRate: "",
+            gstRate: product?.gstRate ?? "", grossWeight: "",
+            netWeight: "", stoneWeight: "", wastagePercent: 0,
+            makingChargeType: "per_gram", makingCharge: "", stoneValue: "",
+            stoneValueType: "per_gram", hallmarkCharge: "",
           };
         }
 
@@ -284,31 +257,23 @@ const Billing = () => {
       return;
     }
 
-    if (
-      formData.billingType === "credit" &&
-      toNumber(formData.receivedAmount) > summary.grandTotal
-    ) {
-      toast.error("Received amount cannot be greater than grand total");
-      return;
-    }
-
     try {
       setLoading(true);
       await API.post("/invoices", {
         farmerId: formData.farmerId,
-        billingType: formData.billingType,
-        receivedAmount,
-        paymentMode: formData.paymentMode,
+        invoiceNumber: formData.invoiceNumber,
         rateType: formData.rateType,
         invoiceDate: formData.invoiceDate,
         documentType: documentType,
         gstEnabled: gstEnabled,
         products: formData.products.map((item) => ({
           product: item.product,
+          purity: item.purity,
           grossWeight: Number(item.grossWeight), netWeight: Number(item.netWeight),
           stoneWeight: Number(item.stoneWeight), wastagePercent: Number(item.wastagePercent),
           makingChargeType: item.makingChargeType, makingCharge: Number(item.makingCharge),
           stoneValue: Number(item.stoneValue), stoneValueType: item.stoneValueType,
+          hallmarkCharge: Number(item.hallmarkCharge),
           discount: Number(item.discount),
           quantity: Number(item.quantity),
           selectedRate: Number(item.selectedRate),
@@ -316,7 +281,7 @@ const Billing = () => {
         })),
       });
 
-      const label = gstEnabled ? "GST Invoice" : "Order";
+      const label = gstEnabled ? "GST Invoice" : "Estimate Order";
       toast.success(`${label} created successfully`);
       navigate("/invoices");
     } catch (error) {
@@ -341,7 +306,7 @@ const Billing = () => {
         } else if (key === "o") {
           e.preventDefault();
           setDocumentType("order");
-          toast.success("Switched to Non-GST Order");
+          toast.success("Switched to Estimate Order");
         } else if (key === "f") {
           e.preventDefault();
           const dropdown = document.getElementById("customer-select-dropdown");
@@ -381,7 +346,7 @@ const Billing = () => {
             JewelFlow — Jewellery Billing Software
           </p>
           <h1 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-            {isGst ? "Create GST Invoice" : "Create Order (Kaccha Bill)"}
+            {isGst ? "Create GST Invoice" : "Create Estimate Order"}
           </h1>
           <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-600">
             Jewellery value is calculated from net weight, metal rate, wastage, making charges and stones.
@@ -442,7 +407,7 @@ const Billing = () => {
               >
                 <FileText size={20} />
                 <div className="text-left">
-                  <p className="font-black">Non-GST Order</p>
+                  <p className="font-black">Estimate Order</p>
                   <p className={`text-[10px] font-semibold ${!isGst ? "text-orange-100" : "text-slate-400"}`}>
                     ORD-XXXX series
                   </p>
@@ -456,7 +421,7 @@ const Billing = () => {
               </p>
             ) : (
               <p className="mt-3 text-xs font-semibold text-orange-600">
-                📄 Kaccha Bill / Order — No GST columns. Clean order printout.
+                Estimate Order — No GST columns. Clean client estimate.
               </p>
             )}
           </section>
@@ -504,7 +469,7 @@ const Billing = () => {
 
               <div className="space-y-2">
                 <label className="text-xs font-black uppercase tracking-widest text-slate-600">
-                  {isGst ? "Invoice" : "Order"} Date
+                  {isGst ? "Invoice" : "Estimate"} Date
                 </label>
                 <div className="relative">
                   <CalendarDays
@@ -521,86 +486,19 @@ const Billing = () => {
                   />
                 </div>
               </div>
-            </div>
-          </section>
-
-          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-              <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-widest text-slate-600">
-                  Payment Type
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { value: "cash", label: "Cash" },
-                    { value: "credit", label: "Credit" },
-                  ].map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => handlePaymentTypeChange(option.value)}
-                      className={`rounded-2xl border px-4 py-3 text-sm font-black transition ${
-                        formData.billingType === option.value
-                          ? "border-emerald-600 bg-emerald-600 text-white shadow-lg shadow-emerald-100"
-                          : "border-slate-200 bg-white text-slate-600 hover:border-emerald-300"
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
 
               <div className="space-y-2">
                 <label className="text-xs font-black uppercase tracking-widest text-slate-600">
-                  Received Amount
+                  {isGst ? "Invoice" : "Estimate"} Number
                 </label>
-                <div className="relative">
-                  <IndianRupee
-                    size={18}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                  />
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={
-                      formData.billingType === "cash"
-                        ? summary.grandTotal.toFixed(2)
-                        : formData.receivedAmount
-                    }
-                    onChange={(event) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        receivedAmount: event.target.value,
-                      }))
-                    }
-                    disabled={formData.billingType === "cash"}
-                    placeholder="Optional for credit"
-                    className="input-field pl-10 disabled:bg-slate-100 disabled:text-slate-500"
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-2xl bg-slate-50 p-4">
-                <p className="text-xs font-black uppercase tracking-widest text-slate-500">
-                  Balance Due
-                </p>
-                <p
-                  className={`mt-2 text-2xl font-black ${
-                    balanceDue > 0 ? "text-red-600" : "text-emerald-700"
-                  }`}
-                >
-                  {formatCurrency(balanceDue)}
-                </p>
-                <p className="mt-1 text-xs font-semibold text-slate-500">
-                  Status:{" "}
-                  {balanceDue <= 0
-                    ? "Paid"
-                    : receivedAmount > 0
-                      ? "Partially Paid"
-                      : "Unpaid"}
-                </p>
+                <input
+                  type="text"
+                  value={formData.invoiceNumber}
+                  onChange={(event) => setFormData((previous) => ({ ...previous, invoiceNumber: event.target.value }))}
+                  placeholder="Blank = automatic number"
+                  className="input-field"
+                />
+                <p className="text-[10px] font-semibold text-slate-400">Duplicate numbers are not allowed.</p>
               </div>
             </div>
           </section>
@@ -610,7 +508,7 @@ const Billing = () => {
             <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-xl font-black text-slate-950">
-                  {isGst ? "Invoice" : "Order"} Items
+                  {isGst ? "Invoice" : "Estimate"} Items
                 </h2>
                 <p className="mt-1 text-sm font-medium text-slate-500">
                   Verify weights and charges. The payable amount updates automatically.
@@ -737,6 +635,51 @@ const Billing = () => {
                       </div>
                     </div>
 
+                    {product && (
+                      <p className="mt-3 text-xs font-bold text-amber-700">
+                        Available inventory: {Number(product.inventoryWeight || 0).toLocaleString("en-IN", { maximumFractionDigits: 3 })} g
+                      </p>
+                    )}
+
+                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                      <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        Purity
+                        <input type="text" value={item.purity} onChange={(event) => handleProductChange(index, "purity", event.target.value)} placeholder="22K / 916" className="input-field bg-white normal-case" />
+                      </label>
+                      <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        Gold / Metal Rate per g
+                        <input type="number" min="0" step="0.01" value={item.selectedRate} onChange={(event) => handleProductChange(index, "selectedRate", event.target.value)} className="input-field bg-white" required />
+                      </label>
+                      <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        Making Charge Type
+                        <select value={item.makingChargeType} onChange={(event) => handleProductChange(index, "makingChargeType", event.target.value)} className="input-field bg-white normal-case">
+                          <option value="per_gram">Per gram</option>
+                          <option value="per_piece">Per piece</option>
+                          <option value="fixed">Fixed price</option>
+                        </select>
+                      </label>
+                      <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        Making Charge
+                        <input type="number" min="0" step="0.01" value={item.makingCharge} onChange={(event) => handleProductChange(index, "makingCharge", event.target.value)} className="input-field bg-white" />
+                      </label>
+                      <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        Stone Charge Type
+                        <select value={item.stoneValueType} onChange={(event) => handleProductChange(index, "stoneValueType", event.target.value)} className="input-field bg-white normal-case">
+                          <option value="per_gram">Per gram</option>
+                          <option value="per_piece">Per piece</option>
+                          <option value="fixed">Fixed price</option>
+                        </select>
+                      </label>
+                      <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        Stone / Diamond Charge
+                        <input type="number" min="0" step="0.01" value={item.stoneValue} onChange={(event) => handleProductChange(index, "stoneValue", event.target.value)} className="input-field bg-white" />
+                      </label>
+                      <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        Hallmark Charge (Internal)
+                        <input type="number" min="0" step="0.01" value={item.hallmarkCharge} onChange={(event) => handleProductChange(index, "hallmarkCharge", event.target.value)} className="input-field bg-white" />
+                      </label>
+                    </div>
+
                     <div className={`mt-4 grid grid-cols-2 gap-3 rounded-2xl bg-white p-3 ${isGst ? "sm:grid-cols-5" : "sm:grid-cols-4"}`}>
                       <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
@@ -750,28 +693,9 @@ const Billing = () => {
 
                       <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                          Metal Rate / g
+                          Metal Value
                         </p>
-                        <div className="relative mt-1">
-                          <IndianRupee
-                            size={14}
-                            className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400"
-                          />
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={item.selectedRate}
-                            onChange={(event) =>
-                              handleProductChange(
-                                index,
-                                "selectedRate",
-                                event.target.value
-                              )
-                            }
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-7 pr-2 text-sm font-bold text-slate-900 outline-none focus:border-blue-500"
-                          />
-                        </div>
+                        <p className="mt-2 text-sm font-black text-slate-950">{formatCurrency(line.metalValue)}</p>
                       </div>
 
                       {/* GST% — only for GST Invoice */}
@@ -840,7 +764,7 @@ const Billing = () => {
               ) : (
                 <>
                   <FilePlus2 size={20} />
-                  {isGst ? "Create GST Invoice" : "Create Order"}
+                  {isGst ? "Create GST Invoice" : "Create Estimate Order"}
                   <ChevronRight size={18} />
                 </>
               )}

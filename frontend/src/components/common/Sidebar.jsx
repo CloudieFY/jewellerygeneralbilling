@@ -1,16 +1,14 @@
 import {
-  BarChart3,
   Boxes,
-  FolderTree,
   LayoutDashboard,
   LogOut,
   Receipt,
   Settings,
   ShoppingBag,
-  UserCog,
   Users,
   X,
   Gem,
+  ClipboardList,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useContext } from "react";
@@ -20,11 +18,9 @@ const menuItems = [
   { name: "Dashboard", path: "/dashboard", icon: <LayoutDashboard size={21} /> },
   { name: "Customers", path: "/farmers", icon: <Users size={21} /> },
   { name: "Products", path: "/products", icon: <Boxes size={21} /> },
-  { name: "Categories", path: "/categories", icon: <FolderTree size={21} /> },
   { name: "Create Bill", path: "/billing", icon: <ShoppingBag size={21} /> },
-  { name: "Invoices & Orders", path: "/invoices", icon: <Receipt size={21} /> },
-  { name: "Reports", path: "/reports", icon: <BarChart3 size={21} /> },
-  { name: "Users", path: "/users", icon: <UserCog size={21} /> },
+  { name: "Customer Orders", path: "/orders", icon: <ClipboardList size={21} /> },
+  { name: "Invoices & Estimates", path: "/invoices", icon: <Receipt size={21} /> },
   { name: "Settings", path: "/settings", icon: <Settings size={21} /> },
 ];
 

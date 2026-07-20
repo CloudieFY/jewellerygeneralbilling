@@ -10,6 +10,16 @@ import {
 } from "../utils/customerLedger.js";
 import { generateCustomerVoucherNumber } from "../utils/voucherNumber.js";
 
+const adjustInventory = async (items, direction) => {
+  for (const item of items) {
+    const weight = (Number(item.grossWeight) || 0) * (Number(item.quantity) || 1);
+    if (weight <= 0) continue;
+    await Product.findByIdAndUpdate(item.product, {
+      $inc: { inventoryWeight: direction * weight },
+    });
+  }
+};
+
 const normalizeAmount = (value, fallback = 0) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -102,6 +112,7 @@ export const createInvoice = async (req, res) => {
       billingType = "credit",
       rateType,
       documentType = "gst_invoice",
+      invoiceNumber: requestedInvoiceNumber,
       receivedAmount = 0,
       paymentMode = "cash",
       remarks = "",
@@ -134,6 +145,7 @@ export const createInvoice = async (req, res) => {
     let totalGST = 0;
 
     const invoiceProducts = [];
+    const inventoryUsage = new Map();
 
     // process products
 
@@ -148,21 +160,7 @@ export const createInvoice = async (req, res) => {
 
       // auto rate selection
 
-      let selectedRate = product.metalRatePerGram || 0;
-
-      if (activeRateType === "Rate A") {
-        selectedRate = product.metalRatePerGram || product.cashRate;
-      } else if (activeRateType === "Rate B") {
-        selectedRate = product.creditRate;
-      } else if (activeRateType === "Rate C") {
-        selectedRate = product.wholesaleRate;
-      } else {
-        selectedRate = product.cashRate;
-      }
-
-      if (item.selectedRate !== undefined && item.selectedRate !== "") {
-        selectedRate = Number(item.selectedRate);
-      }
+      const selectedRate = Number(item.selectedRate) || 0;
 
       // calculations
 
@@ -171,13 +169,14 @@ export const createInvoice = async (req, res) => {
       const stoneWeight = Number(item.stoneWeight ?? product.stoneWeight) || 0;
       const netWeight = Math.max(grossWeight - stoneWeight, 0);
       const wastagePercent = Number(item.wastagePercent ?? product.wastagePercent) || 0;
-      const makingChargeType = item.makingChargeType || product.makingChargeType || "per_gram";
-      const makingCharge = Number(item.makingCharge ?? product.makingCharge) || 0;
-      const stoneValue = Number(item.stoneValue ?? product.stoneValue) || 0;
-      const stoneValueType = item.stoneValueType || product.stoneValueType || "per_piece";
+      const makingChargeType = item.makingChargeType || "per_gram";
+      const makingCharge = Number(item.makingCharge) || 0;
+      const stoneValue = Number(item.stoneValue) || 0;
+      const stoneValueType = item.stoneValueType || "per_piece";
       const stoneValueAmount = stoneValueType === "per_gram"
         ? stoneValue * stoneWeight * quantity
-        : stoneValue * quantity;
+        : stoneValueType === "fixed" ? stoneValue : stoneValue * quantity;
+      const hallmarkCharge = Number(item.hallmarkCharge) || 0;
       const discount = Number(item.discount) || 0;
 
       // GST only applies for GST invoices
@@ -193,8 +192,16 @@ export const createInvoice = async (req, res) => {
       const wastageAmount = metalValue * wastagePercent / 100;
       const makingChargeAmount = makingChargeType === "percent"
         ? metalValue * makingCharge / 100
-        : makingChargeType === "fixed" ? makingCharge * quantity : makingCharge * netWeight * quantity;
-      const itemTotal = Math.max(metalValue + wastageAmount + makingChargeAmount + stoneValueAmount - discount, 0);
+        : makingChargeType === "per_piece" ? makingCharge * quantity
+          : makingChargeType === "fixed" ? makingCharge : makingCharge * netWeight * quantity;
+      const itemTotal = Math.max(metalValue + wastageAmount + makingChargeAmount + stoneValueAmount + hallmarkCharge - discount, 0);
+
+      const inventoryNeeded = grossWeight * quantity;
+      const totalInventoryNeeded = (inventoryUsage.get(String(product._id)) || 0) + inventoryNeeded;
+      inventoryUsage.set(String(product._id), totalInventoryNeeded);
+      if (totalInventoryNeeded > Number(product.inventoryWeight || 0)) {
+        return res.status(400).json({ message: `Insufficient inventory for ${product.productName}. Available: ${Number(product.inventoryWeight || 0)} g` });
+      }
 
       const gstAmount = (itemTotal * gstRate) / 100;
 
@@ -213,7 +220,8 @@ export const createInvoice = async (req, res) => {
         quantity,
 
         grossWeight, netWeight, stoneWeight,
-        purity: product.purity, fineness: product.fineness, huid: product.huid,
+        purity: item.purity || "", fineness: item.fineness || "", huid: "",
+        hallmarkCharge,
         metalRatePerGram: selectedRate, wastagePercent, wastageAmount,
         makingChargeType, makingCharge, makingChargeAmount,
         stoneValue, stoneValueType, stoneValueAmount, discount,
@@ -236,17 +244,15 @@ export const createInvoice = async (req, res) => {
 
     // document number (async, DB-backed sequential)
 
-    const invoiceNumber = await generateDocumentNumber(documentType);
-
-    if (normalizeAmount(receivedAmount) > grandTotal) {
-      return res.status(400).json({
-        message: "Received amount cannot be greater than grand total",
-      });
+    const manualInvoiceNumber = typeof requestedInvoiceNumber === "string" ? requestedInvoiceNumber.trim() : "";
+    if (manualInvoiceNumber && await Invoice.exists({ invoiceNumber: manualInvoiceNumber })) {
+      return res.status(400).json({ message: "Invoice/estimate number already exists" });
     }
+    const invoiceNumber = manualInvoiceNumber || await generateDocumentNumber(documentType);
 
-    const received = getReceivedAmount(billingType, grandTotal, receivedAmount);
-    const balanceDue = Math.max(grandTotal - received, 0);
-    const paymentStatus = getPaymentStatus(grandTotal, received);
+    const received = 0;
+    const balanceDue = grandTotal;
+    const paymentStatus = "unpaid";
 
     // create invoice
 
@@ -254,10 +260,11 @@ export const createInvoice = async (req, res) => {
       invoiceNumber,
 
       documentType,
+      workflowStatus: documentType === "order" ? "inventory_reserved" : "invoiced",
 
       farmer: farmerId,
 
-      billingType,
+      billingType: "credit",
 
       rateType: activeRateType,
 
@@ -286,6 +293,8 @@ export const createInvoice = async (req, res) => {
       createdAt: dateWithPreservedTime(invoiceDate),
     });
 
+    await adjustInventory(invoiceProducts, -1);
+
     await createInvoiceLedgerEntries({
       invoice,
       farmerId: farmer._id,
@@ -302,6 +311,9 @@ export const createInvoice = async (req, res) => {
       invoice,
     });
   } catch (error) {
+    if (error?.code === 11000 && error?.keyPattern?.invoiceNumber) {
+      return res.status(400).json({ message: "Invoice/estimate number already exists" });
+    }
     res.status(500).json({
       message: error.message,
     });
@@ -406,6 +418,7 @@ export const deleteInvoice = async (req, res) => {
 
     await deleteInvoiceLedgerEntries(invoice);
 
+    await adjustInventory(invoice.products, 1);
     await Invoice.findByIdAndDelete(req.params.id);
     await recalculateCustomerLedger(farmerId);
 
@@ -430,6 +443,7 @@ export const updateInvoice = async (req, res) => {
       billingType = "credit",
       rateType,
       documentType = "gst_invoice",
+      invoiceNumber: requestedInvoiceNumber,
       products = [],
       invoiceDate,
       receivedAmount,
@@ -465,6 +479,7 @@ export const updateInvoice = async (req, res) => {
     let subTotal = 0;
     let totalGST = 0;
     const invoiceProducts = [];
+    const inventoryUsage = new Map();
 
     for (const item of products) {
       const product = await Product.findById(item.product);
@@ -474,29 +489,21 @@ export const updateInvoice = async (req, res) => {
         });
       }
 
-      let selectedRate = product.metalRatePerGram || product.cashRate || 0;
-      if (activeRateType === "Rate B") {
-        selectedRate = product.creditRate;
-      } else if (activeRateType === "Rate C") {
-        selectedRate = product.wholesaleRate;
-      }
-
-      if (item.selectedRate !== undefined && item.selectedRate !== "") {
-        selectedRate = Number(item.selectedRate);
-      }
+      const selectedRate = Number(item.selectedRate) || 0;
 
       const quantity = Number(item.quantity) || 1;
       const grossWeight = Number(item.grossWeight ?? product.grossWeight) || 0;
       const stoneWeight = Number(item.stoneWeight ?? product.stoneWeight) || 0;
       const netWeight = Math.max(grossWeight - stoneWeight, 0);
       const wastagePercent = Number(item.wastagePercent ?? product.wastagePercent) || 0;
-      const makingChargeType = item.makingChargeType || product.makingChargeType || "per_gram";
-      const makingCharge = Number(item.makingCharge ?? product.makingCharge) || 0;
-      const stoneValue = Number(item.stoneValue ?? product.stoneValue) || 0;
-      const stoneValueType = item.stoneValueType || product.stoneValueType || "per_piece";
+      const makingChargeType = item.makingChargeType || "per_gram";
+      const makingCharge = Number(item.makingCharge) || 0;
+      const stoneValue = Number(item.stoneValue) || 0;
+      const stoneValueType = item.stoneValueType || "per_piece";
       const stoneValueAmount = stoneValueType === "per_gram"
         ? stoneValue * stoneWeight * quantity
-        : stoneValue * quantity;
+        : stoneValueType === "fixed" ? stoneValue : stoneValue * quantity;
+      const hallmarkCharge = Number(item.hallmarkCharge) || 0;
       const discount = Number(item.discount) || 0;
 
       if (!product._id || quantity <= 0 || netWeight <= 0 || selectedRate <= 0) {
@@ -513,15 +520,23 @@ export const updateInvoice = async (req, res) => {
 
       const metalValue = netWeight * selectedRate * quantity;
       const wastageAmount = metalValue * wastagePercent / 100;
-      const makingChargeAmount = makingChargeType === "percent"
-        ? metalValue * makingCharge / 100
-        : makingChargeType === "fixed"
-          ? makingCharge * quantity
-          : makingCharge * netWeight * quantity;
+      const makingChargeAmount = makingChargeType === "per_piece"
+        ? makingCharge * quantity
+        : makingChargeType === "fixed" ? makingCharge : makingCharge * netWeight * quantity;
       const itemTotal = Math.max(
-        metalValue + wastageAmount + makingChargeAmount + stoneValueAmount - discount,
+        metalValue + wastageAmount + makingChargeAmount + stoneValueAmount + hallmarkCharge - discount,
         0,
       );
+
+      const oldWeight = invoice.products
+        .filter((existing) => String(existing.product) === String(product._id))
+        .reduce((total, existing) => total + Number(existing.grossWeight || 0) * Number(existing.quantity || 1), 0);
+      const availableWithOldWeight = Number(product.inventoryWeight || 0) + oldWeight;
+      const nextUsage = (inventoryUsage.get(String(product._id)) || 0) + grossWeight * quantity;
+      inventoryUsage.set(String(product._id), nextUsage);
+      if (nextUsage > availableWithOldWeight) {
+        return res.status(400).json({ message: `Insufficient inventory for ${product.productName}. Available: ${availableWithOldWeight} g` });
+      }
       const gstAmount = (itemTotal * gstRate) / 100;
       const finalAmount = itemTotal + gstAmount;
 
@@ -535,9 +550,10 @@ export const updateInvoice = async (req, res) => {
         grossWeight,
         netWeight,
         stoneWeight,
-        purity: product.purity,
-        fineness: product.fineness,
-        huid: product.huid,
+        purity: item.purity || "",
+        fineness: item.fineness || "",
+        huid: "",
+        hallmarkCharge,
         metalRatePerGram: selectedRate,
         wastagePercent,
         wastageAmount,
@@ -557,27 +573,27 @@ export const updateInvoice = async (req, res) => {
     }
 
     const grandTotal = subTotal + totalGST;
-    const requestedReceived =
-      receivedAmount !== undefined
-        ? receivedAmount
-        : invoice.paidAmount ?? invoice.receivedAmount ?? 0;
+    const received = 0;
+    const balanceDue = grandTotal;
+    const paymentStatus = "unpaid";
 
-    if (normalizeAmount(requestedReceived) > grandTotal) {
-      return res.status(400).json({
-        message: "Received amount cannot be greater than grand total",
-      });
+    const manualInvoiceNumber = typeof requestedInvoiceNumber === "string" ? requestedInvoiceNumber.trim() : "";
+    if (manualInvoiceNumber && await Invoice.exists({
+      invoiceNumber: manualInvoiceNumber,
+      _id: { $ne: invoice._id },
+    })) {
+      return res.status(400).json({ message: "Invoice/estimate number already exists" });
     }
 
-    const received = getReceivedAmount(billingType, grandTotal, requestedReceived);
-    const balanceDue = Math.max(grandTotal - received, 0);
-    const paymentStatus = getPaymentStatus(grandTotal, received);
-
     await deleteInvoiceLedgerEntries(invoice);
+    await adjustInventory(invoice.products, 1);
 
     invoice.farmer = farmer._id;
-    invoice.billingType = billingType;
+    if (manualInvoiceNumber) invoice.invoiceNumber = manualInvoiceNumber;
+    invoice.billingType = "credit";
     invoice.rateType = activeRateType;
     invoice.documentType = documentType;
+    invoice.workflowStatus = documentType === "order" ? "inventory_reserved" : "invoiced";
     invoice.gstEnabled = gstEnabled;
     invoice.products = invoiceProducts;
     invoice.subTotal = subTotal;
@@ -594,6 +610,8 @@ export const updateInvoice = async (req, res) => {
     }
 
     await invoice.save();
+
+    await adjustInventory(invoiceProducts, -1);
 
     await createInvoiceLedgerEntries({
       invoice,

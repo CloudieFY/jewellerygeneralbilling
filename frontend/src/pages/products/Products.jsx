@@ -40,7 +40,7 @@ const Products = () => {
     if (!search) return products;
 
     return products.filter((product) =>
-      [product.productName, product.category]
+      [product.productName, product.metalType]
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(search))
     );
@@ -90,18 +90,18 @@ const Products = () => {
         </div>
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <p className="text-xs font-black uppercase tracking-widest text-slate-500">
-            Hallmarked Items
+            Total Inventory
           </p>
           <p className="mt-2 text-3xl font-black text-blue-700">
-            {products.filter((product) => product.hallmarked).length}
+            {products.reduce((total, product) => total + Number(product.inventoryWeight || 0), 0).toLocaleString("en-IN", { maximumFractionDigits: 3 })} g
           </p>
         </div>
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <p className="text-xs font-black uppercase tracking-widest text-slate-500">
-            Categories
+            Metal Types
           </p>
           <p className="mt-2 text-3xl font-black text-blue-700">
-            {new Set(products.map((product) => product.category)).size}
+            {new Set(products.map((product) => product.metalType).filter(Boolean)).size}
           </p>
         </div>
       </div>
@@ -114,7 +114,7 @@ const Products = () => {
           />
           <input
             type="text"
-            placeholder="Search products by name or category"
+            placeholder="Search products by name or metal type"
             className="input-field pl-11 pr-12"
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}

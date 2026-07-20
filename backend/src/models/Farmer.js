@@ -42,6 +42,12 @@ const farmerSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
+    panNumber: {
+      type: String,
+      default: "",
+      trim: true,
+      uppercase: true,
+    },
 
     defaultRateType: {
       type: String,

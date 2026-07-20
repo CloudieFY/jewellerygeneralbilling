@@ -9,15 +9,13 @@ import Products from "./pages/products/Products";
 import AddProduct from "./pages/products/AddProduct";
 import EditProduct from "./pages/products/EditProduct";
 import ProductDetails from "./pages/products/ProductDetails";
-import Categories from "./pages/categories/Categories";
 import Invoices from "./pages/invoices/Invoices";
 import InvoiceDetails from "./pages/invoices/InvoiceDetails";
 import PrintInvoice from "./pages/invoices/PrintInvoice";
 import EditInvoice from "./pages/invoices/EditInvoice";
 import Billing from "./pages/billing/Billing";
-import Reports from "./pages/reports/Reports";
-import Users from "./pages/users/Users";
 import Settings from "./pages/settings/Settings";
+import Orders from "./pages/orders/Orders";
 
 import Login from "./pages/auth/Login";
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -32,15 +30,12 @@ const protectedRoutes = [
   { path: "/products/add", element: <AddProduct /> },
   { path: "/products/edit/:id", element: <EditProduct /> },
   { path: "/products/:id", element: <ProductDetails /> },
-  { path: "/categories", element: <Categories /> },
   { path: "/billing", element: <Billing /> },
-  { path: "/orders", element: <Navigate to="/billing" replace /> },
+  { path: "/orders", element: <Orders /> },
   { path: "/invoices", element: <Invoices /> },
   { path: "/invoices/create", element: <Navigate to="/billing" replace /> },
   { path: "/invoices/edit/:id", element: <EditInvoice /> },
   { path: "/invoices/:id", element: <InvoiceDetails /> },
-  { path: "/reports", element: <Reports /> },
-  { path: "/users", element: <Users /> },
   { path: "/settings", element: <Settings /> },
 ];
 

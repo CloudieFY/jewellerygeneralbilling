@@ -8,6 +8,7 @@ import {
   Phone,
   Printer,
   Receipt,
+  FilePlus2,
   User,
 } from "lucide-react";
 import API from "../../services/api";
@@ -171,6 +172,18 @@ const CustomerDetails = () => {
         </Link>
 
         <div className="flex flex-wrap gap-2">
+          <Link
+            to={`/billing?customerId=${id}&type=estimate`}
+            className="inline-flex items-center gap-2 rounded-2xl bg-amber-600 px-4 py-3 text-sm font-black text-white hover:bg-amber-700"
+          >
+            <FilePlus2 size={16} /> Create Estimate
+          </Link>
+          <Link
+            to={`/billing?customerId=${id}&type=invoice`}
+            className="inline-flex items-center gap-2 rounded-2xl bg-emerald-700 px-4 py-3 text-sm font-black text-white hover:bg-emerald-800"
+          >
+            <Receipt size={16} /> Create Invoice
+          </Link>
           <button
             type="button"
             onClick={handlePrintStatement}
@@ -190,6 +203,24 @@ const CustomerDetails = () => {
           </button>
         </div>
       </div>
+
+      <section className="statement-print-hidden rounded-3xl border border-amber-200 bg-gradient-to-r from-amber-50 to-white p-6 shadow-sm">
+        <p className="text-xs font-black uppercase tracking-[0.22em] text-amber-700">Connected Customer Order Flow</p>
+        <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-4">
+          {[
+            ["1", "Customer", "Contact and PAN stay linked"],
+            ["2", "Estimate", "Manual jewellery details reserve stock"],
+            ["3", "Confirm", "Edit the same estimate into GST Invoice"],
+            ["4", "Invoice", "Final bill remains in customer history"],
+          ].map(([step, title, description]) => (
+            <div key={step} className="rounded-2xl border border-amber-100 bg-white p-4">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-amber-700 text-xs font-black text-white">{step}</span>
+              <p className="mt-3 font-black text-slate-950">{title}</p>
+              <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">{description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <div ref={statementRef} className="statement-print-area space-y-6 rounded-3xl bg-white/0">
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
