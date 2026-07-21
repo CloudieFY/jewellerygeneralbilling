@@ -10,7 +10,7 @@ const orderSchema = new mongoose.Schema(
     itemDescription: { type: String, required: true, trim: true },
     metal: { type: String, required: true, trim: true },
     purity: { type: String, required: true, trim: true },
-    fixedRate: { type: Number, required: true, min: 0 },
+    fixedRate: { type: Number, default: null, min: 0 },
     advancePaid: { type: Number, default: 0, min: 0 },
     orderDate: { type: Date, required: true },
     dueDate: { type: Date, required: true },

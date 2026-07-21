@@ -22,11 +22,9 @@ export const createOrder = async (req, res) => {
     if (!customerName || !customerMobile || !itemDescription || !metal || !purity || !orderDate || !dueDate) {
       return res.status(400).json({ message: "Please complete all required order fields" });
     }
-    if (Number(fixedRate) < 0 || Number(advancePaid) < 0) {
+    const hasFixedRate = fixedRate !== undefined && fixedRate !== null && fixedRate !== "";
+    if ((hasFixedRate && Number(fixedRate) < 0) || Number(advancePaid) < 0) {
       return res.status(400).json({ message: "Rate and advance cannot be negative" });
-    }
-    if (Number(advancePaid) > Number(fixedRate)) {
-      return res.status(400).json({ message: "Advance paid cannot exceed fixed rate" });
     }
     if (new Date(dueDate) < new Date(orderDate)) {
       return res.status(400).json({ message: "Due date cannot be before order date" });
@@ -53,7 +51,7 @@ export const createOrder = async (req, res) => {
     const order = await Order.create({
       orderNumber: await nextOrderNumber(), customer: customer._id,
       customerName, customerMobile: customerMobile.trim(), customerAddress,
-      itemDescription, metal, purity, fixedRate: Number(fixedRate),
+      itemDescription, metal, purity, fixedRate: hasFixedRate ? Number(fixedRate) : null,
       advancePaid: Number(advancePaid), orderDate, dueDate, note,
       design: design || undefined,
     });

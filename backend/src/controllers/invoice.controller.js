@@ -520,9 +520,11 @@ export const updateInvoice = async (req, res) => {
 
       const metalValue = netWeight * selectedRate * quantity;
       const wastageAmount = metalValue * wastagePercent / 100;
-      const makingChargeAmount = makingChargeType === "per_piece"
-        ? makingCharge * quantity
-        : makingChargeType === "fixed" ? makingCharge : makingCharge * netWeight * quantity;
+      const makingChargeAmount = makingChargeType === "percent"
+        ? metalValue * makingCharge / 100
+        : makingChargeType === "per_piece"
+          ? makingCharge * quantity
+          : makingChargeType === "fixed" ? makingCharge : makingCharge * netWeight * quantity;
       const itemTotal = Math.max(
         metalValue + wastageAmount + makingChargeAmount + stoneValueAmount + hallmarkCharge - discount,
         0,

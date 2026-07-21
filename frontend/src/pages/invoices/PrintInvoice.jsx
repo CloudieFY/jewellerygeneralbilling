@@ -62,6 +62,9 @@ const DESIGN_EDITABLE_SELECTOR = [
   ".order-payment-upi",
 ].join(",");
 
+const INVOICE_PAGE_WIDTH_MM = 190.5;
+const INVOICE_PAGE_HEIGHT_MM = 254;
+
 const A4_PRINT_STYLE = `
 .invoice-shell {
   background: radial-gradient(circle at 10% 5%, rgba(217, 119, 6, 0.14), transparent 28rem), #fffaf0;
@@ -78,12 +81,12 @@ const A4_PRINT_STYLE = `
   flex-direction: column;
   align-items: center;
   gap: 14px;
-  min-width: 210mm;
+  min-width: 190.5mm;
 }
 
 .invoice-page {
-  width: 210mm;
-  height: 297mm;
+  width: 190.5mm;
+  height: 254mm;
   padding: var(--invoice-margin-top, 8mm) var(--invoice-margin-right, 8mm) var(--invoice-margin-bottom, 8mm) var(--invoice-margin-left, 8mm);
   box-sizing: border-box;
   background: #ffffff;
@@ -113,9 +116,9 @@ const A4_PRINT_STYLE = `
 
 .invoice-document.pdf-render {
   display: block;
-  width: 210mm;
-  min-width: 210mm;
-  max-width: 210mm;
+  width: 190.5mm;
+  min-width: 190.5mm;
+  max-width: 190.5mm;
   gap: 0;
   align-items: stretch;
   margin: 0;
@@ -124,8 +127,8 @@ const A4_PRINT_STYLE = `
 }
 
 .invoice-document.pdf-render .invoice-page {
-  width: 210mm;
-  height: 297mm;
+  width: 190.5mm;
+  height: 254mm;
   margin: 0;
   padding: var(--invoice-margin-top, 8mm) var(--invoice-margin-right, 8mm) var(--invoice-margin-bottom, 8mm) var(--invoice-margin-left, 8mm);
   box-shadow: none;
@@ -156,7 +159,7 @@ const A4_PRINT_STYLE = `
 
 .invoice-letterhead-image {
   position: relative;
-  height: 61mm;
+  height: 49mm;
   overflow: hidden;
   border-bottom: 1px solid #7b7057;
   background: #eee9dc;
@@ -173,7 +176,7 @@ const A4_PRINT_STYLE = `
 }
 
 .invoice-sale-title {
-  padding: 4mm 0 2mm;
+  padding: 2mm 0 1mm;
   text-align: center;
   color: #741326;
   font-family: Georgia, "Times New Roman", serif;
@@ -897,11 +900,11 @@ const A4_PRINT_STYLE = `
   background: rgba(255,255,255,.64);
 }
 
-.invoice-buyer-box, .invoice-meta-box { position: relative; min-height: 30mm; padding: 8mm 4mm 3mm; margin: 3mm 5mm; border: 1px solid #d3ad6a; border-radius: 2.5mm; }
+.invoice-buyer-box, .invoice-meta-box { position: relative; min-height: 25mm; padding: 6mm 4mm 2mm; margin: 2mm 5mm; box-sizing: border-box; border: 1px solid #d3ad6a; border-radius: 2.5mm; }
 .invoice-buyer-name { font-size: 15px; text-transform: uppercase; }
 .invoice-buyer-label { font-size: 11px; font-weight: 900; text-transform: uppercase; }
 .invoice-buyer-details, .invoice-meta-row { font-size: 10px; }
-.invoice-meta-row { padding: 2px 0; }
+.invoice-meta-row { padding: 1px 0; }
 .invoice-meta-row strong:last-child { font-size: 10.5px; }
 .parasmani-card-title { position: absolute; top: -3mm; left: 4mm; min-width: 28mm; padding: 3px 10px; border-radius: 2px; background: #741326; color: white; font-size: 9px; font-weight: 900; text-transform: uppercase; }
 
@@ -923,7 +926,7 @@ const A4_PRINT_STYLE = `
 .invoice-filler-row { display: none; }
 .invoice-table tfoot td { background: transparent; color: #29251f; border: 0; border-top: 1px solid #716b5d; }
 
-.invoice-footer { flex: 1 1 auto; border: 0; padding: 3mm 6mm 0; }
+.invoice-footer { flex: 1 1 auto; border: 0; padding: 2mm 6mm 3mm; }
 .invoice-footer-grid { margin-left: auto; width: 58%; border: 0; grid-template-columns: 0 0 100% !important; }
 .invoice-footer-cell { min-height: 0; border: 0; padding: 0; font-size: 9px; }
 .invoice-footer-cell:nth-child(1), .invoice-footer-cell:nth-child(2) { display: none; }
@@ -940,50 +943,36 @@ const A4_PRINT_STYLE = `
   content: none;
 }
 
-.parasmani-summary {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr) 1.15fr;
-  margin-top: 3mm;
-  border: 1px solid #c89235;
-  background: rgba(255,255,255,.76);
-}
-.parasmani-summary > div { padding: 4px; border-right: 1px solid #dfbd78; text-align: center; font-size: 8px; }
-.parasmani-summary > div:last-child { border: 0; background: #741326; color: white; }
-.parasmani-summary strong { display: block; margin-top: 3px; font-size: 9px; }
-.parasmani-summary-label { position: absolute; margin-top: -6mm; padding: 3px 12px; border-radius: 3px 3px 0 0; background: #b87917; color: white; font-size: 8px; font-weight: 900; }
-
-.parasmani-lower-grid { display: grid; grid-template-columns: 38% 62%; gap: 5mm; margin-top: 3mm; }
-.parasmani-words { min-height: 30mm; padding: 4mm; border: 1px solid #d5ad67; border-radius: 3mm; font-size: 9px; line-height: 1.5; }
+.parasmani-lower-grid { display: grid; grid-template-columns: 38% 62%; gap: 5mm; margin-top: 2mm; }
+.parasmani-words { min-height: 26mm; padding: 2mm; box-sizing: border-box; border: 1px solid #d5ad67; border-radius: 3mm; font-size: 8px; line-height: 1.3; }
 .parasmani-box-title { color: #741326; font-weight: 900; text-transform: uppercase; }
-.parasmani-signatures { display: flex; justify-content: space-around; margin-top: 13mm; font-size: 7px; text-decoration: overline; }
-.parasmani-for { margin-top: 3mm; text-align: center; color: #741326; font-size: 9px; font-weight: 900; }
+.parasmani-signatures { display: flex; justify-content: space-around; margin-top: 5mm; font-size: 6px; text-decoration: overline; }
+.parasmani-for { margin-top: 1.5mm; text-align: center; color: #741326; font-size: 8px; font-weight: 900; }
 .parasmani-totals { border-collapse: collapse; width: 100%; font-size: 9px; }
-.parasmani-totals td { padding: 3px 8px; border-bottom: 1px solid #dec79e; }
+.parasmani-totals td { padding: 2px 8px; border-bottom: 1px solid #dec79e; }
 .parasmani-totals td:last-child { text-align: right; font-weight: 900; }
 .parasmani-totals .total { background: #741326; color: white; font-weight: 900; }
 .parasmani-totals .net { color: #741326; font-size: 11px; font-weight: 900; }
-.parasmani-info-grid { display: grid; grid-template-columns: 20% 32% 48%; gap: 4mm; margin-top: 4mm; }
-.parasmani-info-box { min-height: 25mm; padding: 4mm; border: 1px solid #d5ad67; border-radius: 2mm; font-size: 8px; line-height: 1.45; }
-.parasmani-info-box h4 { margin: -4mm -4mm 3mm; padding: 3px 8px; border-radius: 2mm 2mm 0 0; background: #741326; color: white; text-align: center; font-size: 8px; }
+.parasmani-info-grid { display: grid; grid-template-columns: 32% 43% 25%; gap: 3mm; margin-top: 2mm; }
+.parasmani-info-box { min-height: 25mm; padding: 3mm; box-sizing: border-box; border: 1px solid #d5ad67; border-radius: 2mm; font-size: 8px; line-height: 1.3; }
+.parasmani-info-box h4 { margin: -3mm -3mm 2mm; padding: 3px 8px; border-radius: 2mm 2mm 0 0; background: #741326; color: white; text-align: center; font-size: 8px; }
 .parasmani-qr { display: flex; align-items: center; gap: 4mm; }
 .parasmani-qr img { width: 19mm; height: 19mm; object-fit: contain; }
-.parasmani-legal { display: grid; grid-template-columns: 34% 66%; margin-top: 3mm; border-top: 1px solid #d5ad67; border-bottom: 1px solid #d5ad67; font-size: 7px; }
-.parasmani-legal > div { padding: 3mm; border-right: 1px solid #dfbd78; }
-.parasmani-legal > div:last-child { border: 0; }
-.parasmani-legal ol { margin: 2px 0 0; padding-left: 12px; }
-.parasmani-hallmark { margin-top: 2mm; text-align: center; color: #741326; font-size: 8px; font-weight: 900; }
+.parasmani-footer-banner { position: relative; margin-top: 2mm; }
+.parasmani-footer-banner img { display: block; width: 100%; height: 29mm; object-fit: fill; }
+.parasmani-page-number { position: absolute; right: 3mm; bottom: 1.5mm; color: #4b2a12; font-size: 7px; font-weight: 900; }
 
 @media print {
   @page {
-    size: A4 portrait;
+    size: 7.5in 10in;
     margin: 0;
   }
 
   html,
   body,
   #root {
-    width: 210mm;
-    min-width: 210mm;
+    width: 190.5mm;
+    min-width: 190.5mm;
     margin: 0 !important;
     padding: 0 !important;
     background: #ffffff !important;
@@ -1018,15 +1007,15 @@ const A4_PRINT_STYLE = `
   }
 
   .invoice-document {
-    width: 210mm !important;
+    width: 190.5mm !important;
     gap: 0 !important;
     min-width: 0 !important;
     align-items: stretch !important;
   }
 
   .invoice-page {
-    width: 210mm !important;
-    height: 297mm !important;
+    width: 190.5mm !important;
+    height: 254mm !important;
     margin: 0 !important;
     padding: var(--invoice-margin-top, 8mm) var(--invoice-margin-right, 8mm) var(--invoice-margin-bottom, 8mm) var(--invoice-margin-left, 8mm) !important;
     box-shadow: none !important;
@@ -1264,7 +1253,8 @@ const PrintInvoice = () => {
       import("jspdf"),
     ]);
     return withCaptureRender(element, async () => {
-      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      const invoiceFormat = [INVOICE_PAGE_WIDTH_MM, INVOICE_PAGE_HEIGHT_MM];
+      const pdf = new jsPDF({ unit: "mm", format: invoiceFormat, orientation: "portrait" });
       const pageElements = [...element.querySelectorAll(".invoice-page")];
 
       for (let index = 0; index < pageElements.length; index += 1) {
@@ -1283,8 +1273,15 @@ const PrintInvoice = () => {
           windowWidth: document.documentElement.clientWidth,
           windowHeight: document.documentElement.clientHeight,
         });
-        if (index > 0) pdf.addPage("a4", "portrait");
-        pdf.addImage(canvas.toDataURL("image/jpeg", 1), "JPEG", 0, 0, 210, 297);
+        if (index > 0) pdf.addPage(invoiceFormat, "portrait");
+        pdf.addImage(
+          canvas.toDataURL("image/jpeg", 1),
+          "JPEG",
+          0,
+          0,
+          INVOICE_PAGE_WIDTH_MM,
+          INVOICE_PAGE_HEIGHT_MM,
+        );
       }
 
       return pdf.output("blob");
@@ -1591,7 +1588,7 @@ const PrintInvoice = () => {
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-black text-white shadow-sm hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
           >
             <Download size={17} />
-            {pdfBusy ? "Saving..." : isGst ? "Save PDF A4" : "Save Image"}
+            {pdfBusy ? "Saving..." : isGst ? "Save PDF (7.5 × 10 in)" : "Save Image"}
           </button>
 
           <button
@@ -1998,26 +1995,9 @@ const InvoiceFooter = ({
   const balanceAmount = Math.max(grandTotalRounded - receivedAmount, 0);
   const cgstAmount = toNumber(invoice?.totalGST) / 2;
   const gstRate = taxBreakup[0]?.rate || 0;
-  const products = invoice?.products || [];
-  const grossTotal = products.reduce((sum, item) => sum + toNumber(item.grossWeight) * toNumber(item.quantity, 1), 0);
-  const stoneWeightTotal = products.reduce((sum, item) => sum + toNumber(item.stoneWeight) * toNumber(item.quantity, 1), 0);
-  const netWeightTotal = products.reduce((sum, item) => sum + toNumber(item.netWeight) * toNumber(item.quantity, 1), 0);
-  const makingTotal = products.reduce((sum, item) => sum + toNumber(item.makingChargeAmount), 0);
-  const stoneChargeTotal = products.reduce((sum, item) => sum + toNumber(item.stoneValueAmount), 0);
-  const summaryPurity = products[0]?.purity || products[0]?.product?.purity || "-";
 
   return (
     <div className="invoice-footer">
-      <div className="parasmani-summary-label">GOLD SUMMARY</div>
-      <div className="parasmani-summary">
-        <div>GROSS WT.<strong>{formatCompactNumber(grossTotal)}</strong></div>
-        <div>LESS WT.<strong>{formatCompactNumber(stoneWeightTotal)}</strong></div>
-        <div>NET WT.<strong>{formatCompactNumber(netWeightTotal)}</strong></div>
-        <div>PURITY<strong>{summaryPurity}</strong></div>
-        <div>MAKING AMT.<strong>{formatNumber(makingTotal)}</strong></div>
-        <div>STONE CHG.<strong>{formatNumber(stoneChargeTotal)}</strong></div>
-        <div>FINAL AMOUNT<strong>₹ {formatNumber(invoice?.subTotal)}</strong></div>
-      </div>
       <div className="parasmani-lower-grid">
         <div className="parasmani-words">
           <div className="parasmani-box-title">Amount chargeable in words</div>
@@ -2037,18 +2017,14 @@ const InvoiceFooter = ({
       </div>
 
       <div className="parasmani-info-grid">
-        <div className="parasmani-info-box"><h4>Mode of Payment</h4><strong>{invoice?.paymentMode || invoice?.billingType || "Cash"}</strong><br/>₹ {formatNumber(receivedAmount)}</div>
-        <div className="parasmani-info-box"><h4>Company Bank Details</h4>Bank Name : <strong>{shop.bankName}</strong><br/>A/c Holder : <strong>{shop.accountHolderName}</strong><br/>A/c No. : <strong>{shop.accountNumber}</strong><br/>Branch : <strong>{shop.bankBranch}</strong><br/>IFSC Code : <strong>{shop.ifscCode}</strong></div>
         <div className="parasmani-info-box"><h4>Scan QR Code With UPI Apps To Pay</h4><div className="parasmani-qr"><img src={ORDER_PAYMENT_QR} alt="Payment QR"/><div><strong>UPI ID</strong><br/>{shop.paymentUpiId}</div></div></div>
+        <div className="parasmani-info-box"><h4>Company Bank Details</h4>Bank Name : <strong>{shop.bankName}</strong><br/>A/c Holder : <strong>{shop.accountHolderName}</strong><br/>A/c No. : <strong>{shop.accountNumber}</strong><br/>Branch : <strong>{shop.bankBranch}</strong><br/>IFSC Code : <strong>{shop.ifscCode}</strong></div>
+        <div className="parasmani-info-box"><h4>Mode of Payment</h4><strong>{invoice?.paymentMode || invoice?.billingType || "Cash"}</strong><br/>₹ {formatNumber(receivedAmount)}</div>
       </div>
 
-      <div className="parasmani-legal">
-        <div><div className="parasmani-box-title">Declaration</div>We declare that this invoice shows the actual price of the goods described and all particulars are true and correct.</div>
-        <div><div className="parasmani-box-title">Terms & Conditions</div><ol>{termsList.map((term) => <li key={term}>{term}</li>)}<li>Exchange of item is permissible within 2 days.</li><li>This is a computer generated invoice, no signature required.</li></ol></div>
-      </div>
-      <div className="parasmani-hallmark">
-        BIS CERTIFIED HALLMARK
-        <span style={{ float: "right" }}>Page {pageCount} of {pageCount}</span>
+      <div className="parasmani-footer-banner">
+        <img src="/parasmani-invoice-footer.png" alt="Invoice terms, BIS hallmark and authorised signature" />
+        <span className="parasmani-page-number">Page {pageCount} of {pageCount}</span>
       </div>
     </div>
   );
