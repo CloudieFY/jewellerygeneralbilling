@@ -893,19 +893,19 @@ const A4_PRINT_STYLE = `
 
 .invoice-party-grid {
   grid-template-columns: 61% 39%;
-  border-bottom: 1px solid #756c55;
+  border-bottom: 0;
   background: rgba(255,255,255,.64);
 }
 
-.invoice-buyer-box, .invoice-meta-box { position: relative; min-height: 25mm; padding: 6mm 4mm 2mm; margin: 2mm 5mm; box-sizing: border-box; border: 1px solid #d3ad6a; border-radius: 2.5mm; }
+.invoice-buyer-box, .invoice-meta-box { position: relative; min-height: 25mm; padding: 5mm 4mm 2mm; margin: 6mm 5mm 2mm; box-sizing: border-box; border: 1px solid #d3ad6a; border-radius: 2.5mm; }
 .invoice-buyer-name { font-size: 15px; text-transform: uppercase; }
 .invoice-buyer-label { font-size: 11px; font-weight: 900; text-transform: uppercase; }
 .invoice-buyer-details, .invoice-meta-row { font-size: 10px; }
 .invoice-meta-row { padding: 1px 0; }
 .invoice-meta-row strong:last-child { font-size: 10.5px; }
-.parasmani-card-title { position: absolute; top: -3mm; left: 4mm; min-width: 28mm; padding: 3px 10px; border-radius: 2px; background: #741326; color: white; font-size: 9px; font-weight: 900; text-transform: uppercase; }
+.parasmani-card-title { position: absolute; top: -5mm; left: 4mm; min-width: 28mm; padding: 0 2px; border-radius: 0; background: transparent; color: #741326; font-size: 9px; font-weight: 900; text-transform: uppercase; }
 
-.invoice-table-area { flex: 0 0 auto; padding: 0 6mm; }
+.invoice-table-area { flex: 0 0 auto; padding: 2.5mm 6mm 0; }
 .invoice-table { flex: none; height: auto; background: rgba(255,255,255,.68); font-size: 9px; }
 .gst-invoice-page .invoice-table { min-height: 38mm; }
 .gst-invoice-page .invoice-table tbody td { vertical-align: top; padding-top: 5px; }
@@ -979,8 +979,8 @@ const A4_PRINT_STYLE = `
     padding: 0 !important;
     background: #ffffff !important;
     overflow: visible !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: economy !important;
+    print-color-adjust: economy !important;
   }
 
   .print\\:hidden {
@@ -1037,6 +1037,47 @@ const A4_PRINT_STYLE = `
     border-color: transparent !important;
     background: transparent !important;
     box-shadow: none !important;
+    background: #ffffff !important;
+  }
+
+  /* Black-and-white printer output: print only invoice matter. Decorative
+     artwork and colour fills consume toner and turn into a dark grey page. */
+  .invoice-sheet,
+  .invoice-sheet * {
+    background-color: transparent !important;
+    background-image: none !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    -webkit-print-color-adjust: economy !important;
+    print-color-adjust: economy !important;
+  }
+
+  .invoice-sheet::before,
+  .invoice-sheet::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  .invoice-letterhead-image,
+  .parasmani-footer-banner img {
+    visibility: hidden !important;
+  }
+
+  .invoice-table th,
+  .invoice-table td,
+  .invoice-buyer-box,
+  .invoice-meta-box,
+  .parasmani-words,
+  .parasmani-info-box,
+  .parasmani-totals td {
+    border-color: #000000 !important;
+  }
+
+  .parasmani-totals .total {
+    border-top: 1.5px solid #000000 !important;
+    border-bottom: 1.5px solid #000000 !important;
+    font-weight: 900 !important;
   }
 
   .invoice-document.preprinted-paper .invoice-letterhead-image,
