@@ -45,6 +45,7 @@ const getReceivedAmount = (billingType, grandTotal, receivedAmount = 0) => {
   if (billingType === "cash") return grandTotal;
 
   const paid = Math.max(normalizeAmount(receivedAmount), 0);
+  if (Math.abs(grandTotal - paid) <= 0.5) return grandTotal;
   return Math.min(paid, grandTotal);
 };
 
@@ -243,7 +244,9 @@ export const createInvoice = async (req, res) => {
 
     // grand total
 
-    const grandTotal = subTotal + totalGST;
+    const exactTotal = subTotal + totalGST;
+    const grandTotal = Math.round(exactTotal);
+    const roundOff = Math.round((grandTotal - exactTotal + Number.EPSILON) * 100) / 100;
 
     // document number (async, DB-backed sequential)
 
@@ -281,6 +284,8 @@ export const createInvoice = async (req, res) => {
       subTotal,
 
       totalGST,
+
+      roundOff,
 
       grandTotal,
 
@@ -393,16 +398,20 @@ export const printInvoice = async (req, res) => {
       { $match: { invoice: invoice._id, type: "payment" } },
       { $group: { _id: null, total: { $sum: "$amount" } } },
     ]);
-    const receivedForPrint = Math.max(
+    const savedReceivedForPrint = Math.max(
       normalizeAmount(invoice.receivedAmount),
       normalizeAmount(invoice.paidAmount),
       normalizeAmount(linkedPayments[0]?.total)
     );
+    const printableGrandTotal = normalizeAmount(invoice.grandTotal);
+    const receivedForPrint = Math.abs(printableGrandTotal - savedReceivedForPrint) <= 0.5
+      ? printableGrandTotal
+      : savedReceivedForPrint;
     const printableInvoice = invoice.toObject();
     printableInvoice.receivedAmount = receivedForPrint;
     printableInvoice.paidAmount = receivedForPrint;
     printableInvoice.balanceDue = Math.max(
-      normalizeAmount(invoice.grandTotal) - receivedForPrint,
+      printableGrandTotal - receivedForPrint,
       0
     );
 
@@ -596,7 +605,9 @@ export const updateInvoice = async (req, res) => {
       });
     }
 
-    const grandTotal = subTotal + totalGST;
+    const exactTotal = subTotal + totalGST;
+    const grandTotal = Math.round(exactTotal);
+    const roundOff = Math.round((grandTotal - exactTotal + Number.EPSILON) * 100) / 100;
     const received = getReceivedAmount(billingType, grandTotal, receivedAmount);
     const balanceDue = Math.max(grandTotal - received, 0);
     const paymentStatus = getPaymentStatus(grandTotal, received);
@@ -626,6 +637,7 @@ export const updateInvoice = async (req, res) => {
     invoice.products = invoiceProducts;
     invoice.subTotal = subTotal;
     invoice.totalGST = totalGST;
+    invoice.roundOff = roundOff;
     invoice.grandTotal = grandTotal;
     invoice.paidAmount = received;
     invoice.receivedAmount = received;

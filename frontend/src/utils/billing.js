@@ -33,5 +33,11 @@ export const calculateLine = (item, product, _rateType, gstEnabled = true) => {
   const gstAmount = baseAmount * gstRate / 100;
   return { quantity, netWeight, grossWeight, stoneWeight, rate, metalValue, wastagePercent, wastageAmount, makingChargeType, makingCharge, makingChargeAmount, stoneValue, stoneValueType, stoneValueAmount, hallmarkCharge, discount, baseAmount, gstRate, gstAmount, lineTotal: baseAmount + gstAmount, sqFt: 0 };
 };
-export const calculateInvoiceTotals = (items=[], products=[], rateType="Rate A", gstEnabled=true) => items.reduce((t,item)=>{const l=calculateLine(item,products.find(p=>p._id===item.product),rateType,gstEnabled);return {subTotal:t.subTotal+l.baseAmount,totalGST:t.totalGST+l.gstAmount,grandTotal:t.grandTotal+l.lineTotal};},{subTotal:0,totalGST:0,grandTotal:0});
+export const calculateInvoiceTotals = (items=[], products=[], rateType="Rate A", gstEnabled=true) => {
+  const totals = items.reduce((t,item)=>{const l=calculateLine(item,products.find(p=>p._id===item.product),rateType,gstEnabled);return {subTotal:t.subTotal+l.baseAmount,totalGST:t.totalGST+l.gstAmount};},{subTotal:0,totalGST:0});
+  const exactTotal = totals.subTotal + totals.totalGST;
+  const grandTotal = Math.round(exactTotal);
+  const roundOff = Math.round((grandTotal - exactTotal + Number.EPSILON) * 100) / 100;
+  return { ...totals, roundOff, grandTotal };
+};
 export const formatCurrency = (v) => `Rs ${toNumber(v).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})}`;

@@ -176,6 +176,10 @@ const InvoicePreview = ({
               <span>{formatCurrency(summary.totalGST)}</span>
             </div>
           )}
+          <div className="flex items-center justify-between text-sm font-bold text-slate-600">
+            <span>Round Off</span>
+            <span>{formatCurrency(summary.roundOff)}</span>
+          </div>
           <div className="border-t border-slate-200 pt-4">
             <div className="flex items-center justify-between">
               <span className="text-sm font-black uppercase tracking-widest text-amber-800">

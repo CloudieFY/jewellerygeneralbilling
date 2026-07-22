@@ -1243,9 +1243,10 @@ const PrintInvoice = () => {
     return [...groups.values()].sort((a, b) => a.rate - b.rate);
   }, [invoice]);
 
-  const grandTotal = toNumber(invoice?.grandTotal);
-  const grandTotalRounded = Math.round(grandTotal);
-  const roundOff = grandTotalRounded - grandTotal;
+  const grandTotalRounded = Math.round(toNumber(invoice?.grandTotal));
+  const roundOff = invoice?.roundOff !== undefined
+    ? toNumber(invoice.roundOff)
+    : Math.round((grandTotalRounded - toNumber(invoice?.subTotal) - toNumber(invoice?.totalGST) + Number.EPSILON) * 100) / 100;
   const amountInWords = numberToWords(grandTotalRounded);
 
   const getExportFilename = (extension) =>
@@ -1977,11 +1978,15 @@ const InvoiceFooter = ({
 }) => {
   // Older invoices can have receivedAmount=0 while ledger recalculation has
   // correctly populated paidAmount. Use the greater saved value for printing.
-  const receivedAmount = Math.max(
+  const savedReceivedAmount = Math.max(
     toNumber(invoice?.receivedAmount),
     toNumber(invoice?.paidAmount)
   );
-  const balanceAmount = Math.max(grandTotalRounded - receivedAmount, 0);
+  const receivedAmount = Math.abs(grandTotalRounded - savedReceivedAmount) <= 0.5
+    ? grandTotalRounded
+    : savedReceivedAmount;
+  const rawBalanceAmount = Math.max(grandTotalRounded - receivedAmount, 0);
+  const balanceAmount = rawBalanceAmount <= 0.5 ? 0 : rawBalanceAmount;
   const cgstAmount = toNumber(invoice?.totalGST) / 2;
   const gstRate = taxBreakup[0]?.rate || 0;
 
