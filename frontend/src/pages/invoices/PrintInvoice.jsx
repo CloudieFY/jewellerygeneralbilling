@@ -25,12 +25,9 @@ const FALLBACK_SHOP = {
 };
 
 const ORDER_PAYMENT_QR = "/payment-qr-crop.jpeg";
-const ORDER_LOGO_NAME = "Walia's Creative";
-const ORDER_SERVICES = ["Solvent", "Eco-Solvent", "Glow Sign Board", "Signage Solutions"];
-const GST_COLUMN_WIDTHS = [5, 18, 7, 7, 7, 8, 10, 7, 10, 9, 12];
-const ORDER_COLUMN_WIDTHS = [5, 23, 13, 14, 7, 10, 10, 9, 9];
+const GST_COLUMN_WIDTHS = [5, 20, 8, 8, 8, 9, 11, 8, 10, 13];
 const MIN_COLUMN_WIDTH = 4;
-const DESIGN_SCHEMA_VERSION = 3;
+const DESIGN_SCHEMA_VERSION = 4;
 const DESIGN_EDITABLE_SELECTOR = [
   // GST Invoice elements
   ".invoice-document-heading",
@@ -943,21 +940,26 @@ const A4_PRINT_STYLE = `
   content: none;
 }
 
-.parasmani-lower-grid { display: grid; grid-template-columns: 38% 62%; gap: 5mm; margin-top: 2mm; }
-.parasmani-words { min-height: 26mm; padding: 2mm; box-sizing: border-box; border: 1px solid #d5ad67; border-radius: 3mm; font-size: 8px; line-height: 1.3; }
+.parasmani-lower-grid { display: grid; grid-template-columns: 30% 70%; gap: 4mm; margin-top: 2mm; }
+.parasmani-words { min-height: 18mm; padding: 2mm; box-sizing: border-box; border: 1px solid #d5ad67; border-radius: 3mm; display: flex; flex-direction: column; font-size: 7px; line-height: 1.2; }
 .parasmani-box-title { color: #741326; font-weight: 900; text-transform: uppercase; }
-.parasmani-signatures { display: flex; justify-content: space-around; margin-top: 5mm; font-size: 6px; text-decoration: overline; }
-.parasmani-for { margin-top: 1.5mm; text-align: center; color: #741326; font-size: 8px; font-weight: 900; }
+.parasmani-signatures { display: flex; justify-content: space-between; gap: 3mm; margin-top: auto; padding-top: 10mm; font-size: 5px; text-align: center; }
+.parasmani-signatures span { width: 48%; padding-top: 1mm; border-top: 1px solid #6b5a45; }
+.parasmani-for { margin-top: 1mm; text-align: center; color: #741326; font-size: 7px; font-weight: 900; }
 .parasmani-totals { border-collapse: collapse; width: 100%; font-size: 9px; }
 .parasmani-totals td { padding: 2px 8px; border-bottom: 1px solid #dec79e; }
 .parasmani-totals td:last-child { text-align: right; font-weight: 900; }
 .parasmani-totals .total { background: #741326; color: white; font-weight: 900; }
 .parasmani-totals .net { color: #741326; font-size: 11px; font-weight: 900; }
-.parasmani-info-grid { display: grid; grid-template-columns: 32% 43% 25%; gap: 3mm; margin-top: 2mm; }
+.parasmani-totals .parasmani-write-space td { height: 9mm; border-bottom: 1px solid #dec79e; background: transparent; }
+.parasmani-info-grid { display: grid; grid-template-columns: 100%; margin-top: 2mm; }
 .parasmani-info-box { min-height: 25mm; padding: 3mm; box-sizing: border-box; border: 1px solid #d5ad67; border-radius: 2mm; font-size: 8px; line-height: 1.3; }
 .parasmani-info-box h4 { margin: -3mm -3mm 2mm; padding: 3px 8px; border-radius: 2mm 2mm 0 0; background: #741326; color: white; text-align: center; font-size: 8px; }
 .parasmani-qr { display: flex; align-items: center; gap: 4mm; }
 .parasmani-qr img { width: 19mm; height: 19mm; object-fit: contain; }
+.parasmani-bank-with-qr { display: grid; grid-template-columns: auto 1fr 1.6fr; align-items: center; gap: 5mm; }
+.parasmani-bank-with-qr > img { width: 19mm; height: 19mm; object-fit: contain; }
+.parasmani-bank-details { padding-left: 5mm; border-left: 1px solid #dec79e; }
 .parasmani-footer-banner { position: relative; margin-top: 2mm; }
 .parasmani-footer-banner img { display: block; width: 100%; height: 29mm; object-fit: fill; }
 .parasmani-page-number { position: absolute; right: 3mm; bottom: 1.5mm; color: #4b2a12; font-size: 7px; font-weight: 900; }
@@ -1024,6 +1026,36 @@ const A4_PRINT_STYLE = `
   .invoice-shell > * {
     margin-top: 0 !important;
   }
+
+  /* The Parasmani stationery already contains the artwork, letterhead and
+     bottom terms. Keep their measured space, but do not put ink over them. */
+  .invoice-document.preprinted-paper .invoice-page {
+    background: transparent !important;
+  }
+
+  .invoice-document.preprinted-paper .invoice-sheet {
+    border-color: transparent !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .invoice-document.preprinted-paper .invoice-letterhead-image,
+  .invoice-document.preprinted-paper .parasmani-footer-banner {
+    visibility: hidden !important;
+  }
+
+  /* 8 mm page inset + 27 mm spacer = content begins at about 35 mm,
+     immediately below the stationery header measured in the supplied photo. */
+  .invoice-document.preprinted-paper .invoice-letterhead-image {
+    height: 27mm !important;
+    border: 0 !important;
+  }
+
+  /* Preserve the pre-printed footer area (it begins at roughly 230 mm). */
+  .invoice-document.preprinted-paper .parasmani-footer-banner,
+  .invoice-document.preprinted-paper .parasmani-footer-banner img {
+    height: 17mm !important;
+  }
 }
 `;
 
@@ -1069,6 +1101,7 @@ const PrintInvoice = () => {
   const [error, setError] = useState("");
   const [pdfBusy, setPdfBusy] = useState(false);
   const [whatsAppBusy, setWhatsAppBusy] = useState(false);
+  const [printOnPreprintedPaper, setPrintOnPreprintedPaper] = useState(true);
   const [designMode, setDesignMode] = useState(false);
   const [selectedDesignLabel, setSelectedDesignLabel] = useState("Nothing selected");
   const [tableColumnWidths, setTableColumnWidths] = useState(GST_COLUMN_WIDTHS);
@@ -1114,14 +1147,12 @@ const PrintInvoice = () => {
       const savedDesign = storedDesign.schemaVersion === DESIGN_SCHEMA_VERSION
         ? storedDesign
         : {};
-      const expectedColumnCount = orderDocument
-        ? ORDER_COLUMN_WIDTHS.length
-        : GST_COLUMN_WIDTHS.length;
+      const expectedColumnCount = GST_COLUMN_WIDTHS.length;
       const savedColumnWidths = savedDesign.tableColumnWidths;
       setTableColumnWidths(
         Array.isArray(savedColumnWidths) && savedColumnWidths.length === expectedColumnCount
           ? savedColumnWidths
-          : orderDocument ? ORDER_COLUMN_WIDTHS : GST_COLUMN_WIDTHS
+          : GST_COLUMN_WIDTHS
       );
       const elements = [...root.querySelectorAll(DESIGN_EDITABLE_SELECTOR)];
       elements.forEach((element, index) => {
@@ -1212,11 +1243,6 @@ const PrintInvoice = () => {
     return [...groups.values()].sort((a, b) => a.rate - b.rate);
   }, [invoice]);
 
-  const termsList = [
-    settings.invoiceTermOne || "All disputes are subject to Raipur Jurisdiction only.",
-    settings.invoiceTermTwo || "E.&O.E. GST rules apply as current regulations.",
-  ];
-
   const grandTotal = toNumber(invoice?.grandTotal);
   const grandTotalRounded = Math.round(grandTotal);
   const roundOff = grandTotalRounded - grandTotal;
@@ -1288,24 +1314,7 @@ const PrintInvoice = () => {
     });
   };
 
-  const createImageBlob = async (mimeType = "image/jpeg") => {
-    const element = document.getElementById("invoice-a4-wrapper");
-    if (!element) return null;
-
-    const html2canvas = (await import("html2canvas")).default;
-    return withCaptureRender(element, async () => {
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-      });
-      return new Promise((resolve) => canvas.toBlob(resolve, mimeType, 0.95));
-    });
-  };
-
-  const createExportBlob = (filename) =>
-    isGst ? createPdfBlob(filename) : createImageBlob("image/jpeg");
+  const createExportBlob = () => createPdfBlob();
 
   const handlePrint = () => {
     window.print();
@@ -1479,7 +1488,7 @@ const PrintInvoice = () => {
 
     setPdfBusy(true);
     try {
-      const filename = getExportFilename(isGst ? "pdf" : "jpg");
+      const filename = getExportFilename("pdf");
       const blob = await createExportBlob(filename);
       if (blob) downloadBlob(blob, filename);
     } finally {
@@ -1498,14 +1507,14 @@ const PrintInvoice = () => {
 
     setWhatsAppBusy(true);
     try {
-      const extension = isGst ? "pdf" : "jpg";
-      const fileTypeLabel = isGst ? "PDF" : "Image";
+      const extension = "pdf";
+      const fileTypeLabel = "PDF";
       const filename = getExportFilename(extension);
       const blob = await createExportBlob(filename);
       if (!blob) return;
 
       const sharedFile = new File([blob], filename, {
-        type: isGst ? "application/pdf" : "image/jpeg",
+        type: "application/pdf",
       });
       const date = formatDate(invoice?.createdAt);
       const message = `${docLabel} #${invoice?.invoiceNumber}\nDate: ${date}\nCustomer: ${invoice?.farmer?.name || "-"}\nAmount: Rs ${formatNumber(grandTotalRounded)}\n\n${fileTypeLabel} invoice is attached.`;
@@ -1558,6 +1567,15 @@ const PrintInvoice = () => {
         </Link>
 
         <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end">
+          <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-black text-amber-900">
+              <input
+                type="checkbox"
+                checked={printOnPreprintedPaper}
+                onChange={(event) => setPrintOnPreprintedPaper(event.target.checked)}
+                className="h-4 w-4 accent-amber-700"
+              />
+              Pre-printed paper
+          </label>
           <button
             type="button"
             onClick={() => setDesignEditing(!designMode)}
@@ -1571,7 +1589,7 @@ const PrintInvoice = () => {
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-3 text-sm font-black text-white shadow-sm hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-70"
           >
             <MessageCircle size={17} />
-            {whatsAppBusy ? "Preparing..." : `Send ${isGst ? "PDF" : "Image"} on WhatsApp`}
+            {whatsAppBusy ? "Preparing..." : "Send PDF on WhatsApp"}
           </button>
 
           <Link
@@ -1588,7 +1606,7 @@ const PrintInvoice = () => {
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-black text-white shadow-sm hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
           >
             <Download size={17} />
-            {pdfBusy ? "Saving..." : isGst ? "Save PDF (7.5 × 10 in)" : "Save Image"}
+            {pdfBusy ? "Saving..." : "Save PDF (7.5 × 10 in)"}
           </button>
 
           <button
@@ -1699,7 +1717,7 @@ const PrintInvoice = () => {
         <div
           id="invoice-a4-wrapper"
           ref={printRef}
-          className="invoice-document"
+          className={`invoice-document ${printOnPreprintedPaper ? "preprinted-paper" : ""}`}
           onClickCapture={handleDesignSelect}
         >
           {pages.map((pageItems, pageIndex) => {
@@ -1708,7 +1726,7 @@ const PrintInvoice = () => {
 
             return (
               <div
-                className={`invoice-page ${isGst ? "gst-invoice-page" : "order-invoice-page"}`}
+                className="invoice-page gst-invoice-page"
                 key={`invoice-page-${pageIndex}`}
                 style={invoicePageStyle}
               >
@@ -1723,13 +1741,13 @@ const PrintInvoice = () => {
                   />
 
                   <div className="invoice-page-body">
-                    {isGst && <div className="invoice-sale-title">GST INVOICE<span>GOLD SALE</span></div>}
                     <div className="invoice-table-area">
                       <ItemsTable
                         columnWidths={tableColumnWidths}
                         designMode={designMode}
                         invoice={invoice}
-                        isGst={isGst}
+                        isGst={true}
+                        showTax={isGst}
                         onColumnResize={resizeTableColumns}
                         pageItems={pageItems}
                         serialOffset={serialOffset}
@@ -1752,7 +1770,6 @@ const PrintInvoice = () => {
                         roundOff={roundOff}
                         shop={shop}
                         taxBreakup={taxBreakup}
-                        termsList={termsList}
                         pageCount={pages.length}
                       />
                     )}
@@ -1767,11 +1784,7 @@ const PrintInvoice = () => {
   );
 };
 
-const InvoiceHeader = ({ invoice, isGst, shop }) => {
-  if (!isGst) {
-    return <OrderHeader invoice={invoice} shop={shop} />;
-  }
-
+const InvoiceHeader = ({ invoice, isGst }) => {
   const customerAddress = [
     invoice?.farmer?.address,
     invoice?.farmer?.village,
@@ -1794,7 +1807,7 @@ const InvoiceHeader = ({ invoice, isGst, shop }) => {
             <div className="invoice-buyer-details">
               <div>{customerAddress || "-"}</div>
               <div>Mob.: {invoice?.farmer?.mobileNumber || "-"}</div>
-              <div>GST: {invoice?.farmer?.gstNumber || "-"}</div>
+              {isGst && <div>GST: {invoice?.farmer?.gstNumber || "-"}</div>}
             </div>
           </div>
         </div>
@@ -1815,42 +1828,15 @@ const InvoiceHeader = ({ invoice, isGst, shop }) => {
           </div>
           <div className="invoice-meta-row">
             <strong>Document Type</strong>
-            <strong data-design-movable="true" data-design-special-id="doc-type">GST Invoice</strong>
+            <strong data-design-movable="true" data-design-special-id="doc-type">
+              {isGst ? "GST Invoice" : "Estimate Order"}
+            </strong>
           </div>
         </div>
       </div>
     </>
   );
 };
-
-const OrderHeader = ({ invoice, shop }) => (
-  <>
-    <div className="order-letterhead-top">
-      <h1 className="order-logo" data-design-movable="true" data-design-special-id="company-name">{ORDER_LOGO_NAME}</h1>
-      <ul className="order-checklist">
-        {ORDER_SERVICES.map((service) => (
-          <li key={service}>{service}</li>
-        ))}
-      </ul>
-    </div>
-
-    <div className="order-address-line" data-design-movable="true" data-design-special-id="company-address">
-      {shop.shopAddress}
-      {shop.shopMobile ? ` | Handfone : ${shop.shopMobile}` : ""}
-      {shop.shopEmail ? ` | e-mail : ${shop.shopEmail}` : ""}
-    </div>
-
-    <div className="order-party-row">
-      <div data-design-movable="true" data-design-special-id="party-details">
-        M/s <strong>{invoice?.farmer?.name || "-"}</strong>
-      </div>
-      <div className="order-party-right">
-        <div>Inv.No. <strong>{invoice?.invoiceNumber}</strong></div>
-        <div>Date <strong>{formatDate(invoice?.createdAt)}</strong></div>
-      </div>
-    </div>
-  </>
-);
 
 const ItemsTable = ({
   columnWidths,
@@ -1861,10 +1847,14 @@ const ItemsTable = ({
   pageItems,
   serialOffset,
   showPageTotal,
+  showTax,
 }) => {
   const headings = isGst
     ? ["SR NO", "PRODUCT DESCRIPTION", "GS WT.", "LESS WT.", "NT WT.", "PURITY", "RATE (₹)", "MAKING (%)", "MAKING AMT (₹)", "STONE CHG. (₹)", "FINAL AMT (₹)"]
     : ["S. No.", "Jewellery", "Purity", "Gross / Net Wt.", "Pcs.", "Rate / g", "Making", "Stone", "Amount"];
+  const printableHeadings = isGst
+    ? headings.filter((heading) => !heading.startsWith("MAKING AMT"))
+    : headings;
 
   return (
     <table className="invoice-table">
@@ -1875,10 +1865,10 @@ const ItemsTable = ({
       </colgroup>
       <thead>
         <tr>
-          {headings.map((heading, index) => (
+          {printableHeadings.map((heading, index) => (
             <th key={heading}>
               {heading}
-              {designMode && index < headings.length - 1 && (
+              {designMode && index < printableHeadings.length - 1 && (
                 <span
                   className="invoice-column-resizer"
                   contentEditable="false"
@@ -1921,7 +1911,6 @@ const ItemsTable = ({
                       ? `${formatCompactNumber(item.makingCharge)}%`
                       : "-"}
                   </td>
-                  <td className="rate-cell">{formatNumber(item.makingChargeAmount || item.makingCharge)}</td>
                   <td className="rate-cell">{formatNumber(item.stoneValueAmount || item.stoneValue)}</td>
                   <td className="amount-cell amount-highlight">{formatNumber(amount)}</td>
                 </>
@@ -1946,10 +1935,10 @@ const ItemsTable = ({
         })}
         <FillerRow isGst={isGst} />
       </tbody>
-      {showPageTotal && isGst && (
+      {showPageTotal && showTax && (
         <tfoot>
           <tr>
-            <td colSpan={10}>Total Taxable Amount</td>
+            <td colSpan={9}>Total Taxable Amount</td>
             <td className="amount-cell amount-highlight">{formatNumber(invoice?.subTotal)}</td>
           </tr>
         </tfoot>
@@ -1984,14 +1973,14 @@ const InvoiceFooter = ({
   roundOff,
   shop,
   taxBreakup,
-  termsList,
   pageCount,
 }) => {
-  if (!isGst) {
-    return <OrderFooter grandTotalRounded={grandTotalRounded} shop={shop} />;
-  }
-
-  const receivedAmount = toNumber(invoice?.receivedAmount ?? invoice?.paidAmount);
+  // Older invoices can have receivedAmount=0 while ledger recalculation has
+  // correctly populated paidAmount. Use the greater saved value for printing.
+  const receivedAmount = Math.max(
+    toNumber(invoice?.receivedAmount),
+    toNumber(invoice?.paidAmount)
+  );
   const balanceAmount = Math.max(grandTotalRounded - receivedAmount, 0);
   const cgstAmount = toNumber(invoice?.totalGST) / 2;
   const gstRate = taxBreakup[0]?.rate || 0;
@@ -2006,20 +1995,26 @@ const InvoiceFooter = ({
           <div className="parasmani-for">For : PARASMANI</div>
         </div>
         <table className="parasmani-totals"><tbody>
-          <tr><td>Taxable Amount</td><td>₹ {formatNumber(invoice?.subTotal)}</td></tr>
-          <tr><td>CGST ({formatCompactNumber(gstRate / 2)}%)</td><td>₹ {formatNumber(cgstAmount)}</td></tr>
-          <tr><td>SGST ({formatCompactNumber(gstRate / 2)}%)</td><td>₹ {formatNumber(cgstAmount)}</td></tr>
+          <tr><td>{isGst ? "Taxable Amount" : "Estimate Amount"}</td><td>₹ {formatNumber(invoice?.subTotal)}</td></tr>
+          {isGst && <tr><td>CGST ({formatCompactNumber(gstRate / 2)}%)</td><td>₹ {formatNumber(cgstAmount)}</td></tr>}
+          {isGst && <tr><td>SGST ({formatCompactNumber(gstRate / 2)}%)</td><td>₹ {formatNumber(cgstAmount)}</td></tr>}
           <tr><td>Round Off</td><td>₹ {formatNumber(roundOff)}</td></tr>
           <tr className="total"><td>Total Amount</td><td>₹ {formatNumber(grandTotalRounded)}</td></tr>
           <tr><td>Amount Received</td><td>₹ {formatNumber(receivedAmount)}</td></tr>
           <tr className="net"><td>Net Receivable Amount</td><td>₹ {formatNumber(balanceAmount)} DR</td></tr>
+          <tr className="parasmani-write-space"><td colSpan="2" aria-label="Blank space for handwritten note" /></tr>
         </tbody></table>
       </div>
 
       <div className="parasmani-info-grid">
-        <div className="parasmani-info-box"><h4>Scan QR Code With UPI Apps To Pay</h4><div className="parasmani-qr"><img src={ORDER_PAYMENT_QR} alt="Payment QR"/><div><strong>UPI ID</strong><br/>{shop.paymentUpiId}</div></div></div>
-        <div className="parasmani-info-box"><h4>Company Bank Details</h4>Bank Name : <strong>{shop.bankName}</strong><br/>A/c Holder : <strong>{shop.accountHolderName}</strong><br/>A/c No. : <strong>{shop.accountNumber}</strong><br/>Branch : <strong>{shop.bankBranch}</strong><br/>IFSC Code : <strong>{shop.ifscCode}</strong></div>
-        <div className="parasmani-info-box"><h4>Mode of Payment</h4><strong>{invoice?.paymentMode || invoice?.billingType || "Cash"}</strong><br/>₹ {formatNumber(receivedAmount)}</div>
+        <div className="parasmani-info-box">
+          <h4>Scan QR Code / Company Bank Details</h4>
+          <div className="parasmani-bank-with-qr">
+            <img src={ORDER_PAYMENT_QR} alt="Payment QR"/>
+            <div><strong>UPI ID</strong><br/>{shop.paymentUpiId}</div>
+            <div className="parasmani-bank-details">Bank Name : <strong>{shop.bankName}</strong><br/>A/c Holder : <strong>{shop.accountHolderName}</strong><br/>A/c No. : <strong>{shop.accountNumber}</strong><br/>Branch : <strong>{shop.bankBranch}</strong><br/>IFSC Code : <strong>{shop.ifscCode}</strong></div>
+          </div>
+        </div>
       </div>
 
       <div className="parasmani-footer-banner">
@@ -2029,36 +2024,6 @@ const InvoiceFooter = ({
     </div>
   );
 };
-
-const OrderFooter = ({ grandTotalRounded, shop }) => (
-  <div className="order-footer">
-    <div className="order-footer-row">
-      <div className="order-remarks">Remarks :</div>
-
-      <div className="invoice-payment-qr">
-        <img src={ORDER_PAYMENT_QR} alt="Scan QR to pay" />
-        <div>
-          <strong>Scan to Pay</strong>
-          <span className="order-payment-upi">UPI: {shop.paymentUpiId}</span>
-        </div>
-      </div>
-
-      <div className="order-total">
-        <span>Total :</span>
-        <strong>{formatNumber(grandTotalRounded)}</strong>
-      </div>
-    </div>
-
-    <div className="order-bottom-row">
-      <div>
-        Subject to Raipur Jurisdiction
-        <br />
-        E.&amp;O.E.
-      </div>
-      <div className="order-signature">For, {ORDER_LOGO_NAME}</div>
-    </div>
-  </div>
-);
 
 const formatDate = (dateString) => {
   if (!dateString) return "-";

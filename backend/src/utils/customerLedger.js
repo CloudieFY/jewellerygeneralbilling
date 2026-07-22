@@ -36,6 +36,8 @@ export const recalculateCustomerLedger = async (farmerId) => {
     const paymentStatus = getPaymentStatus(invoiceTotal, paidAmount);
 
     invoice.paidAmount = paidAmount;
+    // Keep the invoice print field in sync with payments allocated by ledger.
+    invoice.receivedAmount = paidAmount;
     invoice.balanceDue = balanceDue;
     invoice.paymentStatus = paymentStatus;
     await invoice.save();

@@ -23,6 +23,7 @@ import {
   calculateInvoiceTotals,
   calculateLine,
   getProductRate,
+  roundWeight,
   toNumber,
 } from "../../utils/billing";
 
@@ -130,10 +131,10 @@ const EditInvoice = () => {
         if (field === "grossWeight" || field === "stoneWeight") {
           return {
             ...updated,
-            netWeight: Math.max(
+            netWeight: roundWeight(Math.max(
               Number(updated.grossWeight || 0) - Number(updated.stoneWeight || 0),
               0,
-            ),
+            )),
           };
         }
         return updated;
@@ -284,7 +285,7 @@ const EditInvoice = () => {
               invoiceData.products?.map((item) => ({
                 product: item.product?._id || item.product,
                 grossWeight: item.grossWeight || "",
-                netWeight: Math.max(Number(item.grossWeight || 0) - Number(item.stoneWeight || 0), 0),
+                netWeight: roundWeight(Math.max(Number(item.grossWeight || 0) - Number(item.stoneWeight || 0), 0)),
                 stoneWeight: item.stoneWeight || "",
                 wastagePercent: item.wastagePercent || 0,
                 makingChargeType: item.makingChargeType || "per_gram",

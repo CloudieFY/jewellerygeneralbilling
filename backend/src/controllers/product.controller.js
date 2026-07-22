@@ -70,7 +70,7 @@ export const addProduct = async (req, res) => {
       sku, metalType, purity, fineness, huid, hallmarked,
       inventoryWeight: Math.max(Number(inventoryWeight || 0), 0),
       grossWeight: grossWeight ?? 0,
-      netWeight: Math.max(Number(grossWeight || 0) - Number(stoneWeight || 0), 0),
+      netWeight: Math.round((Math.max(Number(grossWeight || 0) - Number(stoneWeight || 0), 0) + Number.EPSILON) * 1000) / 1000,
       stoneWeight: stoneWeight ?? 0,
       pieces: pieces ?? 1,
       metalRatePerGram: metalRatePerGram ?? 0,
@@ -158,7 +158,7 @@ export const updateProduct = async (req, res) => {
     if (req.body.grossWeight !== undefined || req.body.stoneWeight !== undefined) {
       const gross = Number(req.body.grossWeight ?? product.grossWeight) || 0;
       const stone = Number(req.body.stoneWeight ?? product.stoneWeight) || 0;
-      req.body.netWeight = Math.max(gross - stone, 0);
+      req.body.netWeight = Math.round((Math.max(gross - stone, 0) + Number.EPSILON) * 1000) / 1000;
     }
 
     const updatedProduct = await Product.findByIdAndUpdate(

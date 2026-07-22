@@ -22,6 +22,7 @@ import {
   calculateInvoiceTotals,
   calculateLine,
   formatCurrency,
+  roundWeight,
 } from "../../utils/billing";
 
 const emptyItem = {
@@ -58,6 +59,8 @@ const Billing = () => {
     invoiceNumber: "",
     rateType: "Rate A",
     invoiceDate: today,
+    receivedAmount: "",
+    paymentMode: "cash",
     products: [{ ...emptyItem }],
   });
 
@@ -202,10 +205,10 @@ const Billing = () => {
         if (field === "grossWeight" || field === "stoneWeight") {
           return {
             ...updated,
-            netWeight: Math.max(
+            netWeight: roundWeight(Math.max(
               Number(updated.grossWeight || 0) - Number(updated.stoneWeight || 0),
               0,
-            ),
+            )),
           };
         }
 
@@ -257,6 +260,12 @@ const Billing = () => {
       return;
     }
 
+    const receivedAmount = Number(formData.receivedAmount || 0);
+    if (receivedAmount < 0 || receivedAmount > summary.grandTotal) {
+      toast.error("Received amount must be between zero and grand total");
+      return;
+    }
+
     try {
       setLoading(true);
       await API.post("/invoices", {
@@ -266,6 +275,8 @@ const Billing = () => {
         invoiceDate: formData.invoiceDate,
         documentType: documentType,
         gstEnabled: gstEnabled,
+        receivedAmount,
+        paymentMode: formData.paymentMode,
         products: formData.products.map((item) => ({
           product: item.product,
           purity: item.purity,
@@ -739,6 +750,42 @@ const Billing = () => {
                   </div>
                 );
               })}
+            </div>
+          </section>
+
+          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <h2 className="mb-4 text-lg font-black text-slate-950">Payment Details</h2>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <label className="space-y-2 text-xs font-black uppercase tracking-widest text-slate-600">
+                Received Amount
+                <input
+                  type="number"
+                  min="0"
+                  max={summary.grandTotal}
+                  step="0.01"
+                  value={formData.receivedAmount}
+                  onChange={(event) => setFormData((previous) => ({ ...previous, receivedAmount: event.target.value }))}
+                  placeholder="0.00"
+                  className="input-field bg-white normal-case"
+                />
+              </label>
+              <label className="space-y-2 text-xs font-black uppercase tracking-widest text-slate-600">
+                Payment Mode
+                <select
+                  value={formData.paymentMode}
+                  onChange={(event) => setFormData((previous) => ({ ...previous, paymentMode: event.target.value }))}
+                  className="input-field bg-white normal-case"
+                >
+                  <option value="cash">Cash</option>
+                  <option value="upi">UPI</option>
+                  <option value="bank_transfer">Bank Transfer</option>
+                  <option value="cheque">Cheque</option>
+                </select>
+              </label>
+            </div>
+            <div className="mt-4 flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 text-sm font-bold">
+              <span className="text-slate-600">Balance Due</span>
+              <span className="text-slate-950">{formatCurrency(Math.max(summary.grandTotal - Number(formData.receivedAmount || 0), 0))}</span>
             </div>
           </section>
 

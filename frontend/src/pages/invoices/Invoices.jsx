@@ -236,7 +236,7 @@ const Invoices = () => {
           Loading invoices...
         </div>
       ) : (
-        <InvoiceTable invoices={filteredInvoices} />
+        <InvoiceTable invoices={filteredInvoices} onDeleted={getInvoices} />
       )}
     </div>
   );

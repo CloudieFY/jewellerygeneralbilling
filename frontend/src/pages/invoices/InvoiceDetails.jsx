@@ -67,6 +67,11 @@ const InvoiceDetails = () => {
 
   const isGst = invoice?.documentType !== "order" && invoice?.gstEnabled !== false;
   const docLabel = isGst ? "Invoice" : "Estimate Order";
+  const receivedAmount = Math.max(
+    toNumber(invoice.receivedAmount),
+    toNumber(invoice.paidAmount)
+  );
+  const balanceDue = Math.max(toNumber(invoice.grandTotal) - receivedAmount, 0);
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -304,6 +309,14 @@ const InvoiceDetails = () => {
           <div className="flex justify-between border-t border-slate-200 pt-4 text-lg font-black text-slate-950">
             <span>Grand Total</span>
             <span>{formatCurrency(invoice.grandTotal)}</span>
+          </div>
+          <div className="flex justify-between text-sm font-black text-emerald-700">
+            <span>Amount Received</span>
+            <span>{formatCurrency(receivedAmount)}</span>
+          </div>
+          <div className="flex justify-between border-t border-slate-200 pt-4 text-base font-black text-red-700">
+            <span>Balance Due</span>
+            <span>{formatCurrency(balanceDue)}</span>
           </div>
         </div>
       </section>

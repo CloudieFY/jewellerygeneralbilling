@@ -1,3 +1,4 @@
+import { useContext, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Calendar,
@@ -9,7 +10,11 @@ import {
   FileCheck,
   FileText,
   Pencil,
+  Trash2,
 } from "lucide-react";
+import toast from "react-hot-toast";
+import API from "../../services/api";
+import { AuthContext } from "../../context/AuthContext";
 import { formatCurrency } from "../../utils/billing";
 
 const getWorkflowStatusMeta = (invoice) => {
@@ -25,7 +30,26 @@ const getWorkflowStatusMeta = (invoice) => {
   };
 };
 
-const InvoiceTable = ({ invoices }) => {
+const InvoiceTable = ({ invoices, onDeleted }) => {
+  const { user } = useContext(AuthContext);
+  const [deletingId, setDeletingId] = useState("");
+
+  const handleDelete = async (invoice) => {
+    const label = invoice.documentType === "order" ? "estimate" : "invoice";
+    if (!window.confirm(`Delete ${label} #${invoice.invoiceNumber}? This cannot be undone.`)) return;
+
+    try {
+      setDeletingId(invoice._id);
+      await API.delete(`/invoices/${invoice._id}`);
+      toast.success(`${label === "invoice" ? "Invoice" : "Estimate"} deleted. Number can now be entered manually again.`);
+      onDeleted?.(invoice._id);
+    } catch (error) {
+      toast.error(error.response?.data?.message || `Failed to delete ${label}`);
+    } finally {
+      setDeletingId("");
+    }
+  };
+
   return (
     <>
       {/* Desktop Table Layout (visible on md screens and up) */}
@@ -177,6 +201,17 @@ const InvoiceTable = ({ invoices }) => {
                           >
                             <Printer size={18} />
                           </Link>
+                          {user?.role !== "operator" && (
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(invoice)}
+                              disabled={deletingId === invoice._id}
+                              className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-600 transition hover:bg-red-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                              title="Delete"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -295,6 +330,17 @@ const InvoiceTable = ({ invoices }) => {
                     >
                       <Printer size={16} />
                     </Link>
+                    {user?.role !== "operator" && (
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(invoice)}
+                        disabled={deletingId === invoice._id}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-red-600 transition active:bg-red-600 active:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                        title="Delete"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

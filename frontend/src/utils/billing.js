@@ -1,14 +1,15 @@
 export const RATE_TYPES = ["Rate A"];
 export const toNumber = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
+export const roundWeight = (value) => Math.round((toNumber(value) + Number.EPSILON) * 1000) / 1000;
 export const getProductRate = (product) => toNumber(product?.metalRatePerGram || product?.cashRate);
 export const calculateLine = (item, product, _rateType, gstEnabled = true) => {
   const quantity = toNumber(item?.quantity, 1);
   const unitGrossWeight = toNumber(item?.grossWeight ?? product?.grossWeight);
   const unitStoneWeight = toNumber(item?.stoneWeight ?? product?.stoneWeight);
-  const unitNetWeight = Math.max(unitGrossWeight - unitStoneWeight, 0);
-  const netWeight = unitNetWeight * quantity;
-  const grossWeight = unitGrossWeight * quantity;
-  const stoneWeight = unitStoneWeight * quantity;
+  const unitNetWeight = roundWeight(Math.max(unitGrossWeight - unitStoneWeight, 0));
+  const netWeight = roundWeight(unitNetWeight * quantity);
+  const grossWeight = roundWeight(unitGrossWeight * quantity);
+  const stoneWeight = roundWeight(unitStoneWeight * quantity);
   const rate = item?.selectedRate !== "" && item?.selectedRate !== undefined ? toNumber(item.selectedRate) : getProductRate(product);
   const metalValue = netWeight * rate;
   const wastagePercent = toNumber(item?.wastagePercent ?? product?.wastagePercent);

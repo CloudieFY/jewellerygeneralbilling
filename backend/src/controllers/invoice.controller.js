@@ -3,7 +3,10 @@ import Farmer from "../models/Farmer.js";
 import Product from "../models/Product.js";
 import Transaction from "../models/Transaction.js";
 
-import generateDocumentNumber from "../utils/generateInvoiceNumber.js";
+import generateDocumentNumber, {
+  invoiceNumberExists,
+  reserveManualDocumentNumber,
+} from "../utils/generateInvoiceNumber.js";
 import {
   getPaymentStatus,
   recalculateCustomerLedger,
@@ -167,7 +170,7 @@ export const createInvoice = async (req, res) => {
       const quantity = Number(item.quantity) || 1;
       const grossWeight = Number(item.grossWeight ?? product.grossWeight) || 0;
       const stoneWeight = Number(item.stoneWeight ?? product.stoneWeight) || 0;
-      const netWeight = Math.max(grossWeight - stoneWeight, 0);
+      const netWeight = Math.round((Math.max(grossWeight - stoneWeight, 0) + Number.EPSILON) * 1000) / 1000;
       const wastagePercent = Number(item.wastagePercent ?? product.wastagePercent) || 0;
       const makingChargeType = item.makingChargeType || "per_gram";
       const makingCharge = Number(item.makingCharge) || 0;
@@ -245,14 +248,17 @@ export const createInvoice = async (req, res) => {
     // document number (async, DB-backed sequential)
 
     const manualInvoiceNumber = typeof requestedInvoiceNumber === "string" ? requestedInvoiceNumber.trim() : "";
-    if (manualInvoiceNumber && await Invoice.exists({ invoiceNumber: manualInvoiceNumber })) {
-      return res.status(400).json({ message: "Invoice/estimate number already exists" });
+    if (manualInvoiceNumber && await invoiceNumberExists(manualInvoiceNumber, documentType)) {
+      return res.status(400).json({ message: "Invoice number already exists. Please use a different number." });
+    }
+    if (manualInvoiceNumber) {
+      await reserveManualDocumentNumber(manualInvoiceNumber, documentType);
     }
     const invoiceNumber = manualInvoiceNumber || await generateDocumentNumber(documentType);
 
-    const received = 0;
-    const balanceDue = grandTotal;
-    const paymentStatus = "unpaid";
+    const received = getReceivedAmount(billingType, grandTotal, receivedAmount);
+    const balanceDue = Math.max(grandTotal - received, 0);
+    const paymentStatus = getPaymentStatus(grandTotal, received);
 
     // create invoice
 
@@ -312,7 +318,7 @@ export const createInvoice = async (req, res) => {
     });
   } catch (error) {
     if (error?.code === 11000 && error?.keyPattern?.invoiceNumber) {
-      return res.status(400).json({ message: "Invoice/estimate number already exists" });
+      return res.status(400).json({ message: "Invoice number already exists. Please use a different number." });
     }
     res.status(500).json({
       message: error.message,
@@ -383,10 +389,26 @@ export const printInvoice = async (req, res) => {
     // also send settings for shop name/GST number on printout
     const Settings = (await import("../models/Settings.js")).default;
     const settings = await Settings.findOne() || {};
+    const linkedPayments = await Transaction.aggregate([
+      { $match: { invoice: invoice._id, type: "payment" } },
+      { $group: { _id: null, total: { $sum: "$amount" } } },
+    ]);
+    const receivedForPrint = Math.max(
+      normalizeAmount(invoice.receivedAmount),
+      normalizeAmount(invoice.paidAmount),
+      normalizeAmount(linkedPayments[0]?.total)
+    );
+    const printableInvoice = invoice.toObject();
+    printableInvoice.receivedAmount = receivedForPrint;
+    printableInvoice.paidAmount = receivedForPrint;
+    printableInvoice.balanceDue = Math.max(
+      normalizeAmount(invoice.grandTotal) - receivedForPrint,
+      0
+    );
 
     res.status(200).json({
       success: true,
-      printableInvoice: invoice,
+      printableInvoice,
       settings,
     });
   } catch (error) {
@@ -494,7 +516,7 @@ export const updateInvoice = async (req, res) => {
       const quantity = Number(item.quantity) || 1;
       const grossWeight = Number(item.grossWeight ?? product.grossWeight) || 0;
       const stoneWeight = Number(item.stoneWeight ?? product.stoneWeight) || 0;
-      const netWeight = Math.max(grossWeight - stoneWeight, 0);
+      const netWeight = Math.round((Math.max(grossWeight - stoneWeight, 0) + Number.EPSILON) * 1000) / 1000;
       const wastagePercent = Number(item.wastagePercent ?? product.wastagePercent) || 0;
       const makingChargeType = item.makingChargeType || "per_gram";
       const makingCharge = Number(item.makingCharge) || 0;
@@ -575,16 +597,20 @@ export const updateInvoice = async (req, res) => {
     }
 
     const grandTotal = subTotal + totalGST;
-    const received = 0;
-    const balanceDue = grandTotal;
-    const paymentStatus = "unpaid";
+    const received = getReceivedAmount(billingType, grandTotal, receivedAmount);
+    const balanceDue = Math.max(grandTotal - received, 0);
+    const paymentStatus = getPaymentStatus(grandTotal, received);
 
     const manualInvoiceNumber = typeof requestedInvoiceNumber === "string" ? requestedInvoiceNumber.trim() : "";
-    if (manualInvoiceNumber && await Invoice.exists({
-      invoiceNumber: manualInvoiceNumber,
-      _id: { $ne: invoice._id },
-    })) {
-      return res.status(400).json({ message: "Invoice/estimate number already exists" });
+    if (manualInvoiceNumber && await invoiceNumberExists(
+      manualInvoiceNumber,
+      documentType,
+      invoice._id
+    )) {
+      return res.status(400).json({ message: "Invoice number already exists. Please use a different number." });
+    }
+    if (manualInvoiceNumber) {
+      await reserveManualDocumentNumber(manualInvoiceNumber, documentType);
     }
 
     await deleteInvoiceLedgerEntries(invoice);
