@@ -1081,22 +1081,45 @@ const A4_PRINT_STYLE = `
   }
 
   .invoice-document.preprinted-paper .invoice-letterhead-image,
-  .invoice-document.preprinted-paper .parasmani-footer-banner {
+  .invoice-document.preprinted-paper .parasmani-footer-banner,
+  .invoice-document.preprinted-paper .parasmani-signatures,
+  .invoice-document.preprinted-paper .parasmani-for {
     visibility: hidden !important;
   }
 
-  /* 8 mm page inset + 27 mm spacer = content begins at about 35 mm,
+  /* 8 mm page inset + 47 mm spacer = content begins at about 55 mm,
      immediately below the stationery header measured in the supplied photo. */
   .invoice-document.preprinted-paper .invoice-letterhead-image {
-    height: 27mm !important;
+    height: 47mm !important;
     border: 0 !important;
   }
 
-  /* Preserve the pre-printed footer area (it begins at roughly 230 mm). */
+  /* Preserve the pre-printed footer area (it begins at roughly 233 mm, leaving 13 mm spacer). */
   .invoice-document.preprinted-paper .parasmani-footer-banner,
   .invoice-document.preprinted-paper .parasmani-footer-banner img {
-    height: 17mm !important;
+    height: 13mm !important;
   }
+}
+
+.invoice-document.print-preprinted-active .invoice-letterhead-image,
+.invoice-document.print-preprinted-active .parasmani-footer-banner,
+.invoice-document.print-preprinted-active .parasmani-signatures,
+.invoice-document.print-preprinted-active .parasmani-for {
+  visibility: hidden !important;
+}
+.invoice-document.print-preprinted-active .invoice-letterhead-image {
+  height: 47mm !important;
+  border: 0 !important;
+}
+.invoice-document.print-preprinted-active .parasmani-footer-banner,
+.invoice-document.print-preprinted-active .parasmani-footer-banner img {
+  height: 13mm !important;
+}
+.invoice-document.print-preprinted-active .invoice-sheet {
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  background: #ffffff !important;
 }
 `;
 
@@ -1147,6 +1170,18 @@ const PrintInvoice = () => {
   const [selectedDesignLabel, setSelectedDesignLabel] = useState("Nothing selected");
   const [tableColumnWidths, setTableColumnWidths] = useState(GST_COLUMN_WIDTHS);
   const selectedDesignElement = useRef(null);
+  const [isPrinting, setIsPrinting] = useState(false);
+
+  useEffect(() => {
+    const handleBeforePrint = () => setIsPrinting(true);
+    const handleAfterPrint = () => setIsPrinting(false);
+    window.addEventListener("beforeprint", handleBeforePrint);
+    window.addEventListener("afterprint", handleAfterPrint);
+    return () => {
+      window.removeEventListener("beforeprint", handleBeforePrint);
+      window.removeEventListener("afterprint", handleAfterPrint);
+    };
+  }, []);
 
   useEffect(() => {
     const styleTag = document.createElement("style");
@@ -1561,18 +1596,28 @@ const PrintInvoice = () => {
       const date = formatDate(invoice?.createdAt);
       const message = `${docLabel} #${invoice?.invoiceNumber}\nDate: ${date}\nCustomer: ${invoice?.farmer?.name || "-"}\nAmount: Rs ${formatNumber(grandTotalRounded)}\n\n${fileTypeLabel} invoice is attached.`;
 
+      let sharedViaNative = false;
       if (navigator.canShare && navigator.canShare({ files: [sharedFile] })) {
-        await navigator.share({
-          files: [sharedFile],
-          title: filename,
-          text: message,
-        });
-        return;
+        try {
+          await navigator.share({
+            files: [sharedFile],
+            title: filename,
+            text: message,
+          });
+          sharedViaNative = true;
+        } catch (shareErr) {
+          console.error("Native share failed, using fallback:", shareErr);
+          if (shareErr.name === "AbortError") {
+            return;
+          }
+        }
       }
 
-      downloadBlob(blob, filename);
-      const fallbackMessage = `${message}\n\n${fileTypeLabel} has been downloaded. Please attach the downloaded file in this WhatsApp chat.`;
-      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(fallbackMessage)}`, "_blank");
+      if (!sharedViaNative) {
+        downloadBlob(blob, filename);
+        const fallbackMessage = `${message}\n\n${fileTypeLabel} has been downloaded. Please attach the downloaded file in this WhatsApp chat.`;
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(fallbackMessage)}`, "_blank");
+      }
     } catch (err) {
       console.error("WhatsApp share failed:", err);
       alert("File share nahi ho paya. Please Save file karke WhatsApp me attach karein.");
@@ -1759,7 +1804,7 @@ const PrintInvoice = () => {
         <div
           id="invoice-a4-wrapper"
           ref={printRef}
-          className={`invoice-document ${printOnPreprintedPaper ? "preprinted-paper" : ""}`}
+          className={`invoice-document ${printOnPreprintedPaper ? "preprinted-paper" : ""} ${isPrinting && printOnPreprintedPaper ? "print-preprinted-active" : ""}`}
           onClickCapture={handleDesignSelect}
         >
           {pages.map((pageItems, pageIndex) => {
@@ -1947,7 +1992,10 @@ const ItemsTable = ({
                   <td className="center-cell">{formatCompactNumber(item.stoneWeight)}</td>
                   <td className="center-cell">{formatCompactNumber(item.netWeight)}</td>
                   <td className="center-cell">{purity}{huid ? ` / ${huid}` : ""}</td>
-                  <td className="rate-cell numeric-highlight">{formatNumber(item.metalRatePerGram || item.selectedRate)}</td>
+                  <td className="rate-cell numeric-highlight">
+                    {formatNumber(item.selectedRate || item.metalRatePerGram)}
+                    {item.rateUnit === "per_10_gram" ? " / 10g" : item.rateUnit === "per_kg" ? " / kg" : " / g"}
+                  </td>
                   <td className="rate-cell">
                     {item.makingChargeType === "percent"
                       ? `${formatCompactNumber(item.makingCharge)}%`
@@ -1966,7 +2014,10 @@ const ItemsTable = ({
                 <>
                   <td className="center-cell">{formatCompactNumber(item.grossWeight)} / {formatCompactNumber(item.netWeight)} g</td>
                   <td className="center-cell">{formatCompactNumber(quantity)}</td>
-                  <td className="rate-cell numeric-highlight">{formatNumber(item.metalRatePerGram || item.selectedRate)}</td>
+                  <td className="rate-cell numeric-highlight">
+                    {formatNumber(item.selectedRate || item.metalRatePerGram)}
+                    {item.rateUnit === "per_10_gram" ? " / 10g" : item.rateUnit === "per_kg" ? " / kg" : " / g"}
+                  </td>
                   <td className="rate-cell">{formatNumber(item.makingChargeAmount || item.makingCharge)}</td>
                   <td className="rate-cell">{formatNumber(item.stoneValueAmount || item.stoneValue)}</td>
                   <td className="amount-cell amount-highlight">{formatNumber(amount)}</td>

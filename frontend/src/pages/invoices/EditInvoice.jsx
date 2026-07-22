@@ -42,6 +42,7 @@ const emptyItem = {
   discount: 0,
   quantity: 1,
   selectedRate: "",
+  rateUnit: "per_gram",
   gstRate: "",
 };
 
@@ -237,6 +238,7 @@ const EditInvoice = () => {
           discount: Number(item.discount),
           quantity: Number(item.quantity),
           selectedRate: Number(item.selectedRate),
+          rateUnit: item.rateUnit || "per_gram",
           gstRate: gstEnabled ? Number(item.gstRate) : 0,
         })),
       });
@@ -297,6 +299,7 @@ const EditInvoice = () => {
                 discount: item.discount || 0,
                 quantity: item.quantity || 1,
                 selectedRate: item.selectedRate || "",
+                rateUnit: item.rateUnit || "per_gram",
                 gstRate: item.gstRate || "",
               })) || [{ ...emptyItem }],
           });
@@ -652,21 +655,34 @@ const EditInvoice = () => {
                     {/* Rate */}
                     <div className="lg:col-span-2">
                       <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-600">
-                        Metal Rate / g
+                        Metal Rate
                       </label>
-                      <div className="relative">
-                        <IndianRupee size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={item.selectedRate}
+                      <div className="flex gap-1.5">
+                        <div className="relative flex-1">
+                          <IndianRupee size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={item.selectedRate}
+                            onChange={(event) =>
+                              handleProductChange(index, "selectedRate", event.target.value)
+                            }
+                            className="input-field bg-white pl-6 pr-1 text-sm"
+                            required
+                          />
+                        </div>
+                        <select
+                          value={item.rateUnit || "per_gram"}
                           onChange={(event) =>
-                            handleProductChange(index, "selectedRate", event.target.value)
+                            handleProductChange(index, "rateUnit", event.target.value)
                           }
-                          className="input-field bg-white pl-7"
-                          required
-                        />
+                          className="input-field bg-white px-1 text-[10px] w-[54px] text-center normal-case shrink-0"
+                        >
+                          <option value="per_gram">/ g</option>
+                          <option value="per_10_gram">/ 10g</option>
+                          <option value="per_kg">/ kg</option>
+                        </select>
                       </div>
                     </div>
                   </div>

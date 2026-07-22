@@ -31,6 +31,7 @@ const emptyItem = {
   quantity: 1,
   purity: "22K / 916",
   selectedRate: "",
+  rateUnit: "per_gram",
   gstRate: "",
   wastagePercent: 0, makingChargeType: "per_gram", makingCharge: "",
   stoneValue: "", stoneValueType: "per_gram", hallmarkCharge: "", discount: "",
@@ -288,6 +289,7 @@ const Billing = () => {
           discount: Number(item.discount),
           quantity: Number(item.quantity),
           selectedRate: Number(item.selectedRate),
+          rateUnit: item.rateUnit || "per_gram",
           gstRate: gstEnabled ? Number(item.gstRate) : 0,
         })),
       });
@@ -657,10 +659,31 @@ const Billing = () => {
                         Purity
                         <input type="text" value={item.purity} onChange={(event) => handleProductChange(index, "purity", event.target.value)} placeholder="22K / 916" className="input-field bg-white normal-case" />
                       </label>
-                      <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                        Gold / Metal Rate per g
-                        <input type="number" min="0" step="0.01" value={item.selectedRate} onChange={(event) => handleProductChange(index, "selectedRate", event.target.value)} className="input-field bg-white" required />
-                      </label>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                          Gold / Metal Rate
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={item.selectedRate}
+                            onChange={(event) => handleProductChange(index, "selectedRate", event.target.value)}
+                            className="input-field bg-white flex-1"
+                            required
+                          />
+                          <select
+                            value={item.rateUnit || "per_gram"}
+                            onChange={(event) => handleProductChange(index, "rateUnit", event.target.value)}
+                            className="input-field bg-white px-1 text-[10px] w-[60px] text-center normal-case shrink-0"
+                          >
+                            <option value="per_gram">/ g</option>
+                            <option value="per_10_gram">/ 10g</option>
+                            <option value="per_kg">/ kg</option>
+                          </select>
+                        </div>
+                      </div>
                       <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
                         Making Charge Type
                         <select value={item.makingChargeType} onChange={(event) => handleProductChange(index, "makingChargeType", event.target.value)} className="input-field bg-white normal-case">

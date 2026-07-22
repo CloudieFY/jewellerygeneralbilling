@@ -95,6 +95,11 @@ const invoiceSchema = new mongoose.Schema(
           type: Number,
           required: true,
         },
+        rateUnit: {
+          type: String,
+          default: "per_gram",
+          enum: ["per_gram", "per_10_gram", "per_kg"],
+        },
 
         gstRate: {
           type: Number,

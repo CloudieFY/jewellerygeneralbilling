@@ -11,7 +11,14 @@ export const calculateLine = (item, product, _rateType, gstEnabled = true) => {
   const grossWeight = roundWeight(unitGrossWeight * quantity);
   const stoneWeight = roundWeight(unitStoneWeight * quantity);
   const rate = item?.selectedRate !== "" && item?.selectedRate !== undefined ? toNumber(item.selectedRate) : getProductRate(product);
-  const metalValue = netWeight * rate;
+  const rateUnit = item?.rateUnit || "per_gram";
+  let ratePerGram = rate;
+  if (rateUnit === "per_10_gram") {
+    ratePerGram = rate / 10;
+  } else if (rateUnit === "per_kg") {
+    ratePerGram = rate / 1000;
+  }
+  const metalValue = netWeight * ratePerGram;
   const wastagePercent = toNumber(item?.wastagePercent ?? product?.wastagePercent);
   const wastageAmount = metalValue * wastagePercent / 100;
   const makingCharge = toNumber(item?.makingCharge ?? product?.makingCharge);

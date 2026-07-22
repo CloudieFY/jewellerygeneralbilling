@@ -165,6 +165,7 @@ export const createInvoice = async (req, res) => {
       // auto rate selection
 
       const selectedRate = Number(item.selectedRate) || 0;
+      const rateUnit = item.rateUnit || "per_gram";
 
       // calculations
 
@@ -192,7 +193,15 @@ export const createInvoice = async (req, res) => {
           : 0;
 
       if (netWeight <= 0 || selectedRate <= 0) return res.status(400).json({ message: "Net weight and metal rate must be greater than zero" });
-      const metalValue = netWeight * selectedRate * quantity;
+      
+      let ratePerGram = selectedRate;
+      if (rateUnit === "per_10_gram") {
+        ratePerGram = selectedRate / 10;
+      } else if (rateUnit === "per_kg") {
+        ratePerGram = selectedRate / 1000;
+      }
+
+      const metalValue = netWeight * ratePerGram * quantity;
       const wastageAmount = metalValue * wastagePercent / 100;
       const makingChargeAmount = makingChargeType === "percent"
         ? metalValue * makingCharge / 100
@@ -226,11 +235,12 @@ export const createInvoice = async (req, res) => {
         grossWeight, netWeight, stoneWeight,
         purity: item.purity || "", fineness: item.fineness || "", huid: "",
         hallmarkCharge,
-        metalRatePerGram: selectedRate, wastagePercent, wastageAmount,
+        metalRatePerGram: ratePerGram, wastagePercent, wastageAmount,
         makingChargeType, makingCharge, makingChargeAmount,
         stoneValue, stoneValueType, stoneValueAmount, discount,
 
         selectedRate,
+        rateUnit,
 
         gstRate,
 
@@ -521,6 +531,7 @@ export const updateInvoice = async (req, res) => {
       }
 
       const selectedRate = Number(item.selectedRate) || 0;
+      const rateUnit = item.rateUnit || "per_gram";
 
       const quantity = Number(item.quantity) || 1;
       const grossWeight = Number(item.grossWeight ?? product.grossWeight) || 0;
@@ -549,7 +560,14 @@ export const updateInvoice = async (req, res) => {
           : product.gstRate || 0
         : 0;
 
-      const metalValue = netWeight * selectedRate * quantity;
+      let ratePerGram = selectedRate;
+      if (rateUnit === "per_10_gram") {
+        ratePerGram = selectedRate / 10;
+      } else if (rateUnit === "per_kg") {
+        ratePerGram = selectedRate / 1000;
+      }
+
+      const metalValue = netWeight * ratePerGram * quantity;
       const wastageAmount = metalValue * wastagePercent / 100;
       const makingChargeAmount = makingChargeType === "percent"
         ? metalValue * makingCharge / 100
@@ -587,7 +605,7 @@ export const updateInvoice = async (req, res) => {
         fineness: item.fineness || "",
         huid: "",
         hallmarkCharge,
-        metalRatePerGram: selectedRate,
+        metalRatePerGram: ratePerGram,
         wastagePercent,
         wastageAmount,
         makingChargeType,
@@ -598,6 +616,7 @@ export const updateInvoice = async (req, res) => {
         stoneValueAmount,
         discount,
         selectedRate,
+        rateUnit,
         gstRate,
         baseAmount: itemTotal,
         gstAmount,

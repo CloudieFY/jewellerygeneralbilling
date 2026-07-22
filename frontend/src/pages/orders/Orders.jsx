@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CalendarDays, CheckCircle2, ImagePlus, MessageCircle, PackageCheck, Plus, Search, UserRound, X } from "lucide-react";
+import { CalendarDays, CheckCircle2, ImagePlus, MessageCircle, PackageCheck, Plus, Search, Trash2, UserRound, X } from "lucide-react";
 import toast from "react-hot-toast";
 import API from "../../services/api";
 
@@ -119,8 +119,15 @@ const Orders = () => {
       if (design?.data && navigator.share) {
         const file = await dataUrlToFile(design);
         if (!navigator.canShare || navigator.canShare({ files: [file] })) {
-          await navigator.share({ title: order.orderNumber, text: message, files: [file] });
-          return;
+          try {
+            await navigator.share({ title: order.orderNumber, text: message, files: [file] });
+            return;
+          } catch (shareErr) {
+            console.error("Native share failed, using fallback:", shareErr);
+            if (shareErr.name === "AbortError") {
+              return;
+            }
+          }
         }
       }
       const phone = String(order.customerMobile || "").replace(/\D/g, "");
@@ -138,6 +145,17 @@ const Orders = () => {
       setOrders((previous) => previous.map((item) => item._id === id ? data.order : item));
       toast.success("Order status updated");
     } catch (error) { toast.error(error.response?.data?.message || "Status update failed"); }
+  };
+
+  const deleteOrder = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this order?")) return;
+    try {
+      await API.delete(`/orders/${id}`);
+      setOrders((previous) => previous.filter((item) => item._id !== id));
+      toast.success("Order deleted successfully");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Could not delete order");
+    }
   };
 
   const visibleOrders = useMemo(() => {
@@ -184,7 +202,60 @@ const Orders = () => {
       {savedOrder && <div className="flex flex-col gap-4 rounded-3xl border border-emerald-200 bg-emerald-50 p-5 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-black text-emerald-900">{savedOrder.orderNumber} saved successfully</p><p className="text-sm font-semibold text-emerald-700">Send the complete order summary{savedOrder.designAttached ? " and attached design" : ""} to {savedOrder.customerName}.</p></div><button onClick={() => shareWhatsApp(savedOrder)} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 font-black text-white"><MessageCircle size={19}/> Send via WhatsApp</button></div>}
 
       <section className="space-y-4"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="text-2xl font-black">All Orders</h2><p className="text-sm font-semibold text-slate-500">{orders.length} connected customer orders</p></div><div className="relative"><Search size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"/><input className="input-field pl-11" placeholder="Search order or customer" value={search} onChange={(e) => setSearch(e.target.value)}/></div></div>
-        {loading ? <div className="premium-card p-10 text-center font-bold text-slate-500">Loading orders...</div> : visibleOrders.length === 0 ? <div className="premium-card p-10 text-center font-bold text-slate-500">No orders found. Create your first customer order above.</div> : <div className="grid gap-4 lg:grid-cols-2">{visibleOrders.map((order) => <article key={order._id} className="premium-card p-5"><div className="flex gap-4">{order.design?.data ? <img src={order.design.data} className="h-24 w-24 shrink-0 rounded-2xl border border-amber-100 object-cover" alt="Design"/> : <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl bg-amber-50"><ImagePlus className="text-amber-500"/></div>}<div className="min-w-0 flex-1"><div className="flex flex-wrap items-center justify-between gap-2"><p className="font-black text-amber-800">{order.orderNumber}</p><select value={order.status} onChange={(e) => updateStatus(order._id, e.target.value)} className="rounded-xl border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-black"><option value="pending">Pending</option><option value="in_progress">In progress</option><option value="ready">Ready</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option></select></div><h3 className="mt-1 truncate text-lg font-black">{order.customerName}</h3><p className="truncate text-sm font-semibold text-slate-600">{order.itemDescription}</p><p className="mt-2 flex items-center gap-1 text-xs font-bold text-slate-500"><CalendarDays size={14}/> Due {new Date(order.dueDate).toLocaleDateString("en-IN")}</p></div></div><button onClick={() => shareWhatsApp(order)} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-black text-white"><MessageCircle size={18}/> WhatsApp Customer</button></article>)}</div>}
+        {loading ? (
+          <div className="premium-card p-10 text-center font-bold text-slate-500">Loading orders...</div>
+        ) : visibleOrders.length === 0 ? (
+          <div className="premium-card p-10 text-center font-bold text-slate-500">No orders found. Create your first customer order above.</div>
+        ) : (
+          <div className="grid gap-4 lg:grid-cols-2">
+            {visibleOrders.map((order) => (
+              <article key={order._id} className="premium-card p-5">
+                <div className="flex gap-4">
+                  {order.design?.data ? (
+                    <img src={order.design.data} className="h-24 w-24 shrink-0 rounded-2xl border border-amber-100 object-cover" alt="Design"/>
+                  ) : (
+                    <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl bg-amber-50">
+                      <ImagePlus className="text-amber-500"/>
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="font-black text-amber-800">{order.orderNumber}</p>
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={order.status}
+                          onChange={(e) => updateStatus(order._id, e.target.value)}
+                          className="rounded-xl border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-black"
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="in_progress">In progress</option>
+                          <option value="ready">Ready</option>
+                          <option value="delivered">Delivered</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
+                        <button
+                          onClick={() => deleteOrder(order._id)}
+                          className="rounded-xl border border-red-200 bg-red-50 p-1.5 text-red-600 hover:bg-red-100 transition shadow-sm"
+                          title="Delete Order"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                    <h3 className="mt-1 truncate text-lg font-black">{order.customerName}</h3>
+                    <p className="truncate text-sm font-semibold text-slate-600">{order.itemDescription}</p>
+                    <p className="mt-2 flex items-center gap-1 text-xs font-bold text-slate-500">
+                      <CalendarDays size={14}/> Due {new Date(order.dueDate).toLocaleDateString("en-IN")}
+                    </p>
+                  </div>
+                </div>
+                <button onClick={() => shareWhatsApp(order)} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-black text-white">
+                  <MessageCircle size={18}/> WhatsApp Customer
+                </button>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
