@@ -921,7 +921,7 @@ const A4_PRINT_STYLE = `
 .parasmani-card-title { position: absolute; top: -5mm; left: 4mm; min-width: 28mm; padding: 0 2px; border-radius: 0; background: transparent; color: #741326; font-size: 9px; font-weight: 900; text-transform: uppercase; }
 
 .invoice-table-area { flex: 0 0 auto; padding: 2.5mm 6mm 0; }
-.invoice-table { flex: none; height: auto; background: rgba(255,255,255,.68); font-size: 9px; }
+.invoice-table { flex: none; height: auto; background: rgba(255,255,255,.68); font-size: 10px; }
 .gst-invoice-page .invoice-table { min-height: 38mm; }
 .gst-invoice-page .invoice-table tbody td { vertical-align: top; padding-top: 5px; }
 .invoice-table th {
@@ -929,12 +929,13 @@ const A4_PRINT_STYLE = `
   border: 0.5px solid #5f5a4e;
   background: rgba(255,255,255,.9);
   color: #24211d;
-  font-size: 9px;
+  font-size: 9.5px;
   white-space: normal;
   line-height: 1.1;
 }
 .invoice-table td { height: 6mm; padding: 3px; border: 0.5px solid #716b5d; }
-.invoice-table .numeric-highlight, .invoice-table .gst-rate-cell, .invoice-table .amount-highlight { font-size: 9.5px; }
+.invoice-table .numeric-highlight, .invoice-table .gst-rate-cell, .invoice-table .amount-highlight { font-size: 10.5px; }
+.invoice-table .product-cell { font-size: 11px; }
 .invoice-filler-row { display: none; }
 .invoice-table tfoot td { background: transparent; color: #29251f; border: 0; border-top: 0.5px solid #716b5d; }
 
@@ -958,7 +959,7 @@ const A4_PRINT_STYLE = `
 .parasmani-lower-grid { display: grid; grid-template-columns: 62% 38%; gap: 4mm; margin-top: 2mm; }
 .parasmani-left-column { display: flex; flex-direction: column; gap: 2mm; }
 .parasmani-right-column { display: flex; flex-direction: column; }
-.parasmani-words { min-height: 18mm; padding: 2mm; box-sizing: border-box; border: 0.5px solid #d5ad67; border-radius: 3mm; display: flex; flex-direction: column; font-size: 7px; line-height: 1.2; }
+.parasmani-words { min-height: 18mm; padding: 2mm; box-sizing: border-box; border: 0.5px solid #d5ad67; border-radius: 3mm; display: flex; flex-direction: column; font-size: 9px; line-height: 1.2; }
 .parasmani-box-title { color: #741326; font-weight: 900; text-transform: uppercase; }
 .parasmani-customer-sign {
   margin-top: 2mm;
@@ -970,9 +971,10 @@ const A4_PRINT_STYLE = `
 .parasmani-customer-sign span {
   display: inline-block;
   width: 35mm;
-  border-top: 0.5px solid #6b5a45;
+  border: none;
+  border-bottom: 0.5px solid #6b5a45;
   text-align: center;
-  padding-top: 1mm;
+  padding-bottom: 1mm;
   font-weight: 900;
   text-transform: uppercase;
 }
@@ -993,9 +995,10 @@ const A4_PRINT_STYLE = `
 .parasmani-sign-line span {
   display: inline-block;
   width: 40mm;
-  border-top: 0.5px solid #6b5a45;
+  border: none;
+  border-bottom: 0.5px solid #6b5a45;
   text-align: center;
-  padding-top: 1mm;
+  padding-bottom: 1mm;
   font-weight: 900;
   text-transform: uppercase;
 }
@@ -1006,8 +1009,8 @@ const A4_PRINT_STYLE = `
 .parasmani-totals .total { background: #741326; color: white; font-weight: 900; }
 .parasmani-totals .net { color: #741326; font-size: 11px; font-weight: 900; }
 .parasmani-totals .parasmani-write-space td { height: 9mm; border-bottom: 0.5px solid #dec79e; background: transparent; }
-.parasmani-info-box { min-height: 25mm; padding: 3mm; box-sizing: border-box; border: 0.5px solid #d5ad67; border-radius: 2mm; font-size: 8px; line-height: 1.3; }
-.parasmani-info-box h4 { margin: -3mm -3mm 2mm; padding: 3px 8px; border-radius: 2mm 2mm 0 0; background: #741326; color: white; text-align: center; font-size: 8px; }
+.parasmani-info-box { min-height: 25mm; padding: 3mm; box-sizing: border-box; border: 0.5px solid #d5ad67; border-radius: 2mm; font-size: 10px; line-height: 1.3; }
+.parasmani-info-box h4 { margin: -3mm -3mm 2mm; padding: 3px 8px; border-radius: 2mm 2mm 0 0; background: #741326; color: white; text-align: center; font-size: 10px; }
 .parasmani-qr { display: flex; align-items: center; gap: 4mm; }
 .parasmani-qr img { width: 19mm; height: 19mm; object-fit: contain; }
 .parasmani-bank-with-qr { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 2mm; }
@@ -1166,11 +1169,15 @@ const A4_PRINT_STYLE = `
   .invoice-meta-box,
   .parasmani-words,
   .parasmani-info-box,
-  .parasmani-totals td,
-  .parasmani-customer-sign span,
-  .parasmani-sign-line span {
+  .parasmani-totals td {
     border-width: 0.5px !important;
     border-color: #666666 !important;
+  }
+
+  .parasmani-customer-sign span,
+  .parasmani-sign-line span {
+    border: none !important;
+    border-bottom: 0.5px solid #666666 !important;
   }
 
   .parasmani-totals .total {
@@ -2048,7 +2055,8 @@ const InvoiceHeader = ({ invoice, isGst, showParasmaniName }) => {
             <div className="invoice-buyer-details">
               <div>{customerAddress || "-"}</div>
               <div>Mob.: {invoice?.farmer?.mobileNumber || "-"}</div>
-              {isGst && <div>GST: {invoice?.farmer?.gstNumber || "-"}</div>}
+              {isGst && invoice?.farmer?.gstNumber && <div>GST: {invoice.farmer.gstNumber}</div>}
+              {invoice?.farmer?.panNumber && <div>PAN: {invoice.farmer.panNumber}</div>}
             </div>
           </div>
         </div>
@@ -2063,10 +2071,7 @@ const InvoiceHeader = ({ invoice, isGst, showParasmaniName }) => {
             <strong>Invoice Date</strong>
             <strong>{formatDate(invoice?.createdAt)}</strong>
           </div>
-          <div className="invoice-meta-row">
-            <strong>Bill Time</strong>
-            <strong>{formatTime(invoice?.createdAt)}</strong>
-          </div>
+
           <div className="invoice-meta-row">
             <strong>Document Type</strong>
             <strong data-design-movable="true" data-design-special-id="doc-type">
@@ -2278,10 +2283,7 @@ const InvoiceFooter = ({
         </div>
       </div>
 
-      <div className="parasmani-footer-banner">
-        <img src="/parasmani-invoice-footer.png" alt="Invoice terms, BIS hallmark and authorised signature" />
-        <span className="parasmani-page-number">Page {pageCount} of {pageCount}</span>
-      </div>
+
     </div>
   );
 };
