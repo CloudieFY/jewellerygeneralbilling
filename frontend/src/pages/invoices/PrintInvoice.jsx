@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Download, MessageCircle, Pencil, Printer } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import API from "../../services/api";
 import { toNumber } from "../../utils/billing";
 import { numberToWords } from "../../utils/numberToWords";
@@ -187,7 +188,7 @@ const A4_PRINT_STYLE = `
 .invoice-sale-title {
   padding: 2mm 0 1mm;
   text-align: center;
-  color: #741326;
+  color: #111827;
   font-family: Georgia, "Times New Roman", serif;
   font-size: 17px;
   font-weight: 900;
@@ -912,13 +913,13 @@ const A4_PRINT_STYLE = `
   background: rgba(255,255,255,.64);
 }
 
-.invoice-buyer-box, .invoice-meta-box { position: relative; min-height: 25mm; padding: 5mm 4mm 2mm; margin: 6mm 5mm 2mm; box-sizing: border-box; border: 0.5px solid #d3ad6a; border-radius: 2.5mm; }
+.invoice-buyer-box, .invoice-meta-box { position: relative; min-height: 25mm; padding: 5mm 4mm 2mm; margin: 6mm 5mm 2mm; box-sizing: border-box; border: 0.5px solid #9ca3af; border-radius: 2.5mm; }
 .invoice-buyer-name { font-size: 15px; font-weight: 700; text-transform: uppercase; }
 .invoice-buyer-label { font-size: 11px; font-weight: 900; text-transform: uppercase; }
 .invoice-buyer-details, .invoice-meta-row { font-size: 10px; }
 .invoice-meta-row { padding: 1px 0; }
 .invoice-meta-row strong:last-child { font-size: 10.5px; }
-.parasmani-card-title { position: absolute; top: -5mm; left: 4mm; min-width: 28mm; padding: 0 2px; border-radius: 0; background: transparent; color: #741326; font-size: 9px; font-weight: 900; text-transform: uppercase; }
+.parasmani-card-title { position: absolute; top: -5mm; left: 4mm; min-width: 28mm; padding: 0 2px; border-radius: 0; background: transparent; color: #374151; font-size: 9px; font-weight: 900; text-transform: uppercase; }
 
 .invoice-table-area { flex: 0 0 auto; padding: 2.5mm 6mm 0; }
 .invoice-table { flex: none; height: auto; background: rgba(255,255,255,.68); font-size: 10px; }
@@ -945,7 +946,7 @@ const A4_PRINT_STYLE = `
 .invoice-footer-cell:nth-child(1), .invoice-footer-cell:nth-child(2) { display: none; }
 .invoice-total-row { padding: 2px 8px; border-bottom: 0.5px solid #817762; font-size: 10px; }
 .invoice-total-row span:last-child { font-size: 10px; }
-.invoice-total-row.net { margin: 0; padding: 4px 8px; background: rgba(116,37,56,.08); color: #3a2027; font-size: 12px; }
+.invoice-total-row.net { margin: 0; padding: 4px 8px; background: rgba(75, 85, 99, .08); color: #1f2937; font-size: 12px; }
 .invoice-total-row.net span:last-child { font-size: 12px; }
 .invoice-signature-row { min-height: 25mm; padding: 10px 8px; grid-template-columns: 1fr 1fr; }
 .invoice-amount-words::after { content: "Customer Signatory"; display: block; margin-top: 16mm; font-size: 10px; font-weight: 900; }
@@ -959,8 +960,8 @@ const A4_PRINT_STYLE = `
 .parasmani-lower-grid { display: grid; grid-template-columns: 62% 38%; gap: 4mm; margin-top: 2mm; }
 .parasmani-left-column { display: flex; flex-direction: column; gap: 2mm; }
 .parasmani-right-column { display: flex; flex-direction: column; }
-.parasmani-words { min-height: 18mm; padding: 2mm; box-sizing: border-box; border: 0.5px solid #d5ad67; border-radius: 3mm; display: flex; flex-direction: column; font-size: 9px; line-height: 1.2; }
-.parasmani-box-title { color: #741326; font-weight: 900; text-transform: uppercase; }
+.parasmani-words { min-height: 18mm; padding: 2mm; box-sizing: border-box; border: 0.5px solid #9ca3af; border-radius: 3mm; display: flex; flex-direction: column; font-size: 9px; line-height: 1.2; }
+.parasmani-box-title { color: #374151; font-weight: 900; text-transform: uppercase; }
 .parasmani-customer-sign {
   margin-top: 2mm;
   padding-top: 4mm;
@@ -972,7 +973,7 @@ const A4_PRINT_STYLE = `
   display: inline-block;
   width: 35mm;
   border: none;
-  border-bottom: 0.5px solid #6b5a45;
+  border-bottom: 0.5px solid #9ca3af;
   text-align: center;
   padding-bottom: 1mm;
   font-weight: 900;
@@ -996,26 +997,26 @@ const A4_PRINT_STYLE = `
   display: inline-block;
   width: 40mm;
   border: none;
-  border-bottom: 0.5px solid #6b5a45;
+  border-bottom: 0.5px solid #9ca3af;
   text-align: center;
   padding-bottom: 1mm;
   font-weight: 900;
   text-transform: uppercase;
 }
-.parasmani-for { margin-top: 1mm; text-align: center; color: #741326; font-size: 7px; font-weight: 900; }
+.parasmani-for { margin-top: 1mm; text-align: center; color: #111827; font-size: 7px; font-weight: 900; }
 .parasmani-totals { border-collapse: collapse; width: 100%; font-size: 9px; }
-.parasmani-totals td { padding: 2px 8px; border-bottom: 0.5px solid #dec79e; }
+.parasmani-totals td { padding: 2px 8px; border-bottom: 0.5px solid #e5e7eb; }
 .parasmani-totals td:last-child { text-align: right; font-weight: 900; }
-.parasmani-totals .total { background: #741326; color: white; font-weight: 900; }
-.parasmani-totals .net { color: #741326; font-size: 11px; font-weight: 900; }
-.parasmani-totals .parasmani-write-space td { height: 9mm; border-bottom: 0.5px solid #dec79e; background: transparent; }
-.parasmani-info-box { min-height: 25mm; padding: 3mm; box-sizing: border-box; border: 0.5px solid #d5ad67; border-radius: 2mm; font-size: 10px; line-height: 1.3; }
-.parasmani-info-box h4 { margin: -3mm -3mm 2mm; padding: 3px 8px; border-radius: 2mm 2mm 0 0; background: #741326; color: white; text-align: center; font-size: 10px; }
+.parasmani-totals .total { background: #4b5563; color: white; font-weight: 900; }
+.parasmani-totals .net { color: #111827; font-size: 11px; font-weight: 900; }
+.parasmani-totals .parasmani-write-space td { height: 9mm; border-bottom: 0.5px solid #e5e7eb; background: transparent; }
+.parasmani-info-box { min-height: 25mm; padding: 3mm; box-sizing: border-box; border: 0.5px solid #9ca3af; border-radius: 2mm; font-size: 10px; line-height: 1.3; }
+.parasmani-info-box h4 { margin: -3mm -3mm 2mm; padding: 3px 8px; border-radius: 2mm 2mm 0 0; background: #4b5563; color: white; text-align: center; font-size: 10px; }
 .parasmani-qr { display: flex; align-items: center; gap: 4mm; }
-.parasmani-qr img { width: 19mm; height: 19mm; object-fit: contain; }
+.parasmani-qr img, .parasmani-qr svg { width: 19mm; height: 19mm; object-fit: contain; }
 .parasmani-bank-with-qr { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 2mm; }
-.parasmani-bank-with-qr > img { width: 19mm; height: 19mm; object-fit: contain; }
-.parasmani-bank-details { padding-left: 2mm; border-left: 0.5px solid #dec79e; }
+.parasmani-bank-with-qr > img, .parasmani-bank-with-qr svg, .parasmani-bank-with-qr > div svg { width: 19mm; height: 19mm; object-fit: contain; }
+.parasmani-bank-details { padding-left: 2mm; border-left: 0.5px solid #d1d5db; }
 .parasmani-footer-banner { position: relative; margin-top: 2mm; }
 .parasmani-footer-banner img { display: block; width: 100%; height: 29mm; object-fit: fill; }
 .parasmani-page-number { position: absolute; right: 3mm; bottom: 1.5mm; color: #4b2a12; font-size: 7px; font-weight: 900; }
@@ -1027,7 +1028,7 @@ const A4_PRINT_STYLE = `
   justify-content: center;
   height: 100%;
   background: #fffdf5;
-  color: #741326;
+  color: #111827;
   text-align: center;
   padding: 10px 10px 32px; /* increased bottom padding to avoid sticking to the line */
   box-sizing: border-box;
@@ -1038,7 +1039,7 @@ const A4_PRINT_STYLE = `
   font-weight: 900;
   letter-spacing: 1px;
   margin: 0 0 2px 0;
-  color: #741326;
+  color: #111827;
   text-transform: uppercase;
 }
 .parasmani-header-subtitle-main {
@@ -1046,7 +1047,7 @@ const A4_PRINT_STYLE = `
   font-size: 14px;
   font-weight: 700;
   margin: 0 0 6px 0;
-  color: #741326;
+  color: #111827;
 }
 .parasmani-header-subtitle {
   font-size: 9px;
@@ -1111,6 +1112,7 @@ const A4_PRINT_STYLE = `
     gap: 0 !important;
     min-width: 0 !important;
     align-items: stretch !important;
+    filter: grayscale(100%) !important;
   }
 
   .invoice-page {
@@ -1421,7 +1423,7 @@ const PrintInvoice = () => {
       bankBranch: settings.bankBranch || FALLBACK_SHOP.bankBranch,
       accountNumber: settings.accountNumber || FALLBACK_SHOP.accountNumber,
       ifscCode: settings.ifscCode || FALLBACK_SHOP.ifscCode,
-      paymentUpiId: FALLBACK_SHOP.paymentUpiId,
+      paymentUpiId: settings.upiId || FALLBACK_SHOP.paymentUpiId,
     }),
     [settings]
   );
@@ -2039,7 +2041,6 @@ const InvoiceHeader = ({ invoice, isGst, showParasmaniName }) => {
             <h1 className="parasmani-header-title">PARASMANI</h1>
             <h2 className="parasmani-header-subtitle-main">Murarilal Garg & Sons</h2>
             <p className="parasmani-header-subtitle">Gold, Silver & Diamond Jewellery · Hallmarked Ornaments · Custom Designs</p>
-            <p className="parasmani-header-details">Kelkar Para, Station Road, Raipur (C.G.) · Mob: +91 9981111199 · waliascreative@gmail.com</p>
           </div>
         ) : (
           <img src="/parasmani-invoice-reference.png" alt="Parasmani jewellery letterhead" />
@@ -2053,7 +2054,6 @@ const InvoiceHeader = ({ invoice, isGst, showParasmaniName }) => {
           <div className="invoice-buyer-content">
             <p className="invoice-buyer-name">{invoice?.farmer?.name || "-"}</p>
             <div className="invoice-buyer-details">
-              <div>{customerAddress || "-"}</div>
               <div>Mob.: {invoice?.farmer?.mobileNumber || "-"}</div>
               {isGst && invoice?.farmer?.gstNumber && <div>GST: {invoice.farmer.gstNumber}</div>}
               {invoice?.farmer?.panNumber && <div>PAN: {invoice.farmer.panNumber}</div>}
@@ -2246,13 +2246,20 @@ const InvoiceFooter = ({
         <div className="parasmani-left-column">
           <div className="parasmani-words">
             <div className="parasmani-box-title">Amount chargeable in words</div>
-            <div>Rupees {amountInWords} Only</div>
+            <div>{amountInWords} Only</div>
           </div>
 
           <div className="parasmani-info-box">
             <h4>Scan QR Code / Company Bank Details</h4>
             <div className="parasmani-bank-with-qr">
-              <img src={ORDER_PAYMENT_QR} alt="Payment QR"/>
+              <div className="parasmani-qr-container">
+                <QRCodeSVG
+                  value={`upi://pay?pa=${shop.paymentUpiId}&pn=${encodeURIComponent(shop.accountHolderName || shop.shopName)}&am=${grandTotalRounded}&cu=INR&tn=Invoice%20${encodeURIComponent(invoice?.invoiceNumber || "")}`}
+                  size={72}
+                  level="M"
+                  includeMargin={false}
+                />
+              </div>
               <div className="parasmani-bank-details"><strong>UPI ID</strong>: {shop.paymentUpiId}<br/>Bank Name : <strong>{shop.bankName}</strong><br/>A/c Holder : <strong>{shop.accountHolderName}</strong><br/>A/c No. : <strong>{shop.accountNumber}</strong><br/>Branch : <strong>{shop.bankBranch}</strong><br/>IFSC Code : <strong>{shop.ifscCode}</strong></div>
             </div>
           </div>

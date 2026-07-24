@@ -55,12 +55,11 @@ const InvoiceTable = ({ invoices, onDeleted }) => {
       {/* Desktop Table Layout (visible on md screens and up) */}
       <div className="hidden md:block overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1040px] text-left">
+          <table className="w-full min-w-[800px] text-left">
             <thead className="bg-slate-50">
               <tr>
                 {[
                   "Invoice / Estimate",
-                  "Type",
                   "Customer",
                   "Grand Total",
                   "Status",
@@ -69,7 +68,7 @@ const InvoiceTable = ({ invoices, onDeleted }) => {
                 ].map((heading) => (
                   <th
                     key={heading}
-                    className={`px-6 py-4 text-xs font-black uppercase tracking-widest text-slate-500 ${
+                    className={`px-4 py-3.5 text-xs font-black uppercase tracking-widest text-slate-500 ${
                       heading === "Actions" ? "text-right" : ""
                     }`}
                   >
@@ -81,7 +80,7 @@ const InvoiceTable = ({ invoices, onDeleted }) => {
             <tbody className="divide-y divide-slate-100">
               {invoices?.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-16 text-center">
+                  <td colSpan="6" className="px-4 py-16 text-center">
                     <div className="flex flex-col items-center gap-3 text-slate-400">
                       <Receipt size={40} />
                       <p className="text-sm font-bold">No invoices found.</p>
@@ -98,7 +97,7 @@ const InvoiceTable = ({ invoices, onDeleted }) => {
                   return (
                     <tr key={invoice._id} className="transition hover:bg-slate-50">
                       {/* Invoice Number */}
-                      <td className="px-6 py-5">
+                      <td className="px-4 py-4">
                         <p className="font-black text-slate-955">
                           #{invoice.invoiceNumber}
                         </p>
@@ -107,23 +106,8 @@ const InvoiceTable = ({ invoices, onDeleted }) => {
                         </p>
                       </td>
 
-                      {/* Type Badge */}
-                      <td className="px-6 py-5">
-                        {isGst ? (
-                          <span className="inline-flex items-center gap-1.5 rounded-xl bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700">
-                            <FileCheck size={13} />
-                            GST Invoice
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 rounded-xl bg-orange-50 px-3 py-1.5 text-xs font-black text-orange-700">
-                            <FileText size={13} />
-                            Estimate
-                          </span>
-                        )}
-                      </td>
-
                       {/* Customer */}
-                      <td className="px-6 py-5">
+                      <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
                           <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                             <User size={16} />
@@ -140,7 +124,7 @@ const InvoiceTable = ({ invoices, onDeleted }) => {
                       </td>
 
                       {/* Grand Total */}
-                      <td className="px-6 py-5">
+                      <td className="px-4 py-4">
                         <div className="flex items-center gap-1 text-lg font-black text-slate-950">
                           <IndianRupee size={16} className="text-blue-600" />
                           {Number(invoice.grandTotal || 0).toLocaleString("en-IN", {
@@ -154,7 +138,7 @@ const InvoiceTable = ({ invoices, onDeleted }) => {
                         )}
                       </td>
 
-                      <td className="px-6 py-5">
+                      <td className="px-4 py-4">
                         <span className={`inline-flex rounded-xl px-3 py-1.5 text-xs font-black uppercase tracking-widest ${statusMeta.className}`}>
                           {statusMeta.label}
                         </span>
@@ -166,7 +150,7 @@ const InvoiceTable = ({ invoices, onDeleted }) => {
                       </td>
 
                       {/* Date only */}
-                      <td className="px-6 py-5">
+                      <td className="px-4 py-4">
                         <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
                           <Calendar size={14} className="text-slate-400" />
                           {new Date(invoice.createdAt).toLocaleDateString("en-IN", {
@@ -178,7 +162,7 @@ const InvoiceTable = ({ invoices, onDeleted }) => {
                       </td>
 
                       {/* Actions */}
-                      <td className="px-6 py-5">
+                      <td className="px-4 py-4">
                         <div className="flex justify-end gap-2">
                           <Link
                             to={`/invoices/${invoice._id}`}
