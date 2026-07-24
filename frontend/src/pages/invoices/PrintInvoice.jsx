@@ -2301,7 +2301,7 @@ const InvoiceFooter = ({
             <div className="parasmani-bank-with-qr">
               <div className="parasmani-qr-container">
                 <QRCodeSVG
-                  value={`upi://pay?pa=${shop.paymentUpiId}&pn=${encodeURIComponent(shop.accountHolderName || shop.shopName)}&am=${grandTotalRounded}&cu=INR&tn=Invoice%20${encodeURIComponent(invoice?.invoiceNumber || "")}`}
+                  value={`upi://pay?pa=${shop.paymentUpiId}&pn=${encodeURIComponent(shop.accountHolderName || shop.shopName)}&cu=INR&tn=Invoice%20${encodeURIComponent(invoice?.invoiceNumber || "")}`}
                   size={72}
                   level="M"
                   includeMargin={false}
