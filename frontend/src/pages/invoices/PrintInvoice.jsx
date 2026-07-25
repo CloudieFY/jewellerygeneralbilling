@@ -16,7 +16,7 @@ const FALLBACK_SHOP = {
   shopAddress: "Kelkar Para, Station Road, Raipur (C.G.)",
   shopMobile: "+91 9981111199",
   shopEmail: "waliascreative@gmail.com",
-  gstNumber: "22AEYPA8034J1ZC",
+  gstNumber: "23AAAHM7492L1ZV",
   accountHolderName: "Murarilal Garg And Sons",
   bankName: "HDFC BANK",
   bankBranch: "Neemuch Branch",
@@ -1063,6 +1063,75 @@ const A4_PRINT_STYLE = `
   color: #35200d;
 }
 
+/* B&W Layout preview styles */
+.invoice-document.bw-mode .invoice-sheet {
+  background: #ffffff !important;
+  border-color: #666666 !important;
+  box-shadow: none !important;
+  color: #000000 !important;
+}
+.invoice-document.bw-mode .invoice-sheet::before,
+.invoice-document.bw-mode .invoice-sheet::after {
+  display: none !important;
+  content: none !important;
+}
+.invoice-document.bw-mode .invoice-top-line {
+  background: transparent !important;
+  border-bottom: 0.5px solid #666666 !important;
+  color: #000000 !important;
+}
+.invoice-document.bw-mode .invoice-document-heading {
+  color: #000000 !important;
+}
+.invoice-document.bw-mode .invoice-buyer-box,
+.invoice-document.bw-mode .invoice-meta-box,
+.invoice-document.bw-mode .parasmani-words,
+.invoice-document.bw-mode .parasmani-info-box,
+.invoice-document.bw-mode .invoice-table td,
+.invoice-document.bw-mode .invoice-table th,
+.invoice-document.bw-mode .parasmani-totals td {
+  border-color: #666666 !important;
+  background: transparent !important;
+  color: #000000 !important;
+}
+.invoice-document.bw-mode .parasmani-info-box h4 {
+  background: transparent !important;
+  color: #000000 !important;
+  border-bottom: 0.5px solid #666666 !important;
+  font-weight: 900 !important;
+  margin-bottom: 2mm !important;
+}
+.invoice-document.bw-mode .parasmani-totals .total {
+  background: transparent !important;
+  color: #000000 !important;
+  border-top: 0.5px solid #666666 !important;
+  border-bottom: 0.5px solid #666666 !important;
+}
+.invoice-document.bw-mode .parasmani-totals .net {
+  background: transparent !important;
+  color: #000000 !important;
+}
+.invoice-document.bw-mode .invoice-table th {
+  background: transparent !important;
+  color: #000000 !important;
+  font-weight: 900 !important;
+}
+.invoice-document.bw-mode .invoice-buyer-name,
+.invoice-document.bw-mode .parasmani-box-title,
+.invoice-document.bw-mode .parasmani-card-title,
+.invoice-document.bw-mode .parasmani-header-title,
+.invoice-document.bw-mode .parasmani-header-subtitle-main,
+.invoice-document.bw-mode .parasmani-header-subtitle,
+.invoice-document.bw-mode .parasmani-header-details {
+  color: #000000 !important;
+}
+.invoice-document.bw-mode .parasmani-footer-banner img {
+  visibility: hidden !important;
+}
+.invoice-document.bw-mode .invoice-signature-company {
+  color: #000000 !important;
+}
+
 @media print {
   @page {
     size: 7.5in 10in;
@@ -1078,8 +1147,8 @@ const A4_PRINT_STYLE = `
     padding: 0 !important;
     background: #ffffff !important;
     overflow: visible !important;
-    -webkit-print-color-adjust: economy !important;
-    print-color-adjust: economy !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .print\\:hidden {
@@ -1141,37 +1210,48 @@ const A4_PRINT_STYLE = `
   }
 
   /* Black-and-white printer output: print only invoice matter. Decorative
-     artwork and colour fills consume toner and turn into a dark grey page. */
-  .invoice-sheet,
-  .invoice-sheet * {
+     artwork and colour fills consume toner and turn into a dark grey page. Only applies in B&W or preprinted modes. */
+  .invoice-document.bw-mode .invoice-sheet,
+  .invoice-document.bw-mode .invoice-sheet *,
+  .invoice-document.preprinted-paper .invoice-sheet,
+  .invoice-document.preprinted-paper .invoice-sheet * {
     background-color: transparent !important;
     background-image: none !important;
     color: #000000 !important;
     box-shadow: none !important;
     text-shadow: none !important;
-    -webkit-print-color-adjust: economy !important;
-    print-color-adjust: economy !important;
   }
 
-  .invoice-sheet::before,
-  .invoice-sheet::after {
+  .invoice-document.bw-mode .invoice-sheet::before,
+  .invoice-document.bw-mode .invoice-sheet::after,
+  .invoice-document.preprinted-paper .invoice-sheet::before,
+  .invoice-document.preprinted-paper .invoice-sheet::after {
     display: none !important;
     content: none !important;
   }
 
-  .invoice-document:not(.show-firm-active) .invoice-letterhead-image,
-  .parasmani-footer-banner img {
+  .invoice-document.preprinted-paper:not(.show-firm-active) .invoice-letterhead-image,
+  .invoice-document.bw-mode .parasmani-footer-banner img,
+  .invoice-document.preprinted-paper .parasmani-footer-banner img {
     visibility: hidden !important;
   }
 
-  .invoice-sheet:not(.preprinted-paper),
-  .invoice-table th,
-  .invoice-table td,
-  .invoice-buyer-box,
-  .invoice-meta-box,
-  .parasmani-words,
-  .parasmani-info-box,
-  .parasmani-totals td {
+  .invoice-document.bw-mode .invoice-sheet,
+  .invoice-document.bw-mode .invoice-table th,
+  .invoice-document.bw-mode .invoice-table td,
+  .invoice-document.bw-mode .invoice-buyer-box,
+  .invoice-document.bw-mode .invoice-meta-box,
+  .invoice-document.bw-mode .parasmani-words,
+  .invoice-document.bw-mode .parasmani-info-box,
+  .invoice-document.bw-mode .parasmani-totals td,
+  .invoice-document.preprinted-paper .invoice-sheet:not(.preprinted-paper),
+  .invoice-document.preprinted-paper .invoice-table th,
+  .invoice-document.preprinted-paper .invoice-table td,
+  .invoice-document.preprinted-paper .invoice-buyer-box,
+  .invoice-document.preprinted-paper .invoice-meta-box,
+  .invoice-document.preprinted-paper .parasmani-words,
+  .invoice-document.preprinted-paper .parasmani-info-box,
+  .invoice-document.preprinted-paper .parasmani-totals td {
     border-width: 0.5px !important;
     border-color: #666666 !important;
   }
@@ -1308,7 +1388,7 @@ const PrintInvoice = () => {
   const [pdfBusy, setPdfBusy] = useState(false);
   const [whatsAppBusy, setWhatsAppBusy] = useState(false);
   const [pregeneratedPdf, setPregeneratedPdf] = useState(null);
-  const [printOnPreprintedPaper, setPrintOnPreprintedPaper] = useState(true);
+  const [invoiceMode, setInvoiceMode] = useState("color"); // 'color', 'preprinted', 'bw'
   const [designMode, setDesignMode] = useState(false);
   const [selectedDesignLabel, setSelectedDesignLabel] = useState("Nothing selected");
   const [tableColumnWidths, setTableColumnWidths] = useState(GST_COLUMN_WIDTHS);
@@ -1844,16 +1924,43 @@ const PrintInvoice = () => {
         </Link>
 
         <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end">
-          <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-black text-amber-900">
-              <input
-                type="checkbox"
-                checked={printOnPreprintedPaper}
-                onChange={(event) => setPrintOnPreprintedPaper(event.target.checked)}
-                className="h-4 w-4 accent-amber-700"
-              />
-              Pre-printed paper
-          </label>
-          <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-blue-300 bg-blue-50 px-4 py-3 text-sm font-black text-blue-900">
+          <div className="flex flex-wrap items-center gap-1 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setInvoiceMode("color")}
+              className={`rounded-lg px-3 py-2 text-xs font-black transition-colors ${
+                invoiceMode === "color"
+                  ? "bg-amber-600 text-white shadow-sm"
+                  : "text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              1. Color Invoice
+            </button>
+            <button
+              type="button"
+              onClick={() => setInvoiceMode("preprinted")}
+              className={`rounded-lg px-3 py-2 text-xs font-black transition-colors ${
+                invoiceMode === "preprinted"
+                  ? "bg-amber-600 text-white shadow-sm"
+                  : "text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              2. Pre-printed (No Header/Footer)
+            </button>
+            <button
+              type="button"
+              onClick={() => setInvoiceMode("bw")}
+              className={`rounded-lg px-3 py-2 text-xs font-black transition-colors ${
+                invoiceMode === "bw"
+                  ? "bg-amber-600 text-white shadow-sm"
+                  : "text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              3. B&W Print
+            </button>
+          </div>
+
+          <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-blue-300 bg-blue-50 px-4 py-2.5 text-xs font-black text-blue-900">
               <input
                 type="checkbox"
                 checked={showParasmaniName}
@@ -2003,7 +2110,7 @@ const PrintInvoice = () => {
         <div
           id="invoice-a4-wrapper"
           ref={printRef}
-          className={`invoice-document ${printOnPreprintedPaper ? "preprinted-paper" : ""} ${isPrinting && printOnPreprintedPaper ? "print-preprinted-active" : ""} ${showParasmaniName ? "show-firm-active" : ""}`}
+          className={`invoice-document ${invoiceMode === "preprinted" ? "preprinted-paper" : ""} ${invoiceMode === "bw" ? "bw-mode" : ""} ${invoiceMode === "color" ? "color-mode" : ""} ${isPrinting && invoiceMode === "preprinted" ? "print-preprinted-active" : ""} ${showParasmaniName ? "show-firm-active" : ""}`}
           onClickCapture={handleDesignSelect}
         >
           {pages.map((pageItems, pageIndex) => {
@@ -2072,7 +2179,7 @@ const PrintInvoice = () => {
   );
 };
 
-const InvoiceHeader = ({ invoice, isGst, showParasmaniName }) => {
+const InvoiceHeader = ({ invoice, isGst, showParasmaniName, docHeading, shop }) => {
   const customerAddress = [
     invoice?.farmer?.address,
     invoice?.farmer?.village,
@@ -2094,6 +2201,12 @@ const InvoiceHeader = ({ invoice, isGst, showParasmaniName }) => {
         )}
       </div>
 
+      <div className="invoice-top-line">
+        <div>{isGst ? `GSTIN: ${shop?.gstNumber || "23AAAHM7492L1ZV"}` : ""}</div>
+        <div className="invoice-document-heading">{isGst ? "TAX INVOICE" : "ESTIMATE / BILL"}</div>
+        <div>{isGst ? "Original for Recipient" : ""}</div>
+      </div>
+
       <div className="invoice-party-grid">
         <div className="invoice-buyer-box">
           <span className="parasmani-card-title">Bill To</span>
@@ -2102,7 +2215,8 @@ const InvoiceHeader = ({ invoice, isGst, showParasmaniName }) => {
             <p className="invoice-buyer-name">{invoice?.farmer?.name || "-"}</p>
             <div className="invoice-buyer-details">
               <div>Mob.: {invoice?.farmer?.mobileNumber || "-"}</div>
-              {isGst && invoice?.farmer?.gstNumber && <div>GST: {invoice.farmer.gstNumber}</div>}
+              {customerAddress && <div>Address: {customerAddress}</div>}
+              {invoice?.farmer?.gstNumber && <div>GSTIN: {invoice.farmer.gstNumber}</div>}
               {invoice?.farmer?.panNumber && <div>PAN: {invoice.farmer.panNumber}</div>}
             </div>
           </div>
@@ -2118,7 +2232,12 @@ const InvoiceHeader = ({ invoice, isGst, showParasmaniName }) => {
             <strong>Invoice Date</strong>
             <strong>{formatDate(invoice?.createdAt)}</strong>
           </div>
-
+          {isGst && (
+            <div className="invoice-meta-row">
+              <strong>GSTIN</strong>
+              <strong>{shop?.gstNumber || "23AAAHM7492L1ZV"}</strong>
+            </div>
+          )}
           <div className="invoice-meta-row">
             <strong>Document Type</strong>
             <strong data-design-movable="true" data-design-special-id="doc-type">
