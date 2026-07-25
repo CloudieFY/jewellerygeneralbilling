@@ -1139,9 +1139,7 @@ const A4_PRINT_STYLE = `
   border-bottom: 0 !important;
 }
 .invoice-document.preprinted-paper .parasmani-footer-banner,
-.invoice-document.preprinted-paper .parasmani-authorized-sign,
-.invoice-document.preprinted-paper .parasmani-customer-sign,
-.invoice-document.preprinted-paper .parasmani-for {
+.invoice-document.preprinted-paper:not(.show-firm-active) .parasmani-for {
   visibility: hidden !important;
 }
 
@@ -1194,7 +1192,6 @@ const A4_PRINT_STYLE = `
     gap: 0 !important;
     min-width: 0 !important;
     align-items: stretch !important;
-    filter: grayscale(100%) !important;
   }
 
   .invoice-page {
@@ -1286,8 +1283,6 @@ const A4_PRINT_STYLE = `
 
   .invoice-document.preprinted-paper:not(.show-firm-active) .invoice-letterhead-image,
   .invoice-document.preprinted-paper .parasmani-footer-banner,
-  .invoice-document.preprinted-paper .parasmani-authorized-sign,
-  .invoice-document.preprinted-paper .parasmani-customer-sign,
   .invoice-document.preprinted-paper:not(.show-firm-active) .parasmani-for {
     visibility: hidden !important;
   }
@@ -1324,8 +1319,6 @@ const A4_PRINT_STYLE = `
 
 .invoice-document.print-preprinted-active:not(.show-firm-active) .invoice-letterhead-image,
 .invoice-document.print-preprinted-active .parasmani-footer-banner,
-.invoice-document.print-preprinted-active .parasmani-authorized-sign,
-.invoice-document.print-preprinted-active .parasmani-customer-sign,
 .invoice-document.print-preprinted-active:not(.show-firm-active) .parasmani-for {
   visibility: hidden !important;
 }
