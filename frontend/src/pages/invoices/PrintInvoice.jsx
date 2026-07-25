@@ -1132,6 +1132,19 @@ const A4_PRINT_STYLE = `
   color: #000000 !important;
 }
 
+/* Screen styles for pre-printed mode */
+.invoice-document.preprinted-paper .invoice-letterhead-image {
+  visibility: hidden !important;
+  height: 47mm !important;
+  border-bottom: 0 !important;
+}
+.invoice-document.preprinted-paper .parasmani-footer-banner,
+.invoice-document.preprinted-paper .parasmani-authorized-sign,
+.invoice-document.preprinted-paper .parasmani-customer-sign,
+.invoice-document.preprinted-paper .parasmani-for {
+  visibility: hidden !important;
+}
+
 @media print {
   @page {
     size: 7.5in 10in;
@@ -1273,7 +1286,8 @@ const A4_PRINT_STYLE = `
 
   .invoice-document.preprinted-paper:not(.show-firm-active) .invoice-letterhead-image,
   .invoice-document.preprinted-paper .parasmani-footer-banner,
-  .invoice-document.preprinted-paper .parasmani-signatures,
+  .invoice-document.preprinted-paper .parasmani-authorized-sign,
+  .invoice-document.preprinted-paper .parasmani-customer-sign,
   .invoice-document.preprinted-paper:not(.show-firm-active) .parasmani-for {
     visibility: hidden !important;
   }
@@ -1310,7 +1324,8 @@ const A4_PRINT_STYLE = `
 
 .invoice-document.print-preprinted-active:not(.show-firm-active) .invoice-letterhead-image,
 .invoice-document.print-preprinted-active .parasmani-footer-banner,
-.invoice-document.print-preprinted-active .parasmani-signatures,
+.invoice-document.print-preprinted-active .parasmani-authorized-sign,
+.invoice-document.print-preprinted-active .parasmani-customer-sign,
 .invoice-document.print-preprinted-active:not(.show-firm-active) .parasmani-for {
   visibility: hidden !important;
 }
@@ -1676,7 +1691,7 @@ const PrintInvoice = () => {
           ? "Signature selected (size and position only)"
           : target.dataset.designSpecialId === "company-name"
             ? "Company name selected (position only)"
-        : `${target.textContent.trim().slice(0, 38) || "Text block"} selected`
+            : `${target.textContent.trim().slice(0, 38) || "Text block"} selected`
     );
   };
 
@@ -1699,8 +1714,8 @@ const PrintInvoice = () => {
     const y = Number(element.dataset.moveY || 0) + yDelta;
     const matchingElements = element.dataset.designSpecialId
       ? printRef.current.querySelectorAll(
-          `[data-design-special-id="${element.dataset.designSpecialId}"]`
-        )
+        `[data-design-special-id="${element.dataset.designSpecialId}"]`
+      )
       : [element];
     matchingElements.forEach((matchingElement) => {
       matchingElement.dataset.moveX = String(x);
@@ -1719,8 +1734,8 @@ const PrintInvoice = () => {
       const width = Math.max(30, element.getBoundingClientRect().width + delta);
       const matchingElements = element.dataset.designSpecialId
         ? printRef.current.querySelectorAll(
-            `[data-design-special-id="${element.dataset.designSpecialId}"]`
-          )
+          `[data-design-special-id="${element.dataset.designSpecialId}"]`
+        )
         : [element];
       matchingElements.forEach((matchingElement) => {
         matchingElement.style.width = `${width}px`;
@@ -1928,46 +1943,43 @@ const PrintInvoice = () => {
             <button
               type="button"
               onClick={() => setInvoiceMode("color")}
-              className={`rounded-lg px-3 py-2 text-xs font-black transition-colors ${
-                invoiceMode === "color"
+              className={`rounded-lg px-3 py-2 text-xs font-black transition-colors ${invoiceMode === "color"
                   ? "bg-amber-600 text-white shadow-sm"
                   : "text-slate-700 hover:bg-slate-200"
-              }`}
+                }`}
             >
-              1. Color Invoice
+              1. Color Invoice (Header & Footer)
+            </button>
+            <button
+              type="button"
+              onClick={() => setInvoiceMode("bw_with_header")}
+              className={`rounded-lg px-3 py-2 text-xs font-black transition-colors ${invoiceMode === "bw_with_header"
+                  ? "bg-amber-600 text-white shadow-sm"
+                  : "text-slate-700 hover:bg-slate-200"
+                }`}
+            >
+              2. B&W Invoice (with Header)
             </button>
             <button
               type="button"
               onClick={() => setInvoiceMode("preprinted")}
-              className={`rounded-lg px-3 py-2 text-xs font-black transition-colors ${
-                invoiceMode === "preprinted"
+              className={`rounded-lg px-3 py-2 text-xs font-black transition-colors ${invoiceMode === "preprinted"
                   ? "bg-amber-600 text-white shadow-sm"
                   : "text-slate-700 hover:bg-slate-200"
-              }`}
+                }`}
             >
-              2. Pre-printed (No Header/Footer)
-            </button>
-            <button
-              type="button"
-              onClick={() => setInvoiceMode("bw")}
-              className={`rounded-lg px-3 py-2 text-xs font-black transition-colors ${
-                invoiceMode === "bw"
-                  ? "bg-amber-600 text-white shadow-sm"
-                  : "text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              3. B&W Print
+              3. Pre-Printed (No Header/Footer)
             </button>
           </div>
 
           <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-blue-300 bg-blue-50 px-4 py-2.5 text-xs font-black text-blue-900">
-              <input
-                type="checkbox"
-                checked={showParasmaniName}
-                onChange={(event) => setShowParasmaniName(event.target.checked)}
-                className="h-4 w-4 accent-blue-700"
-              />
-              Show Parasmani Name
+            <input
+              type="checkbox"
+              checked={showParasmaniName}
+              onChange={(event) => setShowParasmaniName(event.target.checked)}
+              className="h-4 w-4 accent-blue-700"
+            />
+            Show Parasmani Name
           </label>
           <button
             type="button"
@@ -2110,7 +2122,7 @@ const PrintInvoice = () => {
         <div
           id="invoice-a4-wrapper"
           ref={printRef}
-          className={`invoice-document ${invoiceMode === "preprinted" ? "preprinted-paper" : ""} ${invoiceMode === "bw" ? "bw-mode" : ""} ${invoiceMode === "color" ? "color-mode" : ""} ${isPrinting && invoiceMode === "preprinted" ? "print-preprinted-active" : ""} ${showParasmaniName ? "show-firm-active" : ""}`}
+          className={`invoice-document ${invoiceMode === "preprinted" ? "preprinted-paper" : ""} ${invoiceMode === "bw_with_header" ? "bw-mode show-firm-active" : ""} ${invoiceMode === "color" ? "color-mode" : ""} ${isPrinting && invoiceMode === "preprinted" ? "print-preprinted-active" : ""} ${showParasmaniName ? "show-firm-active" : ""}`}
           onClickCapture={handleDesignSelect}
         >
           {pages.map((pageItems, pageIndex) => {
@@ -2132,6 +2144,7 @@ const PrintInvoice = () => {
                     pageCount={pages.length}
                     shop={shop}
                     showParasmaniName={showParasmaniName}
+                    invoiceMode={invoiceMode}
                   />
 
                   <div className="invoice-page-body">
@@ -2179,7 +2192,7 @@ const PrintInvoice = () => {
   );
 };
 
-const InvoiceHeader = ({ invoice, isGst, showParasmaniName, docHeading, shop }) => {
+const InvoiceHeader = ({ invoice, isGst, showParasmaniName, docHeading, shop, invoiceMode }) => {
   const customerAddress = [
     invoice?.farmer?.address,
     invoice?.farmer?.village,
@@ -2190,7 +2203,7 @@ const InvoiceHeader = ({ invoice, isGst, showParasmaniName, docHeading, shop }) 
   return (
     <>
       <div className="invoice-letterhead-image">
-        {showParasmaniName ? (
+        {showParasmaniName || invoiceMode === "bw_with_header" ? (
           <div className="parasmani-text-header">
             <h1 className="parasmani-header-title">PARASMANI</h1>
             <h2 className="parasmani-header-subtitle-main">Murarilal Garg & Sons</h2>
@@ -2202,9 +2215,9 @@ const InvoiceHeader = ({ invoice, isGst, showParasmaniName, docHeading, shop }) 
       </div>
 
       <div className="invoice-top-line">
-        <div>{isGst ? `GSTIN: ${shop?.gstNumber || "23AAAHM7492L1ZV"}` : ""}</div>
+        <div />
         <div className="invoice-document-heading">{isGst ? "TAX INVOICE" : "ESTIMATE / BILL"}</div>
-        <div>{isGst ? "Original for Recipient" : ""}</div>
+        <div />
       </div>
 
       <div className="invoice-party-grid">
@@ -2426,7 +2439,7 @@ const InvoiceFooter = ({
                   includeMargin={false}
                 />
               </div>
-              <div className="parasmani-bank-details"><strong>UPI ID</strong>: {shop.paymentUpiId}<br/>Bank Name : <strong>{shop.bankName}</strong><br/>A/c Holder : <strong>{shop.accountHolderName}</strong><br/>A/c No. : <strong>{shop.accountNumber}</strong><br/>Branch : <strong>{shop.bankBranch}</strong><br/>IFSC Code : <strong>{shop.ifscCode}</strong></div>
+              <div className="parasmani-bank-details"><strong>UPI ID</strong>: {shop.paymentUpiId}<br />Bank Name : <strong>{shop.bankName}</strong><br />A/c Holder : <strong>{shop.accountHolderName}</strong><br />A/c No. : <strong>{shop.accountNumber}</strong><br />Branch : <strong>{shop.bankBranch}</strong><br />IFSC Code : <strong>{shop.ifscCode}</strong></div>
             </div>
           </div>
 
