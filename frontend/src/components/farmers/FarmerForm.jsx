@@ -81,7 +81,7 @@ const CustomerForm = ({ initialData = {}, onSubmit, loading }) => {
         </div>
 
         <div>
-          <label className={labelClasses}>Mobile</label>
+          <label className={labelClasses}>Mobile <span className="normal-case font-medium text-slate-400">(Optional)</span></label>
           <div className="relative">
             <Phone className={iconClasses} size={18} />
             <input
@@ -91,7 +91,6 @@ const CustomerForm = ({ initialData = {}, onSubmit, loading }) => {
               value={formData.mobileNumber}
               onChange={handleChange}
               className="input-field pl-10"
-              required
             />
           </div>
         </div>

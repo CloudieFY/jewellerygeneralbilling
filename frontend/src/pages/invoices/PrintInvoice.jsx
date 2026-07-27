@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Download, MessageCircle, Pencil, Printer } from "lucide-react";
+import { ArrowLeft, Download, FileText, MessageCircle, Pencil, Printer } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import API from "../../services/api";
 import { toNumber } from "../../utils/billing";
@@ -1403,6 +1403,7 @@ const PrintInvoice = () => {
   const selectedDesignElement = useRef(null);
   const [isPrinting, setIsPrinting] = useState(false);
   const [showParasmaniName, setShowParasmaniName] = useState(true);
+  const [showPrintTip, setShowPrintTip] = useState(true);
 
   useEffect(() => {
     const handleBeforePrint = () => setIsPrinting(true);
@@ -1643,6 +1644,23 @@ const PrintInvoice = () => {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  // Opens the invoice as a PDF blob in a new Chrome tab.
+  // From Chrome's built-in PDF viewer the user can print directly to any installed printer.
+  const handleOpenAsPdf = async () => {
+    if (!invoice || pdfBusy) return;
+    setPdfBusy(true);
+    try {
+      const blob = await createExportBlob();
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const tab = window.open(url, "_blank");
+      // Revoke after a generous delay so the PDF fully loads in the new tab
+      if (tab) setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } finally {
+      setPdfBusy(false);
+    }
   };
 
   const setDesignEditing = (enabled) => {
@@ -1922,6 +1940,25 @@ const PrintInvoice = () => {
 
   return (
     <div className="invoice-shell space-y-5 p-3 sm:p-6">
+      {/* ── Printer-selection tip banner ── */}
+      {showPrintTip && (
+        <div className="print:hidden mx-auto flex max-w-5xl items-start gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 shadow-sm">
+          <span className="text-lg">💡</span>
+          <div className="flex-1 text-sm text-amber-900">
+            <strong>Printer not printing directly?</strong> In the print dialog, change the printer from{" "}
+            <em>"Microsoft XPS / Save as PDF"</em> to your actual installed printer.
+            Or tap <strong>Open as PDF</strong> below — Chrome will open the invoice as a PDF and you can print it from there using any printer.
+          </div>
+          <button
+            onClick={() => setShowPrintTip(false)}
+            className="shrink-0 rounded-lg p-1 text-amber-600 hover:bg-amber-100"
+            aria-label="Dismiss tip"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <div className="mx-auto flex max-w-5xl flex-col gap-3 rounded-2xl bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between print:hidden">
         <Link
           to="/invoices"
@@ -1981,6 +2018,35 @@ const PrintInvoice = () => {
           >
             {designMode ? "Close Designer" : "Edit Design"}
           </button>
+          {/* ── Primary action: Print — opens system dialog immediately, no forced save ── */}
+          <button
+            onClick={handlePrint}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-sm hover:bg-blue-700"
+          >
+            <Printer size={17} />
+            Print {docLabel}
+          </button>
+
+          {/* ── Open as PDF in Chrome viewer — lets user pick any installed printer ── */}
+          <button
+            onClick={handleOpenAsPdf}
+            disabled={pdfBusy}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-black text-white shadow-sm hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            <FileText size={17} />
+            {pdfBusy ? "Opening..." : "Open as PDF"}
+          </button>
+
+          {/* ── Download PDF — explicit save to disk ── */}
+          <button
+            onClick={handleDownloadFile}
+            disabled={pdfBusy}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-700 px-4 py-3 text-sm font-black text-white shadow-sm hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            <Download size={17} />
+            {pdfBusy ? "Generating..." : "Download PDF"}
+          </button>
+
           <button
             onClick={handleWhatsApp}
             disabled={whatsAppBusy}
@@ -1997,23 +2063,6 @@ const PrintInvoice = () => {
             <Pencil size={17} />
             Edit {docLabel}
           </Link>
-
-          <button
-            onClick={handleDownloadFile}
-            disabled={pdfBusy}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-black text-white shadow-sm hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            <Download size={17} />
-            {pdfBusy ? "Saving..." : "Save PDF (7.5 × 10 in)"}
-          </button>
-
-          <button
-            onClick={handlePrint}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-black text-white shadow-sm hover:bg-blue-700"
-          >
-            <Printer size={17} />
-            Print {docLabel}
-          </button>
         </div>
       </div>
 

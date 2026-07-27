@@ -5,6 +5,7 @@ import {
   ChevronRight,
   FilePlus2,
   Plus,
+  Printer,
   Receipt,
   Ruler,
   Trash2,
@@ -238,7 +239,7 @@ const Billing = () => {
     });
   };
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event, { printAfter = false } = {}) => {
     event.preventDefault();
 
     if (!formData.farmerId) {
@@ -269,7 +270,7 @@ const Billing = () => {
 
     try {
       setLoading(true);
-      await API.post("/invoices", {
+      const { data } = await API.post("/invoices", {
         farmerId: formData.farmerId,
         invoiceNumber: formData.invoiceNumber,
         rateType: formData.rateType,
@@ -296,12 +297,164 @@ const Billing = () => {
 
       const label = gstEnabled ? "GST Invoice" : "Estimate Order";
       toast.success(`${label} created successfully`);
-      navigate("/invoices");
+
+      if (printAfter && data?.invoice?._id) {
+        navigate(`/invoices/print/${data.invoice._id}`);
+      } else {
+        navigate("/invoices");
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to create invoice");
     } finally {
       setLoading(false);
     }
+  };
+
+  // Print invoice directly without saving to DB.
+  // Opens a new window with clean invoice HTML and calls window.print().
+  // Works on mobile — no file saved, no PDF download required.
+  const handleDirectPrint = () => {
+    if (!formData.farmerId) {
+      toast.error("Please select a customer");
+      return;
+    }
+
+    const customer = customers.find((c) => c._id === formData.farmerId);
+    const invoiceDate = formData.invoiceDate
+      ? new Date(formData.invoiceDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+      : new Date().toLocaleDateString("en-IN");
+
+    const validProducts = formData.products.filter((item) => item.product);
+    if (!validProducts.length) {
+      toast.error("Please add at least one product");
+      return;
+    }
+
+    const lines = validProducts.map((item) => {
+      const product = productsList.find((p) => p._id === item.product);
+      return { item, product, line: calculateLine(item, product, formData.rateType, gstEnabled) };
+    });
+
+    const isGstDoc = documentType === "gst_invoice";
+    const docTitle = isGstDoc ? "GST Invoice" : "Estimate";
+    const subTotal = lines.reduce((s, { line }) => s + line.baseAmount, 0);
+    const totalGST = lines.reduce((s, { line }) => s + line.gstAmount, 0);
+    const grandTotal = Math.round(subTotal + totalGST);
+
+    const rowsHtml = lines.map(({ item, product, line }, idx) => `
+      <tr>
+        <td>${idx + 1}</td>
+        <td style="text-align:left">${product?.productName || "-"}</td>
+        <td>${item.purity || "22K"}</td>
+        <td>${line.grossWeight} g</td>
+        <td>${line.stoneWeight} g</td>
+        <td>${line.netWeight} g</td>
+        <td>${item.quantity}</td>
+        <td style="text-align:right">&#8377;${line.rate.toLocaleString("en-IN")}/g</td>
+        <td style="text-align:right">&#8377;${line.metalValue.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</td>
+        <td style="text-align:right">&#8377;${line.makingChargeAmount.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</td>
+        ${isGstDoc ? `<td>${line.gstRate}%</td>` : ""}
+        <td style="text-align:right;font-weight:700">&#8377;${line.lineTotal.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</td>
+      </tr>`).join("");
+
+    const colSpan = isGstDoc ? 11 : 10;
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>${docTitle} - ${customer?.name || "Customer"}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,sans-serif;font-size:12px;color:#111;background:#fff;padding:10mm}
+  h1{font-size:22px;font-weight:900;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px}
+  .header{text-align:center;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:10px}
+  .header p{font-size:11px;color:#444}
+  .doc-title{font-size:15px;font-weight:900;text-align:center;text-transform:uppercase;letter-spacing:2px;border:1.5px solid #111;display:inline-block;padding:3px 18px;margin:6px 0}
+  .meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+  .meta-box{border:1px solid #aaa;padding:6px 8px;border-radius:3px}
+  .meta-box strong{display:block;font-size:10px;text-transform:uppercase;color:#666;margin-bottom:2px}
+  table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:11px}
+  th{background:#222;color:#fff;padding:5px 4px;text-align:center;font-size:10px;text-transform:uppercase}
+  td{border:0.5px solid #bbb;padding:4px;vertical-align:middle;text-align:center}
+  tr:nth-child(even) td{background:#f9f9f9}
+  tfoot td{background:#f0f0f0;font-weight:700;border-top:1.5px solid #555}
+  .totals{margin-left:auto;width:50%;border-collapse:collapse}
+  .totals td{padding:3px 8px;font-size:12px;border:0.5px solid #ddd}
+  .totals td:last-child{text-align:right;font-weight:700}
+  .totals .grand{background:#222;color:#fff;font-size:14px}
+  .footer{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:11px}
+  .sign-box{border-top:1px solid #aaa;margin-top:30px;padding-top:4px;text-align:center;font-size:10px;color:#444}
+  @media print{body{padding:0}@page{size:A4;margin:10mm}}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Walia's Creative</h1>
+  <p>Gold, Silver &amp; Diamond Jewellery &middot; Hallmarked Ornaments &middot; Custom Designs</p>
+  <p>Kelkar Para, Station Road, Raipur (C.G.) | +91 9981111199</p>
+  <div style="margin-top:6px"><span class="doc-title">${docTitle}</span></div>
+</div>
+
+<div class="meta">
+  <div class="meta-box">
+    <strong>Customer</strong>
+    <div style="font-size:15px;font-weight:900">${customer?.name || "-"}</div>
+    <div>${customer?.mobileNumber || ""}</div>
+    <div>${customer?.village || ""}</div>
+  </div>
+  <div class="meta-box" style="text-align:right">
+    <strong>Date</strong>
+    <div>${invoiceDate}</div>
+    ${formData.invoiceNumber ? `<div style="margin-top:4px"><strong style="display:inline">Invoice #:</strong> ${formData.invoiceNumber}</div>` : "<div style='font-size:10px;color:#888;margin-top:4px'>Draft — Not Saved</div>"}
+  </div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>#</th><th style="text-align:left">Product</th><th>Purity</th>
+      <th>Gross Wt</th><th>Stone Wt</th><th>Net Wt</th><th>Qty</th>
+      <th>Rate</th><th>Metal Value</th><th>Making</th>
+      ${isGstDoc ? "<th>GST%</th>" : ""}
+      <th>Total</th>
+    </tr>
+  </thead>
+  <tbody>${rowsHtml}</tbody>
+  <tfoot>
+    <tr>
+      <td colspan="${colSpan - 1}" style="text-align:right">Sub Total</td>
+      <td style="text-align:right">&#8377;${subTotal.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</td>
+    </tr>
+  </tfoot>
+</table>
+
+<table class="totals">
+  ${isGstDoc ? `<tr><td>Sub Total</td><td>&#8377;${subTotal.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</td></tr><tr><td>GST Total</td><td>&#8377;${totalGST.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</td></tr>` : ""}
+  ${formData.receivedAmount ? `<tr><td>Received</td><td>&#8377;${Number(formData.receivedAmount).toLocaleString("en-IN")}</td></tr><tr><td>Balance Due</td><td>&#8377;${Math.max(grandTotal - Number(formData.receivedAmount), 0).toLocaleString("en-IN")}</td></tr>` : ""}
+  <tr class="grand"><td>Grand Total</td><td>&#8377;${grandTotal.toLocaleString("en-IN")}</td></tr>
+</table>
+
+<div class="footer">
+  <div>
+    <div style="font-size:10px;color:#555;margin-bottom:4px">Terms: Goods once sold will not be taken back.</div>
+    <div class="sign-box">Customer Signature</div>
+  </div>
+  <div style="text-align:right">
+    <div class="sign-box">For Walia's Creative<br/>Authorised Signatory</div>
+  </div>
+</div>
+<script>window.onload=function(){window.print()};<\/script>
+</body></html>`;
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      toast.error("Pop-up blocked — please allow pop-ups for this site and try again.");
+      return;
+    }
+    printWindow.document.write(html);
+    printWindow.document.close();
   };
 
   useEffect(() => {
@@ -394,11 +547,10 @@ const Billing = () => {
               <button
                 type="button"
                 onClick={() => setDocumentType("gst_invoice")}
-                className={`flex items-center gap-3 rounded-2xl border-2 px-4 py-4 text-sm font-black transition ${
-                  isGst
+                className={`flex items-center gap-3 rounded-2xl border-2 px-4 py-4 text-sm font-black transition ${isGst
                     ? "border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-200"
                     : "border-slate-200 bg-white text-slate-600 hover:border-blue-300"
-                }`}
+                  }`}
               >
                 <FileCheck size={20} />
                 <div className="text-left">
@@ -412,11 +564,10 @@ const Billing = () => {
               <button
                 type="button"
                 onClick={() => setDocumentType("order")}
-                className={`flex items-center gap-3 rounded-2xl border-2 px-4 py-4 text-sm font-black transition ${
-                  !isGst
+                className={`flex items-center gap-3 rounded-2xl border-2 px-4 py-4 text-sm font-black transition ${!isGst
                     ? "border-orange-500 bg-orange-500 text-white shadow-lg shadow-orange-200"
                     : "border-slate-200 bg-white text-slate-600 hover:border-orange-300"
-                }`}
+                  }`}
               >
                 <FileText size={20} />
                 <div className="text-left">
@@ -715,7 +866,7 @@ const Billing = () => {
                       </label>
                     </div>
 
-                    <div className={`mt-4 grid grid-cols-2 gap-3 rounded-2xl bg-white p-3 ${isGst ? "sm:grid-cols-5" : "sm:grid-cols-4"}`}>
+                    <div className={`mt-4 grid grid-cols-2 gap-3 rounded-2xl bg-white p-3 ${isGst ? "sm:grid-cols-6" : "sm:grid-cols-5"}`}>
                       <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
                           Net Metal Wt.
@@ -731,6 +882,15 @@ const Billing = () => {
                           Metal Value
                         </p>
                         <p className="mt-2 text-sm font-black text-slate-950">{formatCurrency(line.metalValue)}</p>
+                      </div>
+
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                          Making Charges
+                        </p>
+                        <p className="mt-2 text-sm font-black text-slate-800">
+                          {formatCurrency(line.makingChargeAmount)}
+                        </p>
                       </div>
 
                       {/* GST% — only for GST Invoice */}
@@ -812,7 +972,7 @@ const Billing = () => {
             </div>
           </section>
 
-          <section className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6">
+          <section className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="text-sm font-semibold text-slate-600">
               Subtotal Rs {summary.subTotal.toLocaleString("en-IN")}
               {isGst && (
@@ -821,25 +981,37 @@ const Billing = () => {
                 </span>
               )}
             </div>
-            <button
-              type="submit"
-              disabled={loading || summary.grandTotal <= 0}
-              className={`inline-flex items-center justify-center gap-3 rounded-2xl px-6 py-4 text-base font-black text-white shadow-lg transition disabled:cursor-not-allowed disabled:opacity-50 ${
-                isGst
-                  ? "bg-blue-600 shadow-blue-200 hover:bg-blue-700"
-                  : "bg-orange-500 shadow-orange-200 hover:bg-orange-600"
-              }`}
-            >
-              {loading ? (
-                "Saving..."
-              ) : (
-                <>
-                  <FilePlus2 size={20} />
-                  {isGst ? "Create GST Invoice" : "Create Estimate Order"}
-                  <ChevronRight size={18} />
-                </>
-              )}
-            </button>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+              {/* Print directly — no DB save, no file download, works on mobile */}
+              <button
+                type="button"
+                disabled={summary.grandTotal <= 0}
+                onClick={handleDirectPrint}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-green-600 px-5 py-4 text-base font-black text-green-700 transition hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Printer size={20} />
+                Print (No Save)
+              </button>
+
+              <button
+                type="submit"
+                disabled={loading || summary.grandTotal <= 0}
+                className={`inline-flex items-center justify-center gap-3 rounded-2xl px-6 py-4 text-base font-black text-white shadow-lg transition disabled:cursor-not-allowed disabled:opacity-50 ${isGst
+                    ? "bg-blue-600 shadow-blue-200 hover:bg-blue-700"
+                    : "bg-orange-500 shadow-orange-200 hover:bg-orange-600"
+                  }`}
+              >
+                {loading ? (
+                  "Saving..."
+                ) : (
+                  <>
+                    <FilePlus2 size={20} />
+                    {isGst ? "Create GST Invoice" : "Create Estimate Order"}
+                    <ChevronRight size={18} />
+                  </>
+                )}
+              </button>
+            </div>
           </section>
         </form>
 

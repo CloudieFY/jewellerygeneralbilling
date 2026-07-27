@@ -8,10 +8,10 @@ const farmerSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // Phone number is now optional — no required, no unique constraint
     mobileNumber: {
       type: String,
-      required: true,
-      unique: true,
+      default: "",
     },
 
     village: {
@@ -42,6 +42,7 @@ const farmerSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
+
     panNumber: {
       type: String,
       default: "",
