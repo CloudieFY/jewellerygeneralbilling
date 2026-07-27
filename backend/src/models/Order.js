@@ -5,7 +5,7 @@ const orderSchema = new mongoose.Schema(
     orderNumber: { type: String, required: true, unique: true, trim: true },
     customer: { type: mongoose.Schema.Types.ObjectId, ref: "Farmer", required: true },
     customerName: { type: String, required: true, trim: true },
-    customerMobile: { type: String, required: true, trim: true },
+    customerMobile: { type: String, default: "", trim: true },
     customerAddress: { type: String, default: "", trim: true },
     itemDescription: { type: String, required: true, trim: true },
     metal: { type: String, required: true, trim: true },

@@ -19,7 +19,7 @@ export const createOrder = async (req, res) => {
       orderDate, dueDate, note = "", design,
     } = req.body;
 
-    if (!customerName || !customerMobile || !itemDescription || !metal || !purity || !orderDate || !dueDate) {
+    if (!customerName || !itemDescription || !metal || !purity || !orderDate || !dueDate) {
       return res.status(400).json({ message: "Please complete all required order fields" });
     }
     const hasFixedRate = fixedRate !== undefined && fixedRate !== null && fixedRate !== "";
@@ -33,24 +33,26 @@ export const createOrder = async (req, res) => {
       return res.status(400).json({ message: "Design file is too large. Maximum size is 5 MB" });
     }
 
+    const trimmedCustomerMobile = typeof customerMobile === "string" ? customerMobile.trim() : "";
+
     let customer = customerId ? await Farmer.findById(customerId) : null;
-    if (!customer) customer = await Farmer.findOne({ mobileNumber: customerMobile.trim() });
+    if (!customer && trimmedCustomerMobile) customer = await Farmer.findOne({ mobileNumber: trimmedCustomerMobile });
     if (!customer) {
       customer = await Farmer.create({
         name: customerName,
-        mobileNumber: customerMobile.trim(),
+        mobileNumber: trimmedCustomerMobile,
         address: customerAddress,
       });
     } else {
       customer.name = customerName;
-      customer.mobileNumber = customerMobile.trim();
+      customer.mobileNumber = trimmedCustomerMobile;
       customer.address = customerAddress;
       await customer.save();
     }
 
     const order = await Order.create({
       orderNumber: await nextOrderNumber(), customer: customer._id,
-      customerName, customerMobile: customerMobile.trim(), customerAddress,
+      customerName, customerMobile: trimmedCustomerMobile, customerAddress,
       itemDescription, metal, purity, fixedRate: hasFixedRate ? Number(fixedRate) : null,
       advancePaid: Number(advancePaid), orderDate, dueDate, note,
       design: design || undefined,

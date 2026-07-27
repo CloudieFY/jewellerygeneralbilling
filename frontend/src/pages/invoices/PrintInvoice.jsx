@@ -2299,6 +2299,12 @@ const InvoiceHeader = ({ invoice, isGst, showParasmaniName, docHeading, shop, in
               {isGst ? "GST Invoice" : "Estimate Order"}
             </strong>
           </div>
+          {!isGst && (
+            <div className="invoice-meta-row">
+              <strong>Mobile No.</strong>
+              <strong>7898088910</strong>
+            </div>
+          )}
         </div>
       </div>
     </>

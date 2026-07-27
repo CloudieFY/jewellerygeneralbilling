@@ -82,15 +82,20 @@ export const addFarmer = async (req, res) => {
 
     // validation
 
-    if (!name || !mobileNumber) {
+    if (!name) {
       return res.status(400).json({
-        message: "Customer name and mobile are required",
+        message: "Customer name is required",
       });
     }
 
     // check existing customer
 
-    const existingFarmer = await Farmer.findOne({ mobileNumber });
+    const trimmedMobileNumber =
+      typeof mobileNumber === "string" ? mobileNumber.trim() : mobileNumber;
+
+    const existingFarmer = trimmedMobileNumber
+      ? await Farmer.findOne({ mobileNumber: trimmedMobileNumber })
+      : null;
 
     if (existingFarmer) {
       return res.status(400).json({
@@ -105,7 +110,7 @@ export const addFarmer = async (req, res) => {
 
     const farmer = await Farmer.create({
       name,
-      mobileNumber,
+      mobileNumber: trimmedMobileNumber || "",
       village,
       city,
       address,
