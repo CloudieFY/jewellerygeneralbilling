@@ -11,6 +11,7 @@ import {
   IndianRupee,
   MessageSquare,
   Plus,
+  Printer,
   Receipt,
   Ruler,
   Trash2,
@@ -180,6 +181,8 @@ const EditInvoice = () => {
       if (next.tagName === "INPUT" && next.select) next.select();
     }
   };
+
+
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -628,10 +631,9 @@ const EditInvoice = () => {
                     </div>
 
                     <NumberField
-                      label="Net Wt. (Auto)"
-                      value={item.netWeight}
-                      onChange={() => {}}
-                      readOnly
+                      label="Gross Wt. (g)"
+                      value={item.grossWeight}
+                      onChange={(value) => handleProductChange(index, "grossWeight", value)}
                     />
                     <NumberField
                       label="Stone Wt. (g)"
@@ -640,9 +642,10 @@ const EditInvoice = () => {
                       step="0.001"
                     />
                     <NumberField
-                      label="Gross Wt. (g)"
-                      value={item.grossWeight}
-                      onChange={(value) => handleProductChange(index, "grossWeight", value)}
+                      label="Net Wt. (Auto)"
+                      value={item.netWeight}
+                      onChange={() => {}}
+                      readOnly
                     />
                     <NumberField
                       label="Qty (pcs)"
@@ -794,23 +797,33 @@ const EditInvoice = () => {
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading || summary.grandTotal <= 0}
-              className={`inline-flex items-center justify-center gap-3 rounded-2xl px-8 py-4 text-base font-black text-white shadow-lg transition disabled:cursor-not-allowed disabled:opacity-50 ${accentSubmit}`}
-            >
-              {loading ? (
-                <>
-                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                  Saving Changes...
-                </>
-              ) : (
-                <>
-                  <CreditCard size={20} />
-                  Save Changes
-                </>
-              )}
-            </button>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+              <Link
+                to={`/invoices/print/${id}`}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-green-600 px-5 py-4 text-base font-black text-green-700 transition hover:bg-green-50"
+              >
+                <Printer size={20} />
+                Print Template View
+              </Link>
+
+              <button
+                type="submit"
+                disabled={loading || summary.grandTotal <= 0}
+                className={`inline-flex items-center justify-center gap-3 rounded-2xl px-8 py-4 text-base font-black text-white shadow-lg transition disabled:cursor-not-allowed disabled:opacity-50 ${accentSubmit}`}
+              >
+                {loading ? (
+                  <>
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    Saving Changes...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard size={20} />
+                    Save Changes
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </section>
       </form>

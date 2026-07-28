@@ -1442,6 +1442,69 @@ const PrintInvoice = () => {
     getInvoice();
   }, [id]);
 
+  const withCaptureRender = async (element, action) => {
+    if (document.fonts?.ready) await document.fonts.ready;
+    const images = [...element.querySelectorAll("img")];
+    await Promise.all(images.map((image) => {
+      if (image.complete) return image.decode?.().catch(() => undefined);
+      return new Promise((resolve) => {
+        image.addEventListener("load", resolve, { once: true });
+        image.addEventListener("error", resolve, { once: true });
+      });
+    }));
+    element.classList.add("capture-render");
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    try {
+      return await action();
+    } finally {
+      element.classList.remove("capture-render");
+    }
+  };
+
+  const createPdfBlob = async () => {
+    const element = document.getElementById("invoice-a4-wrapper");
+    if (!element) return null;
+
+    const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+      import("html2canvas"),
+      import("jspdf"),
+    ]);
+    return withCaptureRender(element, async () => {
+      const invoiceFormat = [INVOICE_PAGE_WIDTH_MM, INVOICE_PAGE_HEIGHT_MM];
+      const pdf = new jsPDF({ unit: "mm", format: invoiceFormat, orientation: "portrait" });
+      const pageElements = [...element.querySelectorAll(".invoice-page")];
+
+      for (let index = 0; index < pageElements.length; index += 1) {
+        const page = pageElements[index];
+        const pageRect = page.getBoundingClientRect();
+        const canvas = await html2canvas(page, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: "#ffffff",
+          logging: false,
+          scrollX: 0,
+          scrollY: -window.scrollY,
+          width: Math.round(pageRect.width),
+          height: Math.round(pageRect.height),
+          windowWidth: document.documentElement.clientWidth,
+          windowHeight: document.documentElement.clientHeight,
+        });
+        if (index > 0) pdf.addPage(invoiceFormat, "portrait");
+        pdf.addImage(
+          canvas.toDataURL("image/jpeg", 1),
+          "JPEG",
+          0,
+          0,
+          INVOICE_PAGE_WIDTH_MM,
+          INVOICE_PAGE_HEIGHT_MM,
+        );
+      }
+
+      return pdf.output("blob");
+    });
+  };
+
   useEffect(() => {
     if (!loading && invoice && !error && !designMode) {
       const timer = setTimeout(async () => {
@@ -1577,68 +1640,7 @@ const PrintInvoice = () => {
   const getExportFilename = (extension) =>
     `${isGst ? "GST-Invoice" : "Estimate"}-${invoice?.invoiceNumber || "bill"}.${extension}`;
 
-  const withCaptureRender = async (element, action) => {
-    if (document.fonts?.ready) await document.fonts.ready;
-    const images = [...element.querySelectorAll("img")];
-    await Promise.all(images.map((image) => {
-      if (image.complete) return image.decode?.().catch(() => undefined);
-      return new Promise((resolve) => {
-        image.addEventListener("load", resolve, { once: true });
-        image.addEventListener("error", resolve, { once: true });
-      });
-    }));
-    element.classList.add("capture-render");
-    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    try {
-      return await action();
-    } finally {
-      element.classList.remove("capture-render");
-    }
-  };
 
-  const createPdfBlob = async () => {
-    const element = document.getElementById("invoice-a4-wrapper");
-    if (!element) return null;
-
-    const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
-      import("html2canvas"),
-      import("jspdf"),
-    ]);
-    return withCaptureRender(element, async () => {
-      const invoiceFormat = [INVOICE_PAGE_WIDTH_MM, INVOICE_PAGE_HEIGHT_MM];
-      const pdf = new jsPDF({ unit: "mm", format: invoiceFormat, orientation: "portrait" });
-      const pageElements = [...element.querySelectorAll(".invoice-page")];
-
-      for (let index = 0; index < pageElements.length; index += 1) {
-        const page = pageElements[index];
-        const pageRect = page.getBoundingClientRect();
-        const canvas = await html2canvas(page, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: "#ffffff",
-          logging: false,
-          scrollX: 0,
-          scrollY: -window.scrollY,
-          width: Math.round(pageRect.width),
-          height: Math.round(pageRect.height),
-          windowWidth: document.documentElement.clientWidth,
-          windowHeight: document.documentElement.clientHeight,
-        });
-        if (index > 0) pdf.addPage(invoiceFormat, "portrait");
-        pdf.addImage(
-          canvas.toDataURL("image/jpeg", 1),
-          "JPEG",
-          0,
-          0,
-          INVOICE_PAGE_WIDTH_MM,
-          INVOICE_PAGE_HEIGHT_MM,
-        );
-      }
-
-      return pdf.output("blob");
-    });
-  };
 
   const createExportBlob = () => createPdfBlob();
 
@@ -1943,15 +1945,13 @@ const PrintInvoice = () => {
       {/* ── Printer-selection tip banner ── */}
       {showPrintTip && (
         <div className="print:hidden mx-auto flex max-w-5xl items-start gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 shadow-sm">
-          <span className="text-lg">💡</span>
-          <div className="flex-1 text-sm text-amber-900">
-            <strong>Printer not printing directly?</strong> In the print dialog, change the printer from{" "}
-            <em>"Microsoft XPS / Save as PDF"</em> to your actual installed printer.
-            Or tap <strong>Open as PDF</strong> below — Chrome will open the invoice as a PDF and you can print it from there using any printer.
+          <span className="text-xl">🖨️</span>
+          <div className="flex-1 text-sm text-amber-900 leading-relaxed">
+            <strong>Direct Print without File Save popup:</strong> When the print window opens, check the <strong>Destination / Printer</strong> dropdown at the top right. If it says <em>"Save as PDF"</em> or <em>"Microsoft Print to PDF"</em>, Windows will ask to save a file. Change <strong>Destination</strong> to your <strong>actual installed Printer (HP, Canon, Thermal, etc.)</strong>. Chrome will remember your printer for future prints!
           </div>
           <button
             onClick={() => setShowPrintTip(false)}
-            className="shrink-0 rounded-lg p-1 text-amber-600 hover:bg-amber-100"
+            className="shrink-0 rounded-lg p-1 text-amber-600 hover:bg-amber-100 font-bold"
             aria-label="Dismiss tip"
           >
             ✕
@@ -2018,13 +2018,13 @@ const PrintInvoice = () => {
           >
             {designMode ? "Close Designer" : "Edit Design"}
           </button>
-          {/* ── Primary action: Print — opens system dialog immediately, no forced save ── */}
+          {/* ── Primary action: Print (No Save) — prints the currently selected template mode ── */}
           <button
             onClick={handlePrint}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-black text-white shadow-sm hover:bg-blue-700"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-600 px-5 py-3 text-sm font-black text-white shadow-sm hover:bg-green-700"
           >
             <Printer size={17} />
-            Print {docLabel}
+            Print (No Save)
           </button>
 
           {/* ── Open as PDF in Chrome viewer — lets user pick any installed printer ── */}

@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7-jammy
+    container_name: billing_mongodb_prod
+    restart: always
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongo_prod_data:/data/db
+    networks:
+      - billing_prod_network
+
+  backend:
+    image: ghcr.io/${GITHUB_REPOSITORY_LOWER:-user/repo}/backend:latest
+    container_name: billing_backend_prod
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MONGO_URI=${MONGO_URI:-mongodb://mongodb:27017/billing}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      - mongodb
+    networks:
+      - billing_prod_network
+
+  frontend:
+    image: ghcr.io/${GITHUB_REPOSITORY_LOWER:-user/repo}/frontend:latest
+    container_name: billing_frontend_prod
+    restart: always
+    ports:
+      - "80:5173"
+    depends_on:
+      - backend
+    networks:
+      - billing_prod_network
+
+volumes:
+  mongo_prod_data:
+
+networks:
+  billing_prod_network:
+    driver: bridge
