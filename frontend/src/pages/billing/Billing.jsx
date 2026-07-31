@@ -260,13 +260,18 @@ const Billing = () => {
       toast.error("Select a product and enter valid net weight, metal rate, and quantity");
       return;
     }
-
-    const receivedAmount = Number(formData.receivedAmount || 0);
-    if (receivedAmount < 0 || receivedAmount > summary.grandTotal) {
-      toast.error("Received amount must be between zero and grand total");
+    const rawReceivedAmount = Number(formData.receivedAmount || 0);
+    if (rawReceivedAmount < 0) {
+      toast.error("Received amount cannot be negative");
       return;
     }
-
+    if (formData.billingType !== "cash" && rawReceivedAmount > summary.grandTotal + 0.5) {
+      toast.error("Received amount cannot exceed grand total");
+      return;
+    }
+    const receivedAmount = formData.billingType === "cash"
+      ? summary.grandTotal
+      : Math.max(0, Math.min(rawReceivedAmount, summary.grandTotal));
     try {
       setLoading(true);
       const { data } = await API.post("/invoices", {

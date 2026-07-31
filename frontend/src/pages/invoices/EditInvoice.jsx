@@ -208,11 +208,10 @@ const EditInvoice = () => {
       return;
     }
 
-    const receivedAmt = toNumber(formData.receivedAmount);
-    if (receivedAmt > summary.grandTotal) {
-      toast.error("Received amount cannot exceed grand total");
-      return;
-    }
+    const rawReceivedAmt = toNumber(formData.receivedAmount);
+    const receivedAmt = formData.billingType === "cash"
+      ? summary.grandTotal
+      : Math.max(0, Math.min(rawReceivedAmt, summary.grandTotal));
 
     try {
       setLoading(true);
