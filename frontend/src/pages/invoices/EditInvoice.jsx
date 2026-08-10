@@ -688,6 +688,7 @@ const EditInvoice = () => {
                       step="1"
                       value={item.quantity}
                       onChange={(value) => handleProductChange(index, "quantity", value)}
+                      required={true}
                     />
 
                     {/* Rate */}
@@ -873,7 +874,7 @@ const EditInvoice = () => {
   );
 };
 
-const NumberField = ({ label, value, onChange, min = "0", step = "0.01", readOnly = false }) => (
+const NumberField = ({ label, value, onChange, min = "0", step = "0.01", readOnly = false, required = false }) => (
   <div className="lg:col-span-2">
     <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-600">
       {label}
@@ -886,7 +887,7 @@ const NumberField = ({ label, value, onChange, min = "0", step = "0.01", readOnl
       onChange={(event) => onChange(event.target.value)}
       readOnly={readOnly}
       className="input-field bg-white"
-      required
+      required={required}
     />
   </div>
 );
