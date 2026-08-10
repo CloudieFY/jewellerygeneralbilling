@@ -121,13 +121,25 @@ const EditInvoice = () => {
         const updated = { ...item, [field]: value };
         if (field === "product") {
           const product = productsList.find((entry) => entry._id === value);
+          const rateVal = product?.metalRatePerGram || product?.cashRate || "";
+          const grossVal = product?.grossWeight || "";
+          const stoneVal = product?.stoneWeight || "";
+          const netVal = product?.netWeight || (grossVal !== "" && stoneVal !== "" ? roundWeight(Math.max(Number(grossVal) - Number(stoneVal), 0)) : "");
+
           return {
             ...updated,
-            selectedRate: "",
-            gstRate: product?.gstRate ?? "",
-            grossWeight: "", netWeight: "", stoneWeight: "", wastagePercent: 0,
-            makingChargeType: "per_gram", makingCharge: "", stoneValue: "",
-            stoneValueType: "per_gram", purity: "22K / 916", hallmarkCharge: "",
+            selectedRate: rateVal,
+            purity: product?.purity ? `${product.purity}${product.fineness ? ` / ${product.fineness}` : ""}` : (item.purity || "22K / 916"),
+            makingChargeType: product?.makingChargeType || "per_gram",
+            makingCharge: product?.makingCharge ?? "",
+            stoneValue: product?.stoneValue ?? "",
+            stoneValueType: product?.stoneValueType || "per_gram",
+            gstRate: product?.gstRate ?? 3,
+            grossWeight: grossVal,
+            stoneWeight: stoneVal,
+            netWeight: netVal,
+            wastagePercent: product?.wastagePercent || 0,
+            hallmarkCharge: "",
           };
         }
         if (field === "grossWeight" || field === "stoneWeight") {
@@ -733,36 +745,43 @@ const EditInvoice = () => {
 
                   {/* Live calculation stats */}
                   <div
-                    className={`mt-4 grid gap-3 rounded-2xl bg-white p-3 ${
-                      gstEnabled ? "grid-cols-2 sm:grid-cols-5" : "grid-cols-2 sm:grid-cols-4"
+                    className={`mt-3.5 grid gap-2.5 rounded-2xl bg-white p-3 border border-slate-200 ${
+                      gstEnabled ? "grid-cols-2 sm:grid-cols-6" : "grid-cols-2 sm:grid-cols-5"
                     }`}
                   >
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Net Metal Wt.</p>
-                      <p className={`mt-2 flex items-center gap-1 text-sm font-black ${accentHighlight}`}>
+                      <p className={`mt-1 flex items-center gap-1 text-sm font-black ${accentHighlight}`}>
                         <Ruler size={13} className={accentIcon} />
                         {line.netWeight.toLocaleString("en-IN")} g
                       </p>
                     </div>
 
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Making Charges</p>
-                      <p className="mt-2 text-sm font-black text-slate-800">
-                        ₹{line.makingChargeAmount.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Rate (/g)</p>
+                      <p className="mt-1 text-sm font-black text-slate-900">
+                        ₹{line.rate.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
                       </p>
                     </div>
 
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Amount</p>
-                      <p className="mt-2 text-sm font-black text-slate-950">
-                        ₹{line.baseAmount.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Metal Value</p>
+                      <p className="mt-1 text-sm font-black text-slate-900">
+                        ₹{line.metalValue.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Making Charges</p>
+                      <p className="mt-1 text-sm font-black text-slate-800">
+                        ₹{line.makingChargeAmount.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
                       </p>
                     </div>
 
                     {gstEnabled && (
                       <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">GST Amt</p>
-                        <p className="mt-2 text-sm font-black text-slate-800">
+                        <p className="mt-1 text-sm font-black text-slate-800">
                           ₹{line.gstAmount.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
                         </p>
                       </div>
@@ -770,7 +789,7 @@ const EditInvoice = () => {
 
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Line Total</p>
-                      <p className={`mt-2 text-sm font-black ${accentHighlight}`}>
+                      <p className={`mt-1 text-sm font-black ${accentHighlight}`}>
                         ₹{line.lineTotal.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
                       </p>
                     </div>

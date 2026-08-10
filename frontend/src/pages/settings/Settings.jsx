@@ -374,7 +374,7 @@ const Settings = () => {
                 {settings.gstInvoiceCounter || 0}
               </p>
               <p className="text-xs font-semibold text-slate-500">
-                Total GST invoices created
+                Active GST invoices
               </p>
             </div>
 
@@ -386,7 +386,7 @@ const Settings = () => {
                 {settings.orderCounter || 0}
               </p>
               <p className="text-xs font-semibold text-slate-500">
-                Total non-GST orders created
+                Active non-GST orders
               </p>
             </div>
           </div>

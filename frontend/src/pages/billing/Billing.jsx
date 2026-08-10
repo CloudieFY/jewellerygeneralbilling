@@ -192,14 +192,25 @@ const Billing = () => {
 
         if (field === "product") {
           const product = productsList.find((entry) => entry._id === value);
+          const rateVal = product?.metalRatePerGram || product?.cashRate || "";
+          const grossVal = product?.grossWeight || "";
+          const stoneVal = product?.stoneWeight || "";
+          const netVal = product?.netWeight || (grossVal !== "" && stoneVal !== "" ? roundWeight(Math.max(Number(grossVal) - Number(stoneVal), 0)) : "");
 
           return {
             ...updated,
-            selectedRate: "",
-            gstRate: product?.gstRate ?? "", grossWeight: "",
-            netWeight: "", stoneWeight: "", wastagePercent: 0,
-            makingChargeType: "per_gram", makingCharge: "", stoneValue: "",
-            stoneValueType: "per_gram", hallmarkCharge: "",
+            selectedRate: rateVal,
+            purity: product?.purity ? `${product.purity}${product.fineness ? ` / ${product.fineness}` : ""}` : item.purity,
+            makingChargeType: product?.makingChargeType || "per_gram",
+            makingCharge: product?.makingCharge ?? "",
+            stoneValue: product?.stoneValue ?? "",
+            stoneValueType: product?.stoneValueType || "per_gram",
+            gstRate: product?.gstRate ?? 3,
+            grossWeight: grossVal,
+            stoneWeight: stoneVal,
+            netWeight: netVal,
+            wastagePercent: product?.wastagePercent || 0,
+            hallmarkCharge: "",
           };
         }
 
@@ -571,11 +582,12 @@ const Billing = () => {
                 return (
                   <div
                     key={index}
-                    className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                    className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 sm:p-4"
                   >
-                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+                    {/* Primary item row */}
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-12">
                       <div className="lg:col-span-3">
-                        <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-600">
+                        <label className="mb-1 block text-[11px] font-black uppercase tracking-widest text-slate-600">
                           Product
                         </label>
                         <select
@@ -596,7 +608,7 @@ const Billing = () => {
                       </div>
 
                       <div className="lg:col-span-2">
-                        <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-600">
+                        <label className="mb-1 block text-[11px] font-black uppercase tracking-widest text-slate-600">
                           Gross Wt. (g)
                         </label>
                         <input
@@ -613,7 +625,7 @@ const Billing = () => {
                       </div>
 
                       <div className="lg:col-span-2">
-                        <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-600">
+                        <label className="mb-1 block text-[11px] font-black uppercase tracking-widest text-slate-600">
                           Stone Wt. (g)
                         </label>
                         <input
@@ -629,7 +641,7 @@ const Billing = () => {
                       </div>
 
                       <div className="lg:col-span-2">
-                        <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-600">
+                        <label className="mb-1 block text-[11px] font-black uppercase tracking-widest text-slate-600">
                           Net Wt. (g)
                         </label>
                         <input
@@ -637,14 +649,14 @@ const Billing = () => {
                           min="0"
                           step="0.01"
                           value={item.netWeight}
-                          className="input-field bg-white"
+                          className="input-field bg-white font-bold"
                           required
                           readOnly
                         />
                       </div>
 
                       <div className="lg:col-span-2">
-                        <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-600">
+                        <label className="mb-1 block text-[11px] font-black uppercase tracking-widest text-slate-600">
                           Quantity
                         </label>
                         <input
@@ -664,7 +676,7 @@ const Billing = () => {
                         <button
                           type="button"
                           onClick={() => removeProductRow(index)}
-                          className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                          className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
                           aria-label="Remove item"
                         >
                           <Trash2 size={18} />
@@ -673,17 +685,21 @@ const Billing = () => {
                     </div>
 
                     {product && (
-                      <p className="mt-3 text-xs font-bold text-amber-700">
+                      <p className="mt-2 text-xs font-bold text-amber-700">
                         Available inventory: {Number(product.inventoryWeight || 0).toLocaleString("en-IN", { maximumFractionDigits: 3 })} g
                       </p>
                     )}
 
-                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                      <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                        Purity
+                    {/* Secondary details row */}
+                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                          Purity
+                        </label>
                         <input type="text" value={item.purity} onChange={(event) => handleProductChange(index, "purity", event.target.value)} placeholder="22K / 916" className="input-field bg-white normal-case" />
-                      </label>
-                      <div className="space-y-2">
+                      </div>
+
+                      <div className="space-y-1">
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
                           Gold / Metal Rate
                         </label>
@@ -694,7 +710,8 @@ const Billing = () => {
                             step="0.01"
                             value={item.selectedRate}
                             onChange={(event) => handleProductChange(index, "selectedRate", event.target.value)}
-                            className="input-field bg-white flex-1"
+                            className="input-field bg-white flex-1 font-bold"
+                            placeholder="Rate"
                             required
                           />
                           <select
@@ -708,60 +725,85 @@ const Billing = () => {
                           </select>
                         </div>
                       </div>
-                      <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                        Making Charge Type
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                          Making Charge Type
+                        </label>
                         <select value={item.makingChargeType} onChange={(event) => handleProductChange(index, "makingChargeType", event.target.value)} className="input-field bg-white normal-case">
                           <option value="per_gram">Per gram</option>
                           <option value="percent">Percentage (%)</option>
                           <option value="per_piece">Per piece</option>
                           <option value="fixed">Fixed price</option>
                         </select>
-                      </label>
-                      <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                        Making Charge
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                          Making Charge
+                        </label>
                         <input type="number" min="0" step="0.01" value={item.makingCharge} onChange={(event) => handleProductChange(index, "makingCharge", event.target.value)} className="input-field bg-white" />
-                      </label>
-                      <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                        Stone Charge Type
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                          Stone Charge Type
+                        </label>
                         <select value={item.stoneValueType} onChange={(event) => handleProductChange(index, "stoneValueType", event.target.value)} className="input-field bg-white normal-case">
                           <option value="per_gram">Per gram</option>
                           <option value="per_piece">Per piece</option>
                           <option value="fixed">Fixed price</option>
                         </select>
-                      </label>
-                      <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                        Stone / Diamond Charge
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                          Stone / Diamond Charge
+                        </label>
                         <input type="number" min="0" step="0.01" value={item.stoneValue} onChange={(event) => handleProductChange(index, "stoneValue", event.target.value)} className="input-field bg-white" />
-                      </label>
-                      <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                        Hallmark Charge (Internal)
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                          Hallmark Charge (Internal)
+                        </label>
                         <input type="number" min="0" step="0.01" value={item.hallmarkCharge} onChange={(event) => handleProductChange(index, "hallmarkCharge", event.target.value)} className="input-field bg-white" />
-                      </label>
+                      </div>
                     </div>
 
-                    <div className={`mt-4 grid grid-cols-2 gap-3 rounded-2xl bg-white p-3 ${isGst ? "sm:grid-cols-6" : "sm:grid-cols-5"}`}>
+                    {/* Calculated values summary bar */}
+                    <div className={`mt-3.5 grid grid-cols-2 gap-2.5 rounded-2xl border border-amber-200/70 bg-amber-50/80 p-3 ${isGst ? "sm:grid-cols-6" : "sm:grid-cols-5"}`}>
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-900/70">
                           Net Metal Wt.
                         </p>
-                        <p className="mt-1 flex items-center gap-1 text-base font-black text-slate-950">
-                          <Ruler size={14} className="text-blue-600" />
+                        <p className="mt-1 flex items-center gap-1 text-sm font-black text-slate-950">
+                          <Ruler size={13} className="text-amber-700" />
                           {line.netWeight.toLocaleString("en-IN")} g
                         </p>
                       </div>
 
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                          Metal Value
+                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-900/70">
+                          Rate (/g)
                         </p>
-                        <p className="mt-2 text-sm font-black text-slate-950">{formatCurrency(line.metalValue)}</p>
+                        <p className="mt-1 text-sm font-black text-slate-950">
+                          Rs {line.rate.toLocaleString("en-IN")}
+                        </p>
                       </div>
 
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-900/70">
+                          Metal Value
+                        </p>
+                        <p className="mt-1 text-sm font-black text-amber-900">{formatCurrency(line.metalValue)}</p>
+                      </div>
+
+                      <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-900/70">
                           Making Charges
                         </p>
-                        <p className="mt-2 text-sm font-black text-slate-800">
+                        <p className="mt-1 text-sm font-black text-slate-800">
                           {formatCurrency(line.makingChargeAmount)}
                         </p>
                       </div>
@@ -769,7 +811,7 @@ const Billing = () => {
                       {/* GST% — only for GST Invoice */}
                       {isGst && (
                         <div>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-amber-900/70">
                             GST %
                           </p>
                           <input
@@ -780,25 +822,16 @@ const Billing = () => {
                             onChange={(event) =>
                               handleProductChange(index, "gstRate", event.target.value)
                             }
-                            className="mt-1 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-900 outline-none focus:border-blue-500"
+                            className="mt-0.5 w-full rounded-lg border border-amber-300 bg-white px-2 py-1 text-xs font-bold text-slate-900 outline-none focus:border-amber-600"
                           />
                         </div>
                       )}
 
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                          Amount
-                        </p>
-                        <p className="mt-2 text-sm font-black text-slate-950">
-                          Rs {line.baseAmount.toLocaleString("en-IN")}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-900/70">
                           Line Total
                         </p>
-                        <p className="mt-2 text-sm font-black text-blue-700">
+                        <p className="mt-1 text-sm font-black text-amber-950">
                           Rs {line.lineTotal.toLocaleString("en-IN")}
                         </p>
                       </div>

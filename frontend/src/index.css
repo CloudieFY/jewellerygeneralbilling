@@ -34,7 +34,7 @@
   }
 
   .input-field {
-    @apply w-full px-4 py-3 rounded-2xl focus:outline-none transition-all duration-200;
+    @apply w-full px-3.5 py-2.5 rounded-xl focus:outline-none transition-all duration-200 text-sm;
     background: #fffdf5;
     border: 1px solid #e7d4ab;
   }

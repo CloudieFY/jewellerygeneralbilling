@@ -21,7 +21,6 @@ const menuItems = [
   { name: "Create Bill", path: "/billing", icon: <ShoppingBag size={21} /> },
   { name: "Customer Orders", path: "/orders", icon: <ClipboardList size={21} /> },
   { name: "Invoices & Estimates", path: "/invoices", icon: <Receipt size={21} /> },
-  { name: "Settings", path: "/settings", icon: <Settings size={21} /> },
 ];
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {

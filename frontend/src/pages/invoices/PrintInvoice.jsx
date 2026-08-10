@@ -1152,8 +1152,6 @@ const A4_PRINT_STYLE = `
   html,
   body,
   #root {
-    width: 190.5mm;
-    min-width: 190.5mm;
     margin: 0 !important;
     padding: 0 !important;
     background: #ffffff !important;
@@ -1644,8 +1642,58 @@ const PrintInvoice = () => {
 
   const createExportBlob = () => createPdfBlob();
 
-  const handlePrint = () => {
-    window.print();
+  const handlePrint = async () => {
+    const isMobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      ) || window.innerWidth <= 768;
+
+    if (isMobile) {
+      if (!invoice || pdfBusy) return;
+      setPdfBusy(true);
+      try {
+        const filename = getExportFilename("pdf");
+        const blob = pregeneratedPdf || (await createPdfBlob());
+        if (!blob) {
+          window.print();
+          return;
+        }
+
+        const sharedFile = new File([blob], filename, {
+          type: "application/pdf",
+        });
+
+        // Trigger native mobile share/print modal if supported
+        if (navigator.canShare && navigator.canShare({ files: [sharedFile] })) {
+          try {
+            await navigator.share({
+              files: [sharedFile],
+              title: filename,
+              text: `${docLabel} #${invoice?.invoiceNumber}`,
+            });
+            return;
+          } catch (shareErr) {
+            if (shareErr.name === "AbortError") return;
+          }
+        }
+
+        // Fallback: Open PDF in new tab where Android system PDF viewer handles printing cleanly
+        const url = URL.createObjectURL(blob);
+        const win = window.open(url, "_blank");
+        if (!win) {
+          downloadBlob(blob, filename);
+        } else {
+          setTimeout(() => URL.revokeObjectURL(url), 60000);
+        }
+      } catch (err) {
+        console.error("Mobile print fallback:", err);
+        window.print();
+      } finally {
+        setPdfBusy(false);
+      }
+    } else {
+      window.print();
+    }
   };
 
   // Opens the invoice as a PDF blob in a new Chrome tab.
