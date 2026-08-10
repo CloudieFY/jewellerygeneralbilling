@@ -47,7 +47,23 @@ const emptyItem = {
   gstRate: "",
 };
 
-const today = new Date().toISOString().slice(0, 10);
+const getLocalDateString = (dateVal) => {
+  if (!dateVal) {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+  const d = new Date(dateVal);
+  if (isNaN(d.getTime())) return getLocalDateString();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const today = getLocalDateString();
 
 const PAYMENT_MODES = [
   { value: "cash", label: "Cash" },
@@ -291,7 +307,7 @@ const EditInvoice = () => {
             invoiceNumber: invoiceData.invoiceNumber || "",
             rateType: invoiceData.rateType || "Rate A",
             invoiceDate: invoiceData.createdAt
-              ? invoiceData.createdAt.slice(0, 10)
+              ? getLocalDateString(invoiceData.createdAt)
               : today,
             billingType: invoiceData.billingType || "credit",
             receivedAmount: invoiceData.paidAmount ?? invoiceData.receivedAmount ?? "",

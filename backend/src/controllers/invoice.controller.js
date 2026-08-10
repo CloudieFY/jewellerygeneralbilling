@@ -30,15 +30,37 @@ const normalizeAmount = (value, fallback = 0) => {
 
 const dateWithPreservedTime = (dateValue, timeSource = new Date()) => {
   if (!dateValue) return undefined;
-  const selectedDate = new Date(`${dateValue}T00:00:00`);
-  const source = new Date(timeSource);
-  selectedDate.setHours(
-    source.getHours(),
-    source.getMinutes(),
-    source.getSeconds(),
-    source.getMilliseconds()
-  );
-  return selectedDate;
+
+  let dateStr;
+  if (dateValue instanceof Date) {
+    dateStr = dateValue.toISOString().slice(0, 10);
+  } else if (typeof dateValue === "string") {
+    dateStr = dateValue.split("T")[0];
+  } else {
+    dateStr = String(dateValue).split("T")[0];
+  }
+
+  const parts = dateStr.split("-");
+  if (parts.length === 3) {
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    const selectedDate = new Date(year, month, day, 0, 0, 0, 0);
+
+    const source = new Date(timeSource);
+    if (!isNaN(source.getTime())) {
+      selectedDate.setHours(
+        source.getHours(),
+        source.getMinutes(),
+        source.getSeconds(),
+        source.getMilliseconds()
+      );
+    }
+    return selectedDate;
+  }
+
+  const fallbackDate = new Date(dateValue);
+  return isNaN(fallbackDate.getTime()) ? undefined : fallbackDate;
 };
 
 const getReceivedAmount = (billingType, grandTotal, receivedAmount = 0) => {
@@ -692,13 +714,20 @@ export const updateInvoice = async (req, res) => {
     invoice.paymentStatus = paymentStatus;
     invoice.paymentMode = paymentMode;
     if (remarks !== undefined) invoice.remarks = remarks;
+    let newCreatedAt;
     if (invoiceDate) {
-      const newCreatedAt = dateWithPreservedTime(invoiceDate, invoice.createdAt);
-      invoice.createdAt = newCreatedAt;
-      await Invoice.updateOne({ _id: invoice._id }, { $set: { createdAt: newCreatedAt } });
+      newCreatedAt = dateWithPreservedTime(invoiceDate, invoice.createdAt);
     }
 
     await invoice.save();
+
+    if (newCreatedAt) {
+      await Invoice.updateOne(
+        { _id: invoice._id },
+        { $set: { createdAt: newCreatedAt } }
+      );
+      invoice.createdAt = newCreatedAt;
+    }
 
     await adjustInventory(invoiceProducts, -1);
 
