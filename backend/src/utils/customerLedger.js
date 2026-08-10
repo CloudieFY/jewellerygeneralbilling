@@ -14,8 +14,8 @@ export const getPaymentStatus = (grandTotal = 0, paidAmount = 0) => {
 export const recalculateCustomerLedger = async (farmerId) => {
   const [farmer, invoices, transactions] = await Promise.all([
     Farmer.findById(farmerId),
-    Invoice.find({ farmer: farmerId }).sort({ createdAt: 1, _id: 1 }),
-    Transaction.find({ farmer: farmerId }).sort({ createdAt: 1, _id: 1 }),
+    Invoice.find({ farmer: farmerId, isDeleted: { $ne: true }, deleted: { $ne: true }, status: { $ne: "deleted" } }).sort({ createdAt: 1, _id: 1 }),
+    Transaction.find({ farmer: farmerId }).sort({ voucherDate: 1, createdAt: 1, _id: 1 }),
   ]);
 
   if (!farmer) return null;
@@ -64,13 +64,13 @@ export const buildCustomerStatement = async (farmerId) => {
 
   const [farmer, invoices, transactions] = await Promise.all([
     Farmer.findById(farmerId),
-    Invoice.find({ farmer: farmerId }),
+    Invoice.find({ farmer: farmerId, isDeleted: { $ne: true }, deleted: { $ne: true }, status: { $ne: "deleted" } }),
     Transaction.find({ farmer: farmerId })
       .populate({
         path: "invoice",
         populate: { path: "products.product", select: "productName" },
       })
-      .sort({ createdAt: 1, _id: 1 }),
+      .sort({ voucherDate: 1, createdAt: 1, _id: 1 }),
   ]);
 
   if (!farmer) return null;

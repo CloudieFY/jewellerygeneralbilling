@@ -66,6 +66,7 @@ const createInvoiceLedgerEntries = async ({
     invoiceNumber: invoice.invoiceNumber,
     voucherNo: await generateCustomerVoucherNumber("credit"),
     voucherDate: entryDate,
+    createdAt: entryDate,
     description: `Invoice ${invoice.invoiceNumber}`,
     dueDate,
   });
@@ -79,6 +80,7 @@ const createInvoiceLedgerEntries = async ({
       invoiceNumber: invoice.invoiceNumber,
       voucherNo: await generateCustomerVoucherNumber("payment"),
       voucherDate: entryDate,
+      createdAt: entryDate,
       paymentMode,
       description: `Received against Invoice ${invoice.invoiceNumber}`,
     });
@@ -170,9 +172,12 @@ export const createInvoice = async (req, res) => {
       // calculations
 
       const quantity = Number(item.quantity) || 1;
-      const grossWeight = Number(item.grossWeight ?? product.grossWeight) || 0;
-      const stoneWeight = Number(item.stoneWeight ?? product.stoneWeight) || 0;
-      const netWeight = Math.round((Math.max(grossWeight - stoneWeight, 0) + Number.EPSILON) * 1000) / 1000;
+      const grossWeight = Number(item.grossWeight !== undefined && item.grossWeight !== "" ? item.grossWeight : product.grossWeight) || 0;
+      const stoneWeight = Number(item.stoneWeight !== undefined && item.stoneWeight !== "" ? item.stoneWeight : 0) || 0;
+      const providedNet = Number(item.netWeight);
+      const netWeight = (Number.isFinite(providedNet) && providedNet > 0)
+        ? providedNet
+        : Math.round((Math.max(grossWeight - stoneWeight, 0) + Number.EPSILON) * 1000) / 1000;
       const wastagePercent = Number(item.wastagePercent ?? product.wastagePercent) || 0;
       const makingChargeType = item.makingChargeType || "per_gram";
       const makingCharge = Number(item.makingCharge) || 0;
@@ -345,7 +350,11 @@ export const createInvoice = async (req, res) => {
 
 export const getAllInvoices = async (req, res) => {
   try {
-    const invoices = await Invoice.find()
+    const invoices = await Invoice.find({
+      isDeleted: { $ne: true },
+      deleted: { $ne: true },
+      status: { $ne: "deleted" },
+    })
       .populate("farmer")
       .populate("products.product")
       .sort({ createdAt: -1 });
@@ -366,7 +375,12 @@ export const getAllInvoices = async (req, res) => {
 
 export const getSingleInvoice = async (req, res) => {
   try {
-    const invoice = await Invoice.findById(req.params.id)
+    const invoice = await Invoice.findOne({
+      _id: req.params.id,
+      isDeleted: { $ne: true },
+      deleted: { $ne: true },
+      status: { $ne: "deleted" },
+    })
       .populate("farmer")
       .populate("products.product");
 
@@ -391,7 +405,12 @@ export const getSingleInvoice = async (req, res) => {
 
 export const printInvoice = async (req, res) => {
   try {
-    const invoice = await Invoice.findById(req.params.id)
+    const invoice = await Invoice.findOne({
+      _id: req.params.id,
+      isDeleted: { $ne: true },
+      deleted: { $ne: true },
+      status: { $ne: "deleted" },
+    })
       .populate("farmer")
       .populate("products.product");
 
@@ -460,6 +479,8 @@ export const deleteInvoice = async (req, res) => {
     await deleteInvoiceLedgerEntries(invoice);
 
     await adjustInventory(invoice.products, 1);
+    invoice.isDeleted = true;
+    await invoice.save();
     await Invoice.findByIdAndDelete(req.params.id);
     await recalculateCustomerLedger(farmerId);
 
@@ -534,9 +555,12 @@ export const updateInvoice = async (req, res) => {
       const rateUnit = item.rateUnit || "per_gram";
 
       const quantity = Number(item.quantity) || 1;
-      const grossWeight = Number(item.grossWeight ?? product.grossWeight) || 0;
-      const stoneWeight = Number(item.stoneWeight ?? product.stoneWeight) || 0;
-      const netWeight = Math.round((Math.max(grossWeight - stoneWeight, 0) + Number.EPSILON) * 1000) / 1000;
+      const grossWeight = Number(item.grossWeight !== undefined && item.grossWeight !== "" ? item.grossWeight : product.grossWeight) || 0;
+      const stoneWeight = Number(item.stoneWeight !== undefined && item.stoneWeight !== "" ? item.stoneWeight : 0) || 0;
+      const providedNet = Number(item.netWeight);
+      const netWeight = (Number.isFinite(providedNet) && providedNet > 0)
+        ? providedNet
+        : Math.round((Math.max(grossWeight - stoneWeight, 0) + Number.EPSILON) * 1000) / 1000;
       const wastagePercent = Number(item.wastagePercent ?? product.wastagePercent) || 0;
       const makingChargeType = item.makingChargeType || "per_gram";
       const makingCharge = Number(item.makingCharge) || 0;

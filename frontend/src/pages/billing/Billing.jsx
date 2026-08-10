@@ -378,15 +378,29 @@ const Billing = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-          <Receipt size={20} className="text-blue-600" />
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-              Grand Total
-            </p>
-            <p className="text-lg font-black text-slate-950">
-              Rs {summary.grandTotal.toLocaleString("en-IN")}
-            </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            <Ruler size={20} className="text-amber-600" />
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                Total Net Wt.
+              </p>
+              <p className="text-lg font-black text-slate-950">
+                {summary.totalNetWeight ? `${summary.totalNetWeight} g` : "0 g"}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            <Receipt size={20} className="text-blue-600" />
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                Grand Total
+              </p>
+              <p className="text-lg font-black text-slate-950">
+                Rs {summary.grandTotal.toLocaleString("en-IN")}
+              </p>
+            </div>
           </div>
         </div>
       </div>

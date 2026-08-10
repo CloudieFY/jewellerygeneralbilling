@@ -362,15 +362,29 @@ const EditInvoice = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
-          <Receipt size={20} className={accentIcon} />
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-              Grand Total
-            </p>
-            <p className={`text-2xl font-black ${accentHighlight}`}>
-              ₹{summary.grandTotal.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
-            </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+            <Ruler size={20} className="text-amber-600" />
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                Total Net Wt.
+              </p>
+              <p className="text-2xl font-black text-slate-950">
+                {summary.totalNetWeight ? `${summary.totalNetWeight} g` : "0 g"}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+            <Receipt size={20} className={accentIcon} />
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                Grand Total
+              </p>
+              <p className={`text-2xl font-black ${accentHighlight}`}>
+                ₹{summary.grandTotal.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
+              </p>
+            </div>
           </div>
         </div>
       </div>

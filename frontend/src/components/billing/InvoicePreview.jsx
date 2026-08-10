@@ -167,6 +167,10 @@ const InvoicePreview = ({
 
         <section className="ml-auto w-full max-w-sm space-y-3">
           <div className="flex items-center justify-between text-sm font-bold text-slate-600">
+            <span>Total Net Weight</span>
+            <span className="font-black text-slate-900">{summary.totalNetWeight ? `${summary.totalNetWeight} g` : "0 g"}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm font-bold text-slate-600">
             <span>Subtotal</span>
             <span>{formatCurrency(summary.subTotal)}</span>
           </div>

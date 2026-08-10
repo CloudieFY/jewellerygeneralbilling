@@ -39,7 +39,7 @@ const upsertOpeningBalance = async (farmerId, openingBalance = 0) => {
 
 const attachCustomerStats = async (farmer) => {
   const [invoices, payments] = await Promise.all([
-    Invoice.find({ farmer: farmer._id }).select("grandTotal"),
+    Invoice.find({ farmer: farmer._id, isDeleted: { $ne: true }, deleted: { $ne: true }, status: { $ne: "deleted" } }).select("grandTotal"),
     Transaction.find({ farmer: farmer._id, type: "payment" }).select("amount"),
   ]);
 

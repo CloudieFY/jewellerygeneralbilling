@@ -2328,6 +2328,10 @@ const ItemsTable = ({
   const printableHeadings = isGst
     ? headings.filter((heading) => !heading.startsWith("MAKING AMT"))
     : headings;
+  const totalNetWeight = (invoice?.products || []).reduce(
+    (sum, item) => sum + (toNumber(item.netWeight) || 0),
+    0
+  );
 
   return (
     <table className="invoice-table">
@@ -2412,11 +2416,17 @@ const ItemsTable = ({
         })}
         <FillerRow isGst={isGst} />
       </tbody>
-      {showPageTotal && showTax && (
+      {showPageTotal && (
         <tfoot>
           <tr>
-            <td colSpan={9}>Total Taxable Amount</td>
-            <td className="amount-cell amount-highlight">{formatNumber(invoice?.subTotal)}</td>
+            <td colSpan={isGst ? 4 : 3} style={{ textAlign: "right", fontWeight: "bold" }}>Total Net Wt:</td>
+            <td className="center-cell" style={{ fontWeight: "900" }}>{formatCompactNumber(totalNetWeight)} g</td>
+            <td colSpan={isGst ? 5 : 4} style={{ textAlign: "right", fontWeight: "bold" }}>
+              {showTax ? "Total Taxable Amount" : ""}
+            </td>
+            <td className="amount-cell amount-highlight">
+              {showTax ? formatNumber(invoice?.subTotal) : ""}
+            </td>
           </tr>
         </tfoot>
       )}
@@ -2466,6 +2476,10 @@ const InvoiceFooter = ({
   const balanceAmount = rawBalanceAmount <= 0.5 ? 0 : rawBalanceAmount;
   const cgstAmount = toNumber(invoice?.totalGST) / 2;
   const gstRate = taxBreakup[0]?.rate || 0;
+  const totalNetWeight = (invoice?.products || []).reduce(
+    (sum, item) => sum + (toNumber(item.netWeight) || 0),
+    0
+  );
 
   return (
     <div className="invoice-footer">
@@ -2498,6 +2512,7 @@ const InvoiceFooter = ({
 
         <div className="parasmani-right-column">
           <table className="parasmani-totals"><tbody>
+            <tr><td>Total Net Weight</td><td><strong>{formatCompactNumber(totalNetWeight)} g</strong></td></tr>
             <tr><td>{isGst ? "Taxable Amount" : "Estimate Amount"}</td><td>₹ {formatNumber(invoice?.subTotal)}</td></tr>
             {isGst && <tr><td>CGST ({formatCompactNumber(gstRate / 2)}%)</td><td>₹ {formatNumber(cgstAmount)}</td></tr>}
             {isGst && <tr><td>SGST ({formatCompactNumber(gstRate / 2)}%)</td><td>₹ {formatNumber(cgstAmount)}</td></tr>}

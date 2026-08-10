@@ -41,7 +41,16 @@ export const calculateLine = (item, product, _rateType, gstEnabled = true) => {
   return { quantity, netWeight, grossWeight, stoneWeight, rate, metalValue, wastagePercent, wastageAmount, makingChargeType, makingCharge, makingChargeAmount, stoneValue, stoneValueType, stoneValueAmount, hallmarkCharge, discount, baseAmount, gstRate, gstAmount, lineTotal: baseAmount + gstAmount, sqFt: 0 };
 };
 export const calculateInvoiceTotals = (items=[], products=[], rateType="Rate A", gstEnabled=true) => {
-  const totals = items.reduce((t,item)=>{const l=calculateLine(item,products.find(p=>p._id===item.product),rateType,gstEnabled);return {subTotal:t.subTotal+l.baseAmount,totalGST:t.totalGST+l.gstAmount};},{subTotal:0,totalGST:0});
+  const totals = items.reduce((t,item)=>{
+    const l=calculateLine(item,products.find(p=>p._id===item.product),rateType,gstEnabled);
+    return {
+      subTotal: t.subTotal + l.baseAmount,
+      totalGST: t.totalGST + l.gstAmount,
+      totalNetWeight: roundWeight(t.totalNetWeight + l.netWeight),
+      totalGrossWeight: roundWeight(t.totalGrossWeight + l.grossWeight),
+      totalStoneWeight: roundWeight(t.totalStoneWeight + l.stoneWeight),
+    };
+  },{subTotal:0,totalGST:0,totalNetWeight:0,totalGrossWeight:0,totalStoneWeight:0});
   const exactTotal = totals.subTotal + totals.totalGST;
   const grandTotal = Math.round(exactTotal);
   const roundOff = Math.round((grandTotal - exactTotal + Number.EPSILON) * 100) / 100;

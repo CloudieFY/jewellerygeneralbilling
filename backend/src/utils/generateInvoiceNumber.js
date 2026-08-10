@@ -19,6 +19,9 @@ export const invoiceNumberExists = async (invoiceNumber, documentType, excludeId
   return Invoice.exists({
     ...numberMatch,
     documentType,
+    isDeleted: { $ne: true },
+    deleted: { $ne: true },
+    status: { $ne: "deleted" },
     ...(excludeId ? { _id: { $ne: excludeId } } : {}),
   });
 };

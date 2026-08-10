@@ -12,16 +12,13 @@ export const salesReport = async (req, res) => {
   try {
 
     const invoices = await Invoice.aggregate([
-
+      { $match: { isDeleted: { $ne: true }, deleted: { $ne: true }, status: { $ne: "deleted" } } },
       {
         $group: {
-
           _id: "$billingType",
-
           totalSales: {
             $sum: "$grandTotal",
           },
-
           totalInvoices: {
             $sum: 1,
           },
@@ -32,20 +29,16 @@ export const salesReport = async (req, res) => {
 
 
     const overallSales = await Invoice.aggregate([
-
+      { $match: { isDeleted: { $ne: true }, deleted: { $ne: true }, status: { $ne: "deleted" } } },
       {
         $group: {
-
           _id: null,
-
           totalRevenue: {
             $sum: "$grandTotal",
           },
-
           totalGST: {
             $sum: "$totalGST",
           },
-
           totalInvoices: {
             $sum: 1,
           },
@@ -356,14 +349,13 @@ export const dashboardSummary = async (req, res) => {
       await Product.countDocuments();
 
     const totalInvoices =
-      await Invoice.countDocuments();
-
-
+      await Invoice.countDocuments({ isDeleted: { $ne: true }, deleted: { $ne: true }, status: { $ne: "deleted" } });
 
     // ================= TOTAL SALES =================
 
     const totalSales =
       await Invoice.aggregate([
+        { $match: { isDeleted: { $ne: true }, deleted: { $ne: true }, status: { $ne: "deleted" } } },
         {
           $group: {
             _id: null,
@@ -461,12 +453,12 @@ export const dashboardSummary = async (req, res) => {
 
 
     const cashSales = await Invoice.aggregate([
-      { $match: { billingType: "cash" } },
+      { $match: { billingType: "cash", isDeleted: { $ne: true }, deleted: { $ne: true }, status: { $ne: "deleted" } } },
       { $group: { _id: null, total: { $sum: "$grandTotal" } } },
     ]);
 
     const creditSales = await Invoice.aggregate([
-      { $match: { billingType: { $ne: "cash" } } },
+      { $match: { billingType: { $ne: "cash" }, isDeleted: { $ne: true }, deleted: { $ne: true }, status: { $ne: "deleted" } } },
       { $group: { _id: null, total: { $sum: "$grandTotal" } } },
     ]);
 
@@ -540,7 +532,7 @@ export const outstandingReport = async (req, res) => {
     const rows = await Promise.all(
       customers.map(async (customer) => {
         const [lastInvoice, lastPayment] = await Promise.all([
-          Invoice.findOne({ farmer: customer._id }).sort({ createdAt: -1 }),
+          Invoice.findOne({ farmer: customer._id, isDeleted: { $ne: true }, deleted: { $ne: true }, status: { $ne: "deleted" } }).sort({ createdAt: -1 }),
           Transaction.findOne({ farmer: customer._id, type: "payment" }).sort({
             voucherDate: -1,
             createdAt: -1,
@@ -573,7 +565,7 @@ export const outstandingReport = async (req, res) => {
 
 export const salesRegister = async (req, res) => {
   try {
-    const invoices = await Invoice.find()
+    const invoices = await Invoice.find({ isDeleted: { $ne: true }, deleted: { $ne: true }, status: { $ne: "deleted" } })
       .populate("farmer")
       .sort({ createdAt: -1 });
 
@@ -672,7 +664,7 @@ export const paymentRegister = async (req, res) => {
 export const dayBook = async (req, res) => {
   try {
     const [invoices, receipts, vendorEntries] = await Promise.all([
-      Invoice.find().populate("farmer"),
+      Invoice.find({ isDeleted: { $ne: true }, deleted: { $ne: true }, status: { $ne: "deleted" } }).populate("farmer"),
       Transaction.find({ type: { $in: ["opening", "credit", "payment", "interest"] } }).populate("farmer"),
       VendorTransaction.find().populate("vendor"),
     ]);

@@ -72,6 +72,11 @@ const InvoiceDetails = () => {
     toNumber(invoice.paidAmount)
   );
   const balanceDue = Math.max(toNumber(invoice.grandTotal) - receivedAmount, 0);
+  const totalNetWeight = (invoice.products || []).reduce(
+    (sum, item) => sum + toNumber(item.netWeight),
+    0
+  );
+
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -286,6 +291,10 @@ const InvoiceDetails = () => {
 
       <section className="ml-auto w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="space-y-4">
+          <div className="flex justify-between text-sm font-bold text-slate-600">
+            <span>Total Net Weight</span>
+            <span className="font-black text-slate-900">{totalNetWeight} g</span>
+          </div>
           <div className="flex justify-between text-sm font-bold text-slate-600">
             <span>Subtotal</span>
             <span>{formatCurrency(invoice.subTotal)}</span>
