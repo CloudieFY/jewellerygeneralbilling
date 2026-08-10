@@ -4,9 +4,18 @@ export const roundWeight = (value) => Math.round((toNumber(value) + Number.EPSIL
 export const getProductRate = (product) => toNumber(product?.metalRatePerGram || product?.cashRate);
 export const calculateLine = (item, product, _rateType, gstEnabled = true) => {
   const quantity = toNumber(item?.quantity, 1);
-  const unitGrossWeight = toNumber(item?.grossWeight ?? product?.grossWeight);
+  const rawGross = item?.grossWeight !== "" && item?.grossWeight !== undefined && item?.grossWeight !== null && toNumber(item?.grossWeight) > 0
+    ? toNumber(item.grossWeight)
+    : item?.netWeight !== "" && item?.netWeight !== undefined && item?.netWeight !== null && toNumber(item?.netWeight) > 0
+      ? toNumber(item.netWeight)
+      : toNumber(product?.grossWeight);
+
+  const unitGrossWeight = rawGross;
   const unitStoneWeight = toNumber(item?.stoneWeight ?? product?.stoneWeight);
-  const unitNetWeight = roundWeight(Math.max(unitGrossWeight - unitStoneWeight, 0));
+  const unitNetWeight = (item?.netWeight !== "" && item?.netWeight !== undefined && item?.netWeight !== null && toNumber(item?.netWeight) > 0 && (item?.grossWeight === "" || item?.grossWeight === undefined || toNumber(item?.grossWeight) === 0))
+    ? toNumber(item.netWeight)
+    : roundWeight(Math.max(unitGrossWeight - unitStoneWeight, 0));
+
   const netWeight = roundWeight(unitNetWeight * quantity);
   const grossWeight = roundWeight(unitGrossWeight * quantity);
   const stoneWeight = roundWeight(unitStoneWeight * quantity);

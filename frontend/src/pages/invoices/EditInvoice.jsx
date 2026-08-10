@@ -298,24 +298,34 @@ const EditInvoice = () => {
             paymentMode: invoiceData.paymentMode || "cash",
             remarks: invoiceData.remarks || "",
             products:
-              invoiceData.products?.map((item) => ({
-                product: item.product?._id || item.product,
-                grossWeight: item.grossWeight || "",
-                netWeight: roundWeight(Math.max(Number(item.grossWeight || 0) - Number(item.stoneWeight || 0), 0)),
-                stoneWeight: item.stoneWeight || "",
-                wastagePercent: item.wastagePercent || 0,
-                makingChargeType: item.makingChargeType || "per_gram",
-                makingCharge: item.makingCharge || 0,
-                stoneValue: item.stoneValue || 0,
-                stoneValueType: item.stoneValueType || "per_piece",
-                purity: item.purity || "",
-                hallmarkCharge: item.hallmarkCharge || 0,
-                discount: item.discount || 0,
-                quantity: item.quantity || 1,
-                selectedRate: item.selectedRate || "",
-                rateUnit: item.rateUnit || "per_gram",
-                gstRate: item.gstRate || "",
-              })) || [{ ...emptyItem }],
+              invoiceData.products?.map((item) => {
+                const grossVal = item.grossWeight !== undefined && item.grossWeight !== null && item.grossWeight !== "" && Number(item.grossWeight) > 0
+                  ? item.grossWeight
+                  : (item.netWeight || "");
+                const stoneVal = item.stoneWeight || "";
+                const netVal = item.netWeight !== undefined && item.netWeight !== null && item.netWeight !== "" && Number(item.netWeight) > 0
+                  ? item.netWeight
+                  : (grossVal !== "" ? roundWeight(Math.max(Number(grossVal) - Number(stoneVal || 0), 0)) : "");
+
+                return {
+                  product: item.product?._id || item.product,
+                  grossWeight: grossVal,
+                  stoneWeight: stoneVal,
+                  netWeight: netVal,
+                  wastagePercent: item.wastagePercent || 0,
+                  makingChargeType: item.makingChargeType || "per_gram",
+                  makingCharge: item.makingCharge || 0,
+                  stoneValue: item.stoneValue || 0,
+                  stoneValueType: item.stoneValueType || "per_piece",
+                  purity: item.purity || "",
+                  hallmarkCharge: item.hallmarkCharge || 0,
+                  discount: item.discount || 0,
+                  quantity: item.quantity || 1,
+                  selectedRate: item.selectedRate || item.metalRatePerGram || "",
+                  rateUnit: item.rateUnit || "per_gram",
+                  gstRate: item.gstRate !== undefined ? item.gstRate : "",
+                };
+              }) || [{ ...emptyItem }],
           });
         }
       } catch (error) {

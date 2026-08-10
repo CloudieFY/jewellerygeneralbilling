@@ -555,12 +555,16 @@ export const updateInvoice = async (req, res) => {
       const rateUnit = item.rateUnit || "per_gram";
 
       const quantity = Number(item.quantity) || 1;
-      const grossWeight = Number(item.grossWeight !== undefined && item.grossWeight !== "" ? item.grossWeight : product.grossWeight) || 0;
-      const stoneWeight = Number(item.stoneWeight !== undefined && item.stoneWeight !== "" ? item.stoneWeight : 0) || 0;
+      const providedGross = Number(item.grossWeight);
       const providedNet = Number(item.netWeight);
+      const grossWeightRaw = Number.isFinite(providedGross) && providedGross > 0
+        ? providedGross
+        : (Number.isFinite(providedNet) && providedNet > 0 ? providedNet : Number(product.grossWeight || 0));
+      const stoneWeight = Number(item.stoneWeight !== undefined && item.stoneWeight !== "" ? item.stoneWeight : 0) || 0;
       const netWeight = (Number.isFinite(providedNet) && providedNet > 0)
         ? providedNet
-        : Math.round((Math.max(grossWeight - stoneWeight, 0) + Number.EPSILON) * 1000) / 1000;
+        : Math.round((Math.max(grossWeightRaw - stoneWeight, 0) + Number.EPSILON) * 1000) / 1000;
+      const grossWeight = grossWeightRaw > 0 ? grossWeightRaw : (netWeight > 0 ? netWeight + stoneWeight : 0);
       const wastagePercent = Number(item.wastagePercent ?? product.wastagePercent) || 0;
       const makingChargeType = item.makingChargeType || "per_gram";
       const makingCharge = Number(item.makingCharge) || 0;
