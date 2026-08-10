@@ -2283,9 +2283,11 @@ const PrintInvoice = () => {
 };
 
 const InvoiceHeader = ({ invoice, isGst, showParasmaniName, docHeading, shop, invoiceMode }) => {
+  const displayName = invoice?.customerName || invoice?.farmer?.name || "Walk-in Customer";
+  const displayMobile = invoice?.customerMobile || invoice?.farmer?.mobileNumber || "-";
   const customerAddress = [
-    invoice?.farmer?.address,
-    invoice?.farmer?.village,
+    invoice?.customerAddress || invoice?.farmer?.address,
+    invoice?.customerVillage || invoice?.farmer?.village,
   ]
     .filter(Boolean)
     .join(", ");
@@ -2315,9 +2317,9 @@ const InvoiceHeader = ({ invoice, isGst, showParasmaniName, docHeading, shop, in
           <span className="parasmani-card-title">Bill To</span>
           <span className="invoice-muted-label invoice-buyer-label">Name:</span>
           <div className="invoice-buyer-content">
-            <p className="invoice-buyer-name">{invoice?.farmer?.name || "-"}</p>
+            <p className="invoice-buyer-name">{displayName}</p>
             <div className="invoice-buyer-details">
-              <div>Mob.: {invoice?.farmer?.mobileNumber || "-"}</div>
+              <div>Mob.: {displayMobile}</div>
               {customerAddress && <div>Address: {customerAddress}</div>}
               {invoice?.farmer?.gstNumber && <div>GSTIN: {invoice.farmer.gstNumber}</div>}
               {invoice?.farmer?.panNumber && <div>PAN: {invoice.farmer.panNumber}</div>}

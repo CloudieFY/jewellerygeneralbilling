@@ -72,7 +72,10 @@ const Billing = () => {
   const gstEnabled = documentType === "gst_invoice";
 
   const [formData, setFormData] = useState({
-    farmerId: "",
+    farmerId: "walk_in",
+    customerName: "",
+    customerMobile: "",
+    customerVillage: "",
     invoiceNumber: "",
     rateType: "Rate A",
     invoiceDate: today,
@@ -268,11 +271,6 @@ const Billing = () => {
   const handleSubmit = async (event, { printAfter = false } = {}) => {
     event.preventDefault();
 
-    if (!formData.farmerId) {
-      toast.error("Please select a customer");
-      return;
-    }
-
     const invalidItem = formData.products.some((item) => {
       const line = calculateLine(
         item,
@@ -303,6 +301,9 @@ const Billing = () => {
       setLoading(true);
       const { data } = await API.post("/invoices", {
         farmerId: formData.farmerId,
+        customerName: formData.customerName,
+        customerMobile: formData.customerMobile,
+        customerVillage: formData.customerVillage,
         invoiceNumber: formData.invoiceNumber,
         rateType: formData.rateType,
         invoiceDate: formData.invoiceDate,
@@ -490,80 +491,164 @@ const Billing = () => {
             )}
           </section>
 
-          {/* ── Customer / Rate / Date ── */}
+          {/* ── Customer / Date / Invoice # ── */}
           <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between gap-3">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+              
+              {/* Customer Section (Takes 7 cols) */}
+              <div className="space-y-4 lg:col-span-7">
+                <div className="flex items-center justify-between gap-4">
                   <label className="text-xs font-black uppercase tracking-widest text-slate-600">
-                    Customer
+                    Customer Type
                   </label>
                   <button
                     type="button"
                     onClick={() => setCustomerFormOpen(true)}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700 transition hover:border-blue-200 hover:bg-blue-100"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700 transition hover:bg-blue-100"
                   >
                     <UserPlus size={14} />
-                    Add
+                    + Add New Customer
                   </button>
                 </div>
-                <div className="relative">
-                  <User
-                    size={18}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                  />
-                  <select
-                    id="customer-select-dropdown"
-                    value={formData.farmerId}
-                    onChange={(event) =>
-                      handleCustomerChange(event.target.value)
-                    }
-                    className="input-field pl-10"
-                    required
+
+                {/* Mode Selector Cards */}
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleCustomerChange("walk_in")}
+                    className={`flex items-center justify-center gap-2 rounded-2xl border-2 p-3 text-xs font-black transition ${
+                      formData.farmerId === "walk_in"
+                        ? "border-amber-500 bg-amber-50 text-amber-950 shadow-sm"
+                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                    }`}
                   >
-                    <option value="">Select Customer</option>
-                    {customers.map((customer) => (
-                      <option key={customer._id} value={customer._id}>
-                        {customer.name} - {customer.village}
-                      </option>
-                    ))}
-                  </select>
+                    ⚡ Walk-in Customer
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (formData.farmerId === "walk_in") {
+                        handleCustomerChange(customers[0]?._id || "");
+                      }
+                    }}
+                    className={`flex items-center justify-center gap-2 rounded-2xl border-2 p-3 text-xs font-black transition ${
+                      formData.farmerId !== "walk_in"
+                        ? "border-blue-600 bg-blue-50 text-blue-950 shadow-sm"
+                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                    }`}
+                  >
+                    👤 Saved Customer
+                  </button>
                 </div>
+
+                {/* Mode 1: Walk-in Customer Fields */}
+                {formData.farmerId === "walk_in" ? (
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-500">
+                        Buyer Name
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Walk-in Customer"
+                        value={formData.customerName}
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, customerName: e.target.value }))
+                        }
+                        className="input-field bg-slate-50 text-xs font-bold text-slate-900 focus:bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-500">
+                        Mobile Number (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 9876543210"
+                        value={formData.customerMobile}
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, customerMobile: e.target.value }))
+                        }
+                        className="input-field bg-slate-50 text-xs font-bold text-slate-900 focus:bg-white"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  /* Mode 2: Saved Customer Dropdown & Details */
+                  <div className="space-y-3">
+                    <div className="relative">
+                      <User size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <select
+                        id="customer-select-dropdown"
+                        value={formData.farmerId}
+                        onChange={(event) => handleCustomerChange(event.target.value)}
+                        className="input-field pl-10 text-sm font-bold text-slate-900"
+                      >
+                        <option value="">Select Saved Customer</option>
+                        {customers.map((customer) => (
+                          <option key={customer._id} value={customer._id}>
+                            {customer.name} {customer.village ? `(${customer.village})` : ""} {customer.mobileNumber ? `- ${customer.mobileNumber}` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {formData.farmerId && formData.farmerId !== "walk_in" && (
+                      <div className="flex items-center gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-3 text-xs">
+                        <div className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 font-black text-white">
+                          {formData.customerName?.[0]?.toUpperCase() || "C"}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-black text-slate-900">{formData.customerName}</p>
+                          <p className="truncate font-semibold text-slate-500">
+                            {formData.customerMobile ? `Mob: ${formData.customerMobile}` : "No Mobile"}
+                            {formData.customerVillage ? ` • ${formData.customerVillage}` : ""}
+                          </p>
+                        </div>
+                        <span className="rounded-lg bg-blue-100 px-2 py-0.5 text-[10px] font-black uppercase text-blue-800">
+                          Saved Account
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-widest text-slate-600">
-                  {isGst ? "Invoice" : "Estimate"} Date
-                </label>
-                <div className="relative">
-                  <CalendarDays
-                    size={18}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                  />
+              {/* Date & Invoice Number (Takes 5 cols) */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:col-span-5">
+                <div className="space-y-2">
+                  <label className="text-xs font-black uppercase tracking-widest text-slate-600">
+                    {isGst ? "Invoice" : "Estimate"} Date
+                  </label>
+                  <div className="relative">
+                    <CalendarDays size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="date"
+                      value={formData.invoiceDate}
+                      onChange={(event) =>
+                        setFormData({ ...formData, invoiceDate: event.target.value })
+                      }
+                      className="input-field pl-10 text-sm font-bold text-slate-900"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-black uppercase tracking-widest text-slate-600">
+                    {isGst ? "Invoice" : "Estimate"} Number
+                  </label>
                   <input
-                    type="date"
-                    value={formData.invoiceDate}
-                    onChange={(event) =>
-                      setFormData({ ...formData, invoiceDate: event.target.value })
-                    }
-                    className="input-field pl-10"
+                    type="text"
+                    value={formData.invoiceNumber}
+                    onChange={(event) => setFormData((previous) => ({ ...previous, invoiceNumber: event.target.value }))}
+                    placeholder="Auto Number"
+                    className="input-field text-sm font-bold text-slate-900"
                   />
+                  <p className="text-[10px] font-semibold text-slate-400">Blank = Auto generated</p>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-black uppercase tracking-widest text-slate-600">
-                  {isGst ? "Invoice" : "Estimate"} Number
-                </label>
-                <input
-                  type="text"
-                  value={formData.invoiceNumber}
-                  onChange={(event) => setFormData((previous) => ({ ...previous, invoiceNumber: event.target.value }))}
-                  placeholder="Blank = automatic number"
-                  className="input-field"
-                />
-                <p className="text-[10px] font-semibold text-slate-400">Duplicate numbers are not allowed.</p>
-              </div>
             </div>
           </section>
 
@@ -630,7 +715,7 @@ const Billing = () => {
                         <input
                           type="number"
                           min="0"
-                          step="0.01"
+                          step="any"
                           value={item.grossWeight}
                           onChange={(event) =>
                             handleProductChange(index, "grossWeight", event.target.value)
@@ -647,7 +732,7 @@ const Billing = () => {
                         <input
                           type="number"
                           min="0"
-                          step="0.001"
+                          step="any"
                           value={item.stoneWeight}
                           onChange={(event) =>
                             handleProductChange(index, "stoneWeight", event.target.value)
@@ -663,7 +748,7 @@ const Billing = () => {
                         <input
                           type="number"
                           min="0"
-                          step="0.01"
+                          step="any"
                           value={item.netWeight}
                           className="input-field bg-white font-bold"
                           required
@@ -758,7 +843,7 @@ const Billing = () => {
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
                           Making Charge
                         </label>
-                        <input type="number" min="0" step="0.01" value={item.makingCharge} onChange={(event) => handleProductChange(index, "makingCharge", event.target.value)} className="input-field bg-white" />
+                        <input type="number" min="0" step="any" value={item.makingCharge} onChange={(event) => handleProductChange(index, "makingCharge", event.target.value)} className="input-field bg-white" />
                       </div>
 
                       <div className="space-y-1">
@@ -776,14 +861,14 @@ const Billing = () => {
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
                           Stone / Diamond Charge
                         </label>
-                        <input type="number" min="0" step="0.01" value={item.stoneValue} onChange={(event) => handleProductChange(index, "stoneValue", event.target.value)} className="input-field bg-white" />
+                        <input type="number" min="0" step="any" value={item.stoneValue} onChange={(event) => handleProductChange(index, "stoneValue", event.target.value)} className="input-field bg-white" />
                       </div>
 
                       <div className="space-y-1">
                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
                           Hallmark Charge (Internal)
                         </label>
-                        <input type="number" min="0" step="0.01" value={item.hallmarkCharge} onChange={(event) => handleProductChange(index, "hallmarkCharge", event.target.value)} className="input-field bg-white" />
+                        <input type="number" min="0" step="any" value={item.hallmarkCharge} onChange={(event) => handleProductChange(index, "hallmarkCharge", event.target.value)} className="input-field bg-white" />
                       </div>
                     </div>
 
@@ -833,7 +918,7 @@ const Billing = () => {
                           <input
                             type="number"
                             min="0"
-                            step="0.01"
+                            step="any"
                             value={item.gstRate}
                             onChange={(event) =>
                               handleProductChange(index, "gstRate", event.target.value)
@@ -848,7 +933,7 @@ const Billing = () => {
                           Line Total
                         </p>
                         <p className="mt-1 text-sm font-black text-amber-950">
-                          Rs {line.lineTotal.toLocaleString("en-IN")}
+                          Rs {(Math.round((line.lineTotal || 0) * 100) / 100).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </p>
                       </div>
                     </div>
@@ -866,8 +951,7 @@ const Billing = () => {
                 <input
                   type="number"
                   min="0"
-                  max={summary.grandTotal}
-                  step="0.01"
+                  step="any"
                   value={formData.receivedAmount}
                   onChange={(event) => setFormData((previous) => ({ ...previous, receivedAmount: event.target.value }))}
                   placeholder="0.00"

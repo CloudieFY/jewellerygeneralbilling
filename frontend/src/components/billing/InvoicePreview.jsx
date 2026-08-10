@@ -22,6 +22,10 @@ const InvoicePreview = ({
 
   const isGst = documentType === "gst_invoice";
 
+  const customerDisplayName = formData.customerName || selectedCustomer?.name || (formData.farmerId === "walk_in" ? "Walk-in Customer" : "");
+  const customerMobile = formData.customerMobile || selectedCustomer?.mobileNumber || "";
+  const customerVillage = formData.customerVillage || selectedCustomer?.village || "";
+
   return (
     <div className="xl:sticky xl:top-8 overflow-hidden rounded-3xl border border-amber-200 bg-gradient-to-b from-amber-50/80 to-white shadow-lg shadow-amber-100/60">
       <div className="border-b border-amber-200 bg-gradient-to-r from-amber-950 via-yellow-900 to-amber-800 p-6 text-white">
@@ -55,21 +59,25 @@ const InvoicePreview = ({
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
             Customer
           </p>
-          {selectedCustomer ? (
+          {customerDisplayName ? (
             <div className="mt-3 space-y-1">
               <p className="text-lg font-black text-slate-950">
-                {selectedCustomer.name}
+                {customerDisplayName}
               </p>
-              <p className="flex items-center gap-2 text-sm font-semibold text-slate-600">
-                <Phone size={14} /> {selectedCustomer.mobileNumber}
-              </p>
-              <p className="flex items-center gap-2 text-sm font-semibold text-slate-600">
-                <MapPin size={14} /> {selectedCustomer.village}
-              </p>
+              {customerMobile && (
+                <p className="flex items-center gap-2 text-sm font-semibold text-slate-600">
+                  <Phone size={14} /> {customerMobile}
+                </p>
+              )}
+              {customerVillage && (
+                <p className="flex items-center gap-2 text-sm font-semibold text-slate-600">
+                  <MapPin size={14} /> {customerVillage}
+                </p>
+              )}
             </div>
           ) : (
             <p className="mt-3 text-sm font-semibold text-slate-400">
-              Select a customer to preview invoice details.
+              Select or type customer details to preview.
             </p>
           )}
         </section>

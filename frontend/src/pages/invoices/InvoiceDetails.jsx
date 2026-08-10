@@ -177,13 +177,13 @@ const InvoiceDetails = () => {
             Customer
           </p>
           <h2 className="mt-3 text-xl font-black text-slate-950">
-            {invoice.farmer?.name}
+            {invoice.customerName || invoice.farmer?.name || "Walk-in Customer"}
           </h2>
           <p className="mt-1 text-sm font-semibold text-slate-600">
-            {invoice.farmer?.mobileNumber}
+            {invoice.customerMobile || invoice.farmer?.mobileNumber || ""}
           </p>
           <p className="text-sm font-semibold text-slate-600">
-            {invoice.farmer?.village}
+            {invoice.customerVillage || invoice.farmer?.village || ""}
           </p>
         </div>
 

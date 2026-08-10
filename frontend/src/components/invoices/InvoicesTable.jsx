@@ -114,10 +114,10 @@ const InvoiceTable = ({ invoices, onDeleted }) => {
                           </div>
                           <div>
                             <p className="text-sm font-bold text-slate-800">
-                              {invoice.farmer?.name}
+                              {invoice.customerName || invoice.farmer?.name || "Walk-in Customer"}
                             </p>
                             <p className="text-xs font-semibold text-slate-500">
-                              {invoice.farmer?.mobileNumber}
+                              {invoice.customerMobile || invoice.farmer?.mobileNumber || ""}
                             </p>
                           </div>
                         </div>

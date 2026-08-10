@@ -82,8 +82,8 @@ const Invoices = () => {
       return [
         invoice.invoiceNumber,
         isGst ? "GST Invoice" : "Estimate Order",
-        invoice.farmer?.name,
-        invoice.farmer?.mobileNumber,
+        invoice.customerName || invoice.farmer?.name || "Walk-in Customer",
+        invoice.customerMobile || invoice.farmer?.mobileNumber,
         invoice.paymentStatus,
         invoice.grandTotal,
         invoice.balanceDue,

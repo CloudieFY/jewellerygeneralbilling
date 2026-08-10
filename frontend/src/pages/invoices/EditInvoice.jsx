@@ -84,7 +84,10 @@ const EditInvoice = () => {
   const gstEnabled = documentType === "gst_invoice";
 
   const [formData, setFormData] = useState({
-    farmerId: "",
+    farmerId: "walk_in",
+    customerName: "",
+    customerMobile: "",
+    customerVillage: "",
     invoiceNumber: "",
     rateType: "Rate A",
     invoiceDate: today,
@@ -118,11 +121,24 @@ const EditInvoice = () => {
   };
 
   const handleCustomerChange = (customerId) => {
+    if (!customerId || customerId === "walk_in") {
+      setFormData((prev) => ({
+        ...prev,
+        farmerId: "walk_in",
+        customerName: "",
+        customerMobile: "",
+        customerVillage: "",
+      }));
+      return;
+    }
     const customer = customers.find((entry) => entry._id === customerId);
     const nextRateType = customer?.defaultRateType || "Rate A";
     setFormData((prev) => ({
       ...prev,
       farmerId: customerId,
+      customerName: customer?.name || "",
+      customerMobile: customer?.mobileNumber || "",
+      customerVillage: customer?.village || "",
       rateType: nextRateType,
       products: prev.products.map((item) =>
         item.product ? withProductRate(item, nextRateType) : item
@@ -215,11 +231,6 @@ const EditInvoice = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!formData.farmerId) {
-      toast.error("Please select a customer");
-      return;
-    }
-
     const invalidItem = formData.products.some((item) => {
       const product = productsList.find((entry) => entry._id === item.product);
       const line = calculateLine(item, product, formData.rateType, gstEnabled);
@@ -245,6 +256,9 @@ const EditInvoice = () => {
       setLoading(true);
       await API.put(`/invoices/${id}`, {
         farmerId: formData.farmerId,
+        customerName: formData.customerName,
+        customerMobile: formData.customerMobile,
+        customerVillage: formData.customerVillage,
         invoiceNumber: formData.invoiceNumber,
         billingType: formData.billingType,
         rateType: formData.rateType,
@@ -303,7 +317,10 @@ const EditInvoice = () => {
 
           setDocumentType(nextDocumentType);
           setFormData({
-            farmerId: invoiceData.farmer?._id || invoiceData.farmer,
+            farmerId: invoiceData.farmer?._id || invoiceData.farmer || "walk_in",
+            customerName: invoiceData.customerName || invoiceData.farmer?.name || "",
+            customerMobile: invoiceData.customerMobile || invoiceData.farmer?.mobileNumber || "",
+            customerVillage: invoiceData.customerVillage || invoiceData.farmer?.village || "",
             invoiceNumber: invoiceData.invoiceNumber || "",
             rateType: invoiceData.rateType || "Rate A",
             invoiceDate: invoiceData.createdAt
@@ -316,11 +333,11 @@ const EditInvoice = () => {
             products:
               invoiceData.products?.map((item) => {
                 const grossVal = item.grossWeight !== undefined && item.grossWeight !== null && item.grossWeight !== "" && Number(item.grossWeight) > 0
-                  ? item.grossWeight
-                  : (item.netWeight || "");
-                const stoneVal = item.stoneWeight || "";
+                  ? roundWeight(Number(item.grossWeight))
+                  : (item.netWeight ? roundWeight(Number(item.netWeight)) : "");
+                const stoneVal = item.stoneWeight ? roundWeight(Number(item.stoneWeight)) : "";
                 const netVal = item.netWeight !== undefined && item.netWeight !== null && item.netWeight !== "" && Number(item.netWeight) > 0
-                  ? item.netWeight
+                  ? roundWeight(Number(item.netWeight))
                   : (grossVal !== "" ? roundWeight(Math.max(Number(grossVal) - Number(stoneVal || 0), 0)) : "");
 
                 return {
@@ -458,59 +475,154 @@ const EditInvoice = () => {
           </div>
         </section>
 
-        {/* ── 2. Customer, Billing Type & Date ── */}
+        {/* ── 2. Customer & Date ── */}
         <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <p className="mb-4 text-xs font-black uppercase tracking-widest text-slate-500">
-            Customer & Date
-          </p>
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-4">
-            <div className="space-y-2 lg:col-span-2">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+            
+            {/* Customer Section (Takes 7 cols) */}
+            <div className="space-y-4 lg:col-span-7">
               <label className="text-xs font-black uppercase tracking-widest text-slate-600">
-                Customer
+                Customer Type
               </label>
-              <div className="relative">
-                <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <select
-                  value={formData.farmerId}
-                  onChange={(event) => handleCustomerChange(event.target.value)}
-                  className="input-field pl-10"
-                  required
+
+              {/* Mode Selector Cards */}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleCustomerChange("walk_in")}
+                  className={`flex items-center justify-center gap-2 rounded-2xl border-2 p-3 text-xs font-black transition ${
+                    formData.farmerId === "walk_in"
+                      ? "border-amber-500 bg-amber-50 text-amber-950 shadow-sm"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                  }`}
                 >
-                  <option value="">Select Customer</option>
-                  {customers.map((customer) => (
-                    <option key={customer._id} value={customer._id}>
-                      {customer.name} - {customer.village}
-                    </option>
-                  ))}
-                </select>
+                  ⚡ Walk-in Customer
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (formData.farmerId === "walk_in") {
+                      handleCustomerChange(customers[0]?._id || "");
+                    }
+                  }}
+                  className={`flex items-center justify-center gap-2 rounded-2xl border-2 p-3 text-xs font-black transition ${
+                    formData.farmerId !== "walk_in"
+                      ? "border-blue-600 bg-blue-50 text-blue-950 shadow-sm"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                  }`}
+                >
+                  👤 Saved Customer
+                </button>
               </div>
+
+              {/* Mode 1: Walk-in Customer Fields */}
+              {formData.farmerId === "walk_in" ? (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-500">
+                      Buyer Name
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Walk-in Customer"
+                      value={formData.customerName}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, customerName: e.target.value }))
+                      }
+                      className="input-field bg-slate-50 text-xs font-bold text-slate-900 focus:bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-500">
+                      Mobile Number (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 9876543210"
+                      value={formData.customerMobile}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, customerMobile: e.target.value }))
+                      }
+                      className="input-field bg-slate-50 text-xs font-bold text-slate-900 focus:bg-white"
+                    />
+                  </div>
+                </div>
+              ) : (
+                /* Mode 2: Saved Customer Dropdown & Details */
+                <div className="space-y-3">
+                  <div className="relative">
+                    <User size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <select
+                      id="customer-select-dropdown-edit"
+                      value={formData.farmerId}
+                      onChange={(event) => handleCustomerChange(event.target.value)}
+                      className="input-field pl-10 text-sm font-bold text-slate-900"
+                    >
+                      <option value="">Select Saved Customer</option>
+                      {customers.map((customer) => (
+                        <option key={customer._id} value={customer._id}>
+                          {customer.name} {customer.village ? `(${customer.village})` : ""} {customer.mobileNumber ? `- ${customer.mobileNumber}` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {formData.farmerId && formData.farmerId !== "walk_in" && (
+                    <div className="flex items-center gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-3 text-xs">
+                      <div className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-blue-600 font-black text-white">
+                        {formData.customerName?.[0]?.toUpperCase() || "C"}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-black text-slate-900">{formData.customerName}</p>
+                        <p className="truncate font-semibold text-slate-500">
+                          {formData.customerMobile ? `Mob: ${formData.customerMobile}` : "No Mobile"}
+                          {formData.customerVillage ? ` • ${formData.customerVillage}` : ""}
+                        </p>
+                      </div>
+                      <span className="rounded-lg bg-blue-100 px-2 py-0.5 text-[10px] font-black uppercase text-blue-800">
+                        Saved Account
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
-            <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-slate-600">
-                Invoice / Estimate Number
-              </label>
-              <input type="text" value={formData.invoiceNumber} onChange={(event) => setFormData((previous) => ({ ...previous, invoiceNumber: event.target.value }))} className="input-field" required />
-            </div>
+            {/* Date & Invoice Number (Takes 5 cols) */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:col-span-5">
+              <div className="space-y-2">
+                <label className="text-xs font-black uppercase tracking-widest text-slate-600">
+                  Invoice Date
+                </label>
+                <div className="relative">
+                  <CalendarDays size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="date"
+                    value={formData.invoiceDate}
+                    onChange={(event) =>
+                      setFormData((prev) => ({ ...prev, invoiceDate: event.target.value }))
+                    }
+                    className="input-field pl-10 text-sm font-bold text-slate-900"
+                  />
+                </div>
+              </div>
 
-            <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-slate-600">
-                Invoice Date
-              </label>
-              <div className="relative">
-                <CalendarDays size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <div className="space-y-2">
+                <label className="text-xs font-black uppercase tracking-widest text-slate-600">
+                  Invoice / Estimate Number
+                </label>
                 <input
-                  type="date"
-                  value={formData.invoiceDate}
-                  onChange={(event) =>
-                    setFormData((prev) => ({ ...prev, invoiceDate: event.target.value }))
-                  }
-                  className="input-field pl-10"
+                  type="text"
+                  value={formData.invoiceNumber}
+                  onChange={(event) => setFormData((previous) => ({ ...previous, invoiceNumber: event.target.value }))}
+                  className="input-field text-sm font-bold text-slate-900"
+                  required
                 />
               </div>
             </div>
-          </div>
 
+          </div>
         </section>
 
         {/* Legacy payment data is retained for old records but is not editable. */}
@@ -745,10 +857,10 @@ const EditInvoice = () => {
                   <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">Purity<input value={item.purity} onChange={(event) => handleProductChange(index, "purity", event.target.value)} className="input-field bg-white normal-case" /></label>
                     <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">Making Type<select value={item.makingChargeType} onChange={(event) => handleProductChange(index, "makingChargeType", event.target.value)} className="input-field bg-white normal-case"><option value="per_gram">Per gram</option><option value="percent">Percentage (%)</option><option value="per_piece">Per piece</option><option value="fixed">Fixed price</option></select></label>
-                    <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">Making Charge<input type="number" min="0" step="0.01" value={item.makingCharge} onChange={(event) => handleProductChange(index, "makingCharge", event.target.value)} className="input-field bg-white" /></label>
+                    <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">Making Charge<input type="number" min="0" step="any" value={item.makingCharge} onChange={(event) => handleProductChange(index, "makingCharge", event.target.value)} className="input-field bg-white" /></label>
                     <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">Stone Charge Type<select value={item.stoneValueType} onChange={(event) => handleProductChange(index, "stoneValueType", event.target.value)} className="input-field bg-white normal-case"><option value="per_gram">Per gram</option><option value="per_piece">Per piece</option><option value="fixed">Fixed price</option></select></label>
-                    <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">Stone / Diamond Charge<input type="number" min="0" value={item.stoneValue} onChange={(event) => handleProductChange(index, "stoneValue", event.target.value)} className="input-field bg-white" /></label>
-                    <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">Hallmark Charge (Internal)<input type="number" min="0" value={item.hallmarkCharge} onChange={(event) => handleProductChange(index, "hallmarkCharge", event.target.value)} className="input-field bg-white" /></label>
+                    <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">Stone / Diamond Charge<input type="number" min="0" step="any" value={item.stoneValue} onChange={(event) => handleProductChange(index, "stoneValue", event.target.value)} className="input-field bg-white" /></label>
+                    <label className="space-y-2 text-[10px] font-black uppercase tracking-widest text-slate-500">Hallmark Charge (Internal)<input type="number" min="0" step="any" value={item.hallmarkCharge} onChange={(event) => handleProductChange(index, "hallmarkCharge", event.target.value)} className="input-field bg-white" /></label>
                   </div>
 
                   {/* GST rate (only for GST invoices) */}
@@ -760,7 +872,7 @@ const EditInvoice = () => {
                       <input
                         type="number"
                         min="0"
-                        step="0.01"
+                        step="any"
                         value={item.gstRate}
                         onChange={(event) =>
                           handleProductChange(index, "gstRate", event.target.value)
@@ -890,7 +1002,7 @@ const EditInvoice = () => {
   );
 };
 
-const NumberField = ({ label, value, onChange, min = "0", step = "0.01", readOnly = false, required = false }) => (
+const NumberField = ({ label, value, onChange, min = "0", step = "any", readOnly = false, required = false }) => (
   <div className="lg:col-span-2">
     <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-600">
       {label}

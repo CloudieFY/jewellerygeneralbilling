@@ -204,7 +204,7 @@ const Dashboard = () => {
                       #{invoice.invoiceNumber}
                     </p>
                     <p className="text-sm font-semibold text-slate-500">
-                      {invoice.farmer?.name}
+                      {invoice.customerName || invoice.farmer?.name || "Walk-in Customer"}
                     </p>
                   </div>
                   <p className="font-black text-blue-700">

@@ -26,7 +26,31 @@ const invoiceSchema = new mongoose.Schema(
     farmer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Farmer",
-      required: true,
+      required: false,
+    },
+
+    customerName: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    customerMobile: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    customerVillage: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    customerAddress: {
+      type: String,
+      default: "",
+      trim: true,
     },
 
     billingType: {

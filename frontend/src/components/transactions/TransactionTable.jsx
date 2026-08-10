@@ -63,7 +63,7 @@ const TransactionTable = ({ transactions, deleteTransaction }) => {
                         <User size={16} />
                       </div>
                       <p className="font-bold text-slate-900">
-                        {item.farmer?.name}
+                        {item.farmer?.name || "Walk-in Customer"}
                       </p>
                     </div>
                   </td>

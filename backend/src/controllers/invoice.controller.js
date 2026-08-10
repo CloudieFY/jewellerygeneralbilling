@@ -80,7 +80,7 @@ const createInvoiceLedgerEntries = async ({
 }) => {
   const entryDate = invoice.createdAt || new Date();
 
-  await Transaction.create({
+  const creditTx = await Transaction.create({
     farmer: farmerId,
     type: "credit",
     amount: invoice.grandTotal,
@@ -93,8 +93,15 @@ const createInvoiceLedgerEntries = async ({
     dueDate,
   });
 
+  if (entryDate) {
+    await Transaction.collection.updateOne(
+      { _id: creditTx._id },
+      { $set: { createdAt: entryDate } }
+    );
+  }
+
   if (receivedAmount > 0) {
-    await Transaction.create({
+    const payTx = await Transaction.create({
       farmer: farmerId,
       type: "payment",
       amount: receivedAmount,
@@ -106,6 +113,13 @@ const createInvoiceLedgerEntries = async ({
       paymentMode,
       description: `Received against Invoice ${invoice.invoiceNumber}`,
     });
+
+    if (entryDate) {
+      await Transaction.collection.updateOne(
+        { _id: payTx._id },
+        { $set: { createdAt: entryDate } }
+      );
+    }
   }
 };
 
@@ -131,12 +145,32 @@ const deleteInvoiceLedgerEntries = async (invoice) => {
   });
 };
 
+const getOrCreateWalkInCustomer = async () => {
+  let walkIn = await Farmer.findOne({
+    $or: [{ name: "Walk-in Customer" }, { name: "Cash Customer" }],
+  });
+  if (!walkIn) {
+    walkIn = await Farmer.create({
+      name: "Walk-in Customer",
+      mobileNumber: "",
+      village: "Counter Sale",
+      city: "",
+      defaultRateType: "Rate A",
+    });
+  }
+  return walkIn;
+};
+
 // ================= CREATE INVOICE =================
 
 export const createInvoice = async (req, res) => {
   try {
     const {
       farmerId,
+      customerName,
+      customerMobile,
+      customerVillage,
+      customerAddress,
       billingType = "credit",
       rateType,
       documentType = "gst_invoice",
@@ -151,15 +185,19 @@ export const createInvoice = async (req, res) => {
     // documentType determines GST on/off
     const gstEnabled = documentType === "gst_invoice";
 
-    // farmer check
-
-    const farmer = await Farmer.findById(farmerId);
-
-    if (!farmer) {
-      return res.status(404).json({
-        message: "Farmer not found",
-      });
+    // farmer check (optional/walk-in fallback)
+    let farmer;
+    if (farmerId && farmerId !== "walk_in") {
+      farmer = await Farmer.findById(farmerId);
     }
+    if (!farmer) {
+      farmer = await getOrCreateWalkInCustomer();
+    }
+
+    const finalCustomerName = customerName?.trim() || farmer.name || "Walk-in Customer";
+    const finalCustomerMobile = customerMobile !== undefined ? customerMobile.trim() : (farmer.mobileNumber || "");
+    const finalCustomerVillage = customerVillage !== undefined ? customerVillage.trim() : (farmer.village || "");
+    const finalCustomerAddress = customerAddress !== undefined ? customerAddress.trim() : (farmer.address || "");
 
     if (!products.length) {
       return res.status(400).json({
@@ -308,7 +346,11 @@ export const createInvoice = async (req, res) => {
       documentType,
       workflowStatus: documentType === "order" ? "inventory_reserved" : "invoiced",
 
-      farmer: farmerId,
+      farmer: farmer._id,
+      customerName: finalCustomerName,
+      customerMobile: finalCustomerMobile,
+      customerVillage: finalCustomerVillage,
+      customerAddress: finalCustomerAddress,
 
       billingType: "credit",
 
@@ -337,9 +379,19 @@ export const createInvoice = async (req, res) => {
       paymentMode,
 
       remarks: remarks || "",
-
       createdAt: dateWithPreservedTime(invoiceDate),
     });
+
+    if (invoiceDate) {
+      const selectedCreatedAt = dateWithPreservedTime(invoiceDate);
+      if (selectedCreatedAt) {
+        await Invoice.collection.updateOne(
+          { _id: invoice._id },
+          { $set: { createdAt: selectedCreatedAt } }
+        );
+        invoice.createdAt = selectedCreatedAt;
+      }
+    }
 
     await adjustInventory(invoiceProducts, -1);
 
@@ -524,6 +576,10 @@ export const updateInvoice = async (req, res) => {
     const { id } = req.params;
     const {
       farmerId,
+      customerName,
+      customerMobile,
+      customerVillage,
+      customerAddress,
       billingType = "credit",
       rateType,
       documentType = "gst_invoice",
@@ -550,12 +606,19 @@ export const updateInvoice = async (req, res) => {
 
     const oldFarmerId = invoice.farmer;
 
-    const farmer = await Farmer.findById(farmerId || invoice.farmer);
-    if (!farmer) {
-      return res.status(404).json({
-        message: "Customer not found",
-      });
+    let farmer;
+    const targetFarmerId = (farmerId && farmerId !== "walk_in") ? farmerId : (invoice.farmer || undefined);
+    if (targetFarmerId) {
+      farmer = await Farmer.findById(targetFarmerId);
     }
+    if (!farmer) {
+      farmer = await getOrCreateWalkInCustomer();
+    }
+
+    const finalCustomerName = customerName?.trim() || farmer.name || invoice.customerName || "Walk-in Customer";
+    const finalCustomerMobile = customerMobile !== undefined ? customerMobile.trim() : (farmer.mobileNumber || invoice.customerMobile || "");
+    const finalCustomerVillage = customerVillage !== undefined ? customerVillage.trim() : (farmer.village || invoice.customerVillage || "");
+    const finalCustomerAddress = customerAddress !== undefined ? customerAddress.trim() : (farmer.address || invoice.customerAddress || "");
 
     const activeRateType = rateType || farmer.defaultRateType || "Rate A";
     const gstEnabled = documentType === "gst_invoice";
@@ -697,6 +760,10 @@ export const updateInvoice = async (req, res) => {
     await adjustInventory(invoice.products, 1);
 
     invoice.farmer = farmer._id;
+    invoice.customerName = finalCustomerName;
+    invoice.customerMobile = finalCustomerMobile;
+    invoice.customerVillage = finalCustomerVillage;
+    invoice.customerAddress = finalCustomerAddress;
     if (manualInvoiceNumber) invoice.invoiceNumber = manualInvoiceNumber;
     invoice.billingType = "credit";
     invoice.rateType = activeRateType;
@@ -722,7 +789,7 @@ export const updateInvoice = async (req, res) => {
     await invoice.save();
 
     if (newCreatedAt) {
-      await Invoice.updateOne(
+      await Invoice.collection.updateOne(
         { _id: invoice._id },
         { $set: { createdAt: newCreatedAt } }
       );
@@ -744,10 +811,14 @@ export const updateInvoice = async (req, res) => {
       await recalculateCustomerLedger(farmer._id);
     }
 
+    const updatedInvoice = await Invoice.findById(id)
+      .populate("farmer")
+      .populate("products.product");
+
     res.status(200).json({
       success: true,
       message: "Invoice Updated Successfully",
-      invoice,
+      invoice: updatedInvoice || invoice,
     });
   } catch (error) {
     res.status(500).json({
