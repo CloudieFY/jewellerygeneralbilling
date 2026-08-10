@@ -693,7 +693,9 @@ export const updateInvoice = async (req, res) => {
     invoice.paymentMode = paymentMode;
     if (remarks !== undefined) invoice.remarks = remarks;
     if (invoiceDate) {
-      invoice.createdAt = dateWithPreservedTime(invoiceDate, invoice.createdAt);
+      const newCreatedAt = dateWithPreservedTime(invoiceDate, invoice.createdAt);
+      invoice.createdAt = newCreatedAt;
+      await Invoice.updateOne({ _id: invoice._id }, { $set: { createdAt: newCreatedAt } });
     }
 
     await invoice.save();

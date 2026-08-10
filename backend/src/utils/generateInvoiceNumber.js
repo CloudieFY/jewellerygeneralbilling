@@ -9,21 +9,25 @@ const getSequenceNumber = (value) => {
 const sequenceNumberPattern = (sequence) =>
   new RegExp(`(?:^|-)0*${sequence}$`, "i");
 
+const escapeRegExp = (str) => String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 export const invoiceNumberExists = async (invoiceNumber, documentType, excludeId) => {
   const value = String(invoiceNumber || "").trim();
-  const sequence = getSequenceNumber(value);
-  const numberMatch = sequence === null
-    ? { invoiceNumber: value }
-    : { invoiceNumber: sequenceNumberPattern(sequence) };
+  if (!value) return false;
 
-  return Invoice.exists({
-    ...numberMatch,
+  const query = {
+    invoiceNumber: new RegExp(`^${escapeRegExp(value)}$`, "i"),
     documentType,
     isDeleted: { $ne: true },
     deleted: { $ne: true },
     status: { $ne: "deleted" },
-    ...(excludeId ? { _id: { $ne: excludeId } } : {}),
-  });
+  };
+
+  if (excludeId) {
+    query._id = { $ne: excludeId };
+  }
+
+  return Boolean(await Invoice.exists(query));
 };
 
 export const reserveManualDocumentNumber = async (invoiceNumber, documentType) => {
