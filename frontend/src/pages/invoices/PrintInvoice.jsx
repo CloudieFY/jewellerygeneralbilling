@@ -1401,7 +1401,6 @@ const PrintInvoice = () => {
   const selectedDesignElement = useRef(null);
   const [isPrinting, setIsPrinting] = useState(false);
   const [showParasmaniName, setShowParasmaniName] = useState(true);
-  const [showPrintTip, setShowPrintTip] = useState(true);
 
   useEffect(() => {
     const handleBeforePrint = () => setIsPrinting(true);
@@ -1990,22 +1989,6 @@ const PrintInvoice = () => {
 
   return (
     <div className="invoice-shell space-y-5 p-3 sm:p-6">
-      {/* ── Printer-selection tip banner ── */}
-      {showPrintTip && (
-        <div className="print:hidden mx-auto flex max-w-5xl items-start gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 shadow-sm">
-          <span className="text-xl">🖨️</span>
-          <div className="flex-1 text-sm text-amber-900 leading-relaxed">
-            <strong>Direct Print without File Save popup:</strong> When the print window opens, check the <strong>Destination / Printer</strong> dropdown at the top right. If it says <em>"Save as PDF"</em> or <em>"Microsoft Print to PDF"</em>, Windows will ask to save a file. Change <strong>Destination</strong> to your <strong>actual installed Printer (HP, Canon, Thermal, etc.)</strong>. Chrome will remember your printer for future prints!
-          </div>
-          <button
-            onClick={() => setShowPrintTip(false)}
-            className="shrink-0 rounded-lg p-1 text-amber-600 hover:bg-amber-100 font-bold"
-            aria-label="Dismiss tip"
-          >
-            ✕
-          </button>
-        </div>
-      )}
 
       <div className="mx-auto flex max-w-5xl flex-col gap-3 rounded-2xl bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between print:hidden">
         <Link
@@ -2285,12 +2268,20 @@ const PrintInvoice = () => {
 const InvoiceHeader = ({ invoice, isGst, showParasmaniName, docHeading, shop, invoiceMode }) => {
   const displayName = invoice?.customerName || invoice?.farmer?.name || "Walk-in Customer";
   const displayMobile = invoice?.customerMobile || invoice?.farmer?.mobileNumber || "-";
-  const customerAddress = [
-    invoice?.customerAddress || invoice?.farmer?.address,
-    invoice?.customerVillage || invoice?.farmer?.village,
-  ]
-    .filter(Boolean)
-    .join(", ");
+  const rawAddressParts = [
+    invoice?.customerAddress,
+    invoice?.customerVillage,
+    invoice?.farmer?.address,
+    invoice?.farmer?.village,
+  ];
+  const customerAddress = Array.from(
+    new Set(
+      rawAddressParts
+        .filter(Boolean)
+        .map((str) => String(str).trim())
+        .filter((str) => str !== "" && str !== "Counter Sale")
+    )
+  ).join(", ");
 
   return (
     <>
@@ -2471,7 +2462,7 @@ const ItemsTable = ({
           <tr>
             <td colSpan={isGst ? 4 : 3} style={{ textAlign: "right", fontWeight: "bold" }}>Total Net Wt:</td>
             <td className="center-cell" style={{ fontWeight: "900" }}>{formatCompactNumber(totalNetWeight)} g</td>
-            <td colSpan={isGst ? 5 : 4} style={{ textAlign: "right", fontWeight: "bold" }}>
+            <td colSpan={4} style={{ textAlign: "right", fontWeight: "bold" }}>
               {showTax ? "Total Taxable Amount" : ""}
             </td>
             <td className="amount-cell amount-highlight">

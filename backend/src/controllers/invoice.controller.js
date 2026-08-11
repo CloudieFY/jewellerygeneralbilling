@@ -153,7 +153,7 @@ const getOrCreateWalkInCustomer = async () => {
     walkIn = await Farmer.create({
       name: "Walk-in Customer",
       mobileNumber: "",
-      village: "Counter Sale",
+      village: "",
       city: "",
       defaultRateType: "Rate A",
     });
@@ -196,8 +196,12 @@ export const createInvoice = async (req, res) => {
 
     const finalCustomerName = customerName?.trim() || farmer.name || "Walk-in Customer";
     const finalCustomerMobile = customerMobile !== undefined ? customerMobile.trim() : (farmer.mobileNumber || "");
-    const finalCustomerVillage = customerVillage !== undefined ? customerVillage.trim() : (farmer.village || "");
-    const finalCustomerAddress = customerAddress !== undefined ? customerAddress.trim() : (farmer.address || "");
+
+    const rawVillage = customerVillage !== undefined ? customerVillage.trim() : (farmer.village || "");
+    const finalCustomerVillage = rawVillage === "Counter Sale" ? "" : rawVillage;
+
+    const rawAddress = customerAddress !== undefined ? customerAddress.trim() : (farmer.address || "");
+    const finalCustomerAddress = rawAddress === "Counter Sale" ? "" : rawAddress;
 
     if (!products.length) {
       return res.status(400).json({
@@ -617,8 +621,12 @@ export const updateInvoice = async (req, res) => {
 
     const finalCustomerName = customerName?.trim() || farmer.name || invoice.customerName || "Walk-in Customer";
     const finalCustomerMobile = customerMobile !== undefined ? customerMobile.trim() : (farmer.mobileNumber || invoice.customerMobile || "");
-    const finalCustomerVillage = customerVillage !== undefined ? customerVillage.trim() : (farmer.village || invoice.customerVillage || "");
-    const finalCustomerAddress = customerAddress !== undefined ? customerAddress.trim() : (farmer.address || invoice.customerAddress || "");
+
+    const rawVillage = customerVillage !== undefined ? customerVillage.trim() : (invoice.customerVillage || farmer.village || "");
+    const finalCustomerVillage = rawVillage === "Counter Sale" ? "" : rawVillage;
+
+    const rawAddress = customerAddress !== undefined ? customerAddress.trim() : (invoice.customerAddress || farmer.address || "");
+    const finalCustomerAddress = rawAddress === "Counter Sale" ? "" : rawAddress;
 
     const activeRateType = rateType || farmer.defaultRateType || "Rate A";
     const gstEnabled = documentType === "gst_invoice";

@@ -259,6 +259,7 @@ const EditInvoice = () => {
         customerName: formData.customerName,
         customerMobile: formData.customerMobile,
         customerVillage: formData.customerVillage,
+        customerAddress: formData.customerAddress,
         invoiceNumber: formData.invoiceNumber,
         billingType: formData.billingType,
         rateType: formData.rateType,
@@ -315,12 +316,18 @@ const EditInvoice = () => {
             invoiceData.documentType ||
             (invoiceData.gstEnabled ? "gst_invoice" : "order");
 
+          const rawVillage = invoiceData.customerVillage || invoiceData.farmer?.village || "";
+          const cleanVillage = rawVillage === "Counter Sale" ? "" : rawVillage;
+          const rawAddress = invoiceData.customerAddress || invoiceData.farmer?.address || "";
+          const cleanAddress = rawAddress === "Counter Sale" ? "" : rawAddress;
+
           setDocumentType(nextDocumentType);
           setFormData({
             farmerId: invoiceData.farmer?._id || invoiceData.farmer || "walk_in",
             customerName: invoiceData.customerName || invoiceData.farmer?.name || "",
             customerMobile: invoiceData.customerMobile || invoiceData.farmer?.mobileNumber || "",
-            customerVillage: invoiceData.customerVillage || invoiceData.farmer?.village || "",
+            customerVillage: cleanVillage,
+            customerAddress: cleanAddress,
             invoiceNumber: invoiceData.invoiceNumber || "",
             rateType: invoiceData.rateType || "Rate A",
             invoiceDate: invoiceData.createdAt
@@ -518,7 +525,7 @@ const EditInvoice = () => {
 
               {/* Mode 1: Walk-in Customer Fields */}
               {formData.farmerId === "walk_in" ? (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <div>
                     <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-500">
                       Buyer Name
@@ -543,6 +550,24 @@ const EditInvoice = () => {
                       value={formData.customerMobile}
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, customerMobile: e.target.value }))
+                      }
+                      className="input-field bg-slate-50 text-xs font-bold text-slate-900 focus:bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-500">
+                      Address / City (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Neemuch"
+                      value={formData.customerAddress || formData.customerVillage || ""}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          customerAddress: e.target.value,
+                          customerVillage: e.target.value,
+                        }))
                       }
                       className="input-field bg-slate-50 text-xs font-bold text-slate-900 focus:bg-white"
                     />

@@ -24,7 +24,16 @@ const InvoicePreview = ({
 
   const customerDisplayName = formData.customerName || selectedCustomer?.name || (formData.farmerId === "walk_in" ? "Walk-in Customer" : "");
   const customerMobile = formData.customerMobile || selectedCustomer?.mobileNumber || "";
-  const customerVillage = formData.customerVillage || selectedCustomer?.village || "";
+  const rawVillage = formData.customerVillage || selectedCustomer?.village || "";
+  const rawAddress = formData.customerAddress || selectedCustomer?.address || "";
+  const displayLocation = Array.from(
+    new Set(
+      [rawAddress, rawVillage]
+        .filter(Boolean)
+        .map((s) => String(s).trim())
+        .filter((s) => s !== "" && s !== "Counter Sale")
+    )
+  ).join(", ");
 
   return (
     <div className="xl:sticky xl:top-8 overflow-hidden rounded-3xl border border-amber-200 bg-gradient-to-b from-amber-50/80 to-white shadow-lg shadow-amber-100/60">
@@ -69,9 +78,9 @@ const InvoicePreview = ({
                   <Phone size={14} /> {customerMobile}
                 </p>
               )}
-              {customerVillage && (
+              {displayLocation && (
                 <p className="flex items-center gap-2 text-sm font-semibold text-slate-600">
-                  <MapPin size={14} /> {customerVillage}
+                  <MapPin size={14} /> {displayLocation}
                 </p>
               )}
             </div>

@@ -183,7 +183,14 @@ const InvoiceDetails = () => {
             {invoice.customerMobile || invoice.farmer?.mobileNumber || ""}
           </p>
           <p className="text-sm font-semibold text-slate-600">
-            {invoice.customerVillage || invoice.farmer?.village || ""}
+            {Array.from(
+              new Set(
+                [invoice.customerAddress, invoice.customerVillage, invoice.farmer?.address, invoice.farmer?.village]
+                  .filter(Boolean)
+                  .map((s) => String(s).trim())
+                  .filter((s) => s !== "" && s !== "Counter Sale")
+              )
+            ).join(", ")}
           </p>
         </div>
 

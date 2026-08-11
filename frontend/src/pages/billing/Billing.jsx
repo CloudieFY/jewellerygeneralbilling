@@ -76,6 +76,7 @@ const Billing = () => {
     customerName: "",
     customerMobile: "",
     customerVillage: "",
+    customerAddress: "",
     invoiceNumber: "",
     rateType: "Rate A",
     invoiceDate: today,
@@ -304,6 +305,7 @@ const Billing = () => {
         customerName: formData.customerName,
         customerMobile: formData.customerMobile,
         customerVillage: formData.customerVillage,
+        customerAddress: formData.customerAddress,
         invoiceNumber: formData.invoiceNumber,
         rateType: formData.rateType,
         invoiceDate: formData.invoiceDate,
@@ -544,7 +546,7 @@ const Billing = () => {
 
                 {/* Mode 1: Walk-in Customer Fields */}
                 {formData.farmerId === "walk_in" ? (
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <div>
                       <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-500">
                         Buyer Name
@@ -569,6 +571,24 @@ const Billing = () => {
                         value={formData.customerMobile}
                         onChange={(e) =>
                           setFormData((prev) => ({ ...prev, customerMobile: e.target.value }))
+                        }
+                        className="input-field bg-slate-50 text-xs font-bold text-slate-900 focus:bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-500">
+                        Address / City (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Neemuch"
+                        value={formData.customerAddress || formData.customerVillage || ""}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            customerAddress: e.target.value,
+                            customerVillage: e.target.value,
+                          }))
                         }
                         className="input-field bg-slate-50 text-xs font-bold text-slate-900 focus:bg-white"
                       />
