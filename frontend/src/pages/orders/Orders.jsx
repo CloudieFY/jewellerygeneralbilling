@@ -108,6 +108,17 @@ const Orders = () => {
     return new File([blob], design.name || "jewellery-design.jpg", { type: design.mimeType || blob.type });
   };
 
+  const downloadFile = (file) => {
+    const url = URL.createObjectURL(file);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = file.name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
   const shareWhatsApp = async (order) => {
     const message = orderMessage(order);
     try {
@@ -116,26 +127,16 @@ const Orders = () => {
         const { data } = await API.get(`/orders/${order._id}/design`);
         design = data.design;
       }
-      if (design?.data && navigator.share) {
+      if (design?.data) {
         const file = await dataUrlToFile(design);
-        if (!navigator.canShare || navigator.canShare({ files: [file] })) {
-          try {
-            await navigator.share({ title: order.orderNumber, text: message, files: [file] });
-            return;
-          } catch (shareErr) {
-            console.error("Native share failed, using fallback:", shareErr);
-            if (shareErr.name === "AbortError") {
-              return;
-            }
-          }
-        }
+        downloadFile(file);
+        toast("Design image saved to downloads. Tap 📎 in chat to attach.");
       }
       const phone = String(order.customerMobile || "").replace(/\D/g, "");
       const indianPhone = phone.length === 10 ? `91${phone}` : phone;
       window.open(`https://wa.me/${indianPhone}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
-      if (design?.data) toast("Desktop WhatsApp opened. Download/attach the saved design if needed.");
     } catch (error) {
-      if (error.name !== "AbortError") toast.error("Could not open sharing");
+      if (error.name !== "AbortError") toast.error("Could not open WhatsApp");
     }
   };
 

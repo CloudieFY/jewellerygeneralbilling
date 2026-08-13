@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Download, FileText, MessageCircle, Pencil, Printer } from "lucide-react";
+import { ArrowLeft, Download, FileText, MessageCircle, Pencil, Printer, Share2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import API from "../../services/api";
 import { toNumber } from "../../utils/billing";
@@ -1889,15 +1889,46 @@ const PrintInvoice = () => {
     }
   };
 
-  const triggerWhatsAppFallback = (blob, filename, phone) => {
-    downloadBlob(blob, filename);
-    if (phone) {
-      window.open(`https://wa.me/${phone}`, "_blank");
+  const generateWhatsAppInvoiceMessage = (inv) => {
+    if (!inv) return "";
+    const isGst = inv.documentType === "gst_invoice";
+    const docTitle = isGst ? "GST INVOICE" : "ESTIMATE / ORDER";
+    const invNo = inv.invoiceNumber || inv._id || "";
+    const custName = inv.farmer?.name || inv.customerName || "Customer";
+    const dateStr = inv.createdAt
+      ? new Date(inv.createdAt).toLocaleDateString("en-IN")
+      : new Date().toLocaleDateString("en-IN");
+
+    const grandTotal = Number(inv.grandTotal || 0).toLocaleString("en-IN");
+    const paid = Number(inv.receivedAmount ?? inv.paidAmount ?? 0).toLocaleString("en-IN");
+    const balance = Number(inv.balanceDue ?? (inv.grandTotal - (inv.receivedAmount || 0)) ?? 0).toLocaleString("en-IN");
+
+    let text = `🧾 *${docTitle}*
+📌 *Invoice No:* ${invNo}
+👤 *Customer:* ${custName}
+📅 *Date:* ${dateStr}
+
+💰 *Payment Details:*
+• *Total Amount:* ₹${grandTotal}
+• *Paid/Received:* ₹${paid}
+• *Balance Due:* ₹${balance}`;
+
+    const products = inv.products || [];
+    if (products.length > 0) {
+      text += `\n\n📦 *Items Summary:*`;
+      products.forEach((p, index) => {
+        const name = p.name || p.itemName || "Item";
+        const wt = p.weight || p.netWeight || p.quantity || "";
+        const amt = Number(p.total || p.amount || 0).toLocaleString("en-IN");
+        text += `\n${index + 1}. ${name}${wt ? ` (${wt})` : ""} - ₹${amt}`;
+      });
     }
-    setWhatsAppBusy(false);
+
+    text += `\n\n📄 _Invoice PDF saved to downloads. Tap 📎 to attach document._\n\nThank you!`;
+    return text;
   };
 
-  const handleWhatsApp = () => {
+  const handleWhatsApp = async () => {
     if (!invoice || whatsAppBusy) return;
 
     const phone = normalizeWhatsAppPhone(invoice?.farmer?.mobileNumber);
@@ -1905,63 +1936,58 @@ const PrintInvoice = () => {
       alert("Customer mobile number nahi mila. Kripya invoice mein customer phone number add karein.");
       return;
     }
-    const extension = "pdf";
-    const filename = getExportFilename(extension);
 
-    // If PDF is already pregenerated in the background, we can trigger navigator.share
-    // completely synchronously in response to the user click event, which works on iOS/Android!
-    if (pregeneratedPdf) {
-      const sharedFile = new File([pregeneratedPdf], filename, {
-        type: "application/pdf",
-      });
-
-      if (navigator.canShare && navigator.canShare({ files: [sharedFile] })) {
-        navigator.share({
-          files: [sharedFile],
-          title: filename,
-        }).catch((shareErr) => {
-          console.error("Native share failed:", shareErr);
-          if (shareErr.name !== "AbortError") {
-            triggerWhatsAppFallback(pregeneratedPdf, filename, phone);
-          }
-        });
-        return;
-      }
-    }
-
-    // Async fallback if pregenerated PDF is not ready yet
     setWhatsAppBusy(true);
-    createExportBlob(filename).then((blob) => {
+    try {
+      const filename = getExportFilename("pdf");
+      let blob = pregeneratedPdf;
       if (!blob) {
-        setWhatsAppBusy(false);
-        return;
+        blob = await createExportBlob(filename);
       }
-      const sharedFile = new File([blob], filename, {
-        type: "application/pdf",
-      });
+      if (blob) {
+        downloadBlob(blob, filename);
+      }
+
+      const messageText = generateWhatsAppInvoiceMessage(invoice);
+      const url = `https://wa.me/${phone}?text=${encodeURIComponent(messageText)}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      console.error("WhatsApp direct share failed:", err);
+      alert("WhatsApp open nahi ho paya. Please Save file karke WhatsApp me attach karein.");
+    } finally {
+      setWhatsAppBusy(false);
+    }
+  };
+
+  const handleShareNative = async () => {
+    if (!invoice || whatsAppBusy) return;
+    const filename = getExportFilename("pdf");
+    setWhatsAppBusy(true);
+    try {
+      let blob = pregeneratedPdf;
+      if (!blob) {
+        blob = await createExportBlob(filename);
+      }
+      if (!blob) return;
+
+      const sharedFile = new File([blob], filename, { type: "application/pdf" });
 
       if (navigator.canShare && navigator.canShare({ files: [sharedFile] })) {
-        navigator.share({
+        await navigator.share({
           files: [sharedFile],
           title: filename,
-        }).then(() => {
-          setWhatsAppBusy(false);
-        }).catch((shareErr) => {
-          console.error("Native share failed inside async callback:", shareErr);
-          if (shareErr.name !== "AbortError") {
-            triggerWhatsAppFallback(blob, filename, phone);
-          } else {
-            setWhatsAppBusy(false);
-          }
         });
       } else {
-        triggerWhatsAppFallback(blob, filename, phone);
+        downloadBlob(blob, filename);
+        alert("Native share supported nahi hai. PDF download ho gaya hai.");
       }
-    }).catch((err) => {
-      console.error("WhatsApp share failed:", err);
-      alert("File share nahi ho paya. Please Save file karke WhatsApp me attach karein.");
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        console.error("Native share failed:", err);
+      }
+    } finally {
       setWhatsAppBusy(false);
-    });
+    }
   };
 
   if (loading) {
@@ -2075,10 +2101,23 @@ const PrintInvoice = () => {
             onClick={handleWhatsApp}
             disabled={whatsAppBusy}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-3 text-sm font-black text-white shadow-sm hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-70"
+            title="Open WhatsApp chat directly for this customer"
           >
             <MessageCircle size={17} />
-            {whatsAppBusy ? "Preparing..." : "Send PDF on WhatsApp"}
+            {whatsAppBusy ? "Preparing..." : "Send WhatsApp"}
           </button>
+
+          {navigator.canShare && (
+            <button
+              onClick={handleShareNative}
+              disabled={whatsAppBusy}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-3 text-sm font-black text-slate-700 hover:bg-slate-200 border border-slate-300 disabled:cursor-not-allowed disabled:opacity-70"
+              title="Share file via system app chooser (Gmail, Drive, etc.)"
+            >
+              <Share2 size={17} />
+              Share File (All Apps)
+            </button>
+          )}
 
           <Link
             to={`/invoices/edit/${invoice?._id}`}
