@@ -1939,7 +1939,7 @@ const PrintInvoice = ({ publicView = false }) => {
     const pdfViewLink = `${window.location.origin}/view-invoice/${invoice._id}`;
 
     // 📱 PHONE / MOBILE DEVICE:
-    // Opens WhatsApp app directly with pre-filled view link
+    // Opens WhatsApp app directly with pre-filled customer phone number & view link
     if (isMobile) {
       const messageText = `📄 *Invoice PDF:* ${pdfViewLink}`;
       const url = `https://wa.me/${phone}?text=${encodeURIComponent(messageText)}`;
@@ -1948,7 +1948,8 @@ const PrintInvoice = ({ publicView = false }) => {
     }
 
     // 💻 LAPTOP / DESKTOP BROWSER:
-    // Generate PDF file & trigger native Web Share API so PDF file auto-attaches directly into WhatsApp!
+    // 1. Download PDF file directly to laptop Downloads folder
+    // 2. Open WhatsApp Web directly into customer's phone number chat screen!
     setWhatsAppBusy(true);
     try {
       const filename = getExportFilename("pdf");
@@ -1956,28 +1957,11 @@ const PrintInvoice = ({ publicView = false }) => {
       if (!blob) {
         blob = await createExportBlob();
       }
-      if (!blob) return;
-
-      const pdfFile = new File([blob], filename, { type: "application/pdf" });
-
-      // 1. Try Windows/Mac Native Share API (Auto-attaches PDF file directly into WhatsApp app on Laptop!)
-      if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-        try {
-          await navigator.share({
-            files: [pdfFile],
-            title: filename,
-            text: `${docLabel} #${invoice?.invoiceNumber}`,
-          });
-          return;
-        } catch (shareErr) {
-          if (shareErr.name === "AbortError") return;
-          console.warn("Native file share fell back:", shareErr);
-        }
+      if (blob) {
+        downloadBlob(blob, filename);
       }
 
-      // 2. WhatsApp Web Browser Fallback:
-      // Download actual PDF file to laptop & open WhatsApp Web directly into customer's chat!
-      downloadBlob(blob, filename);
+      // Direct WhatsApp chat URL with customer's phone number
       const desktopUrl = `https://web.whatsapp.com/send?phone=${phone}`;
       window.open(desktopUrl, "_blank", "noopener,noreferrer");
     } catch (err) {
