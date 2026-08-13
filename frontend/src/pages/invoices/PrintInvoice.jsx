@@ -75,12 +75,19 @@ const A4_PRINT_STYLE = `
   justify-content: center;
 }
 
+.invoice-scale-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
 .invoice-document {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 14px;
   min-width: 190.5mm;
+  width: 190.5mm;
 }
 
 @media screen and (max-width: 768px) {
@@ -90,16 +97,24 @@ const A4_PRINT_STYLE = `
   .invoice-scroll {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 0;
+    padding: 8px 0;
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: flex-start;
     width: 100%;
   }
+  .invoice-scale-wrapper {
+    width: calc(100vw - 16px);
+    margin: 0 auto;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: flex-start;
+  }
   .invoice-document {
-    transform-origin: top center;
+    transform-origin: top left;
     transform: scale(calc((100vw - 16px) / 720));
     min-width: 190.5mm;
+    width: 190.5mm;
     margin-bottom: calc(-1 * (254mm * (1 - (100vw - 16px) / 720)));
     zoom: normal;
   }
@@ -1196,7 +1211,15 @@ const A4_PRINT_STYLE = `
     padding: 0 !important;
   }
 
+  .invoice-scale-wrapper {
+    width: 100% !important;
+    margin: 0 !important;
+    display: block !important;
+  }
+
   .invoice-document {
+    transform: none !important;
+    margin-bottom: 0 !important;
     width: 190.5mm !important;
     gap: 0 !important;
     min-width: 0 !important;
@@ -1903,7 +1926,7 @@ const PrintInvoice = ({ publicView = false }) => {
   const handleWhatsApp = async () => {
     if (!invoice || whatsAppBusy) return;
 
-    const phone = normalizeWhatsAppPhone(invoice?.farmer?.mobileNumber);
+    const phone = normalizeWhatsAppPhone(invoice?.customerMobile || invoice?.farmer?.mobileNumber);
     if (!phone) {
       alert("Customer mobile number nahi mila. Kripya invoice mein customer phone number add karein.");
       return;
@@ -1914,18 +1937,21 @@ const PrintInvoice = ({ publicView = false }) => {
     );
 
     const pdfViewLink = `${window.location.origin}/view-invoice/${invoice._id}`;
+    const messageText = `📄 *Invoice PDF:* ${pdfViewLink}`;
 
     // 📱 PHONE / MOBILE DEVICE:
-    // Open direct WhatsApp chat with public standalone invoice PDF link
+    // Open direct WhatsApp app with pre-filled customer chat
     if (isMobile) {
-      const messageText = `📄 *Invoice PDF:* ${pdfViewLink}`;
       const url = `https://wa.me/${phone}?text=${encodeURIComponent(messageText)}`;
       window.open(url, "_blank", "noopener,noreferrer");
       return;
     }
 
     // 💻 LAPTOP / DESKTOP BROWSER:
-    // Generate actual PDF file & trigger native file share so PDF file attaches automatically into WhatsApp!
+    // Directly open WhatsApp Web send URL (https://web.whatsapp.com/send?phone=...)
+    // so desktop WhatsApp Web opens directly into customer's chat!
+    const desktopUrl = `https://web.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(messageText)}`;
+
     setWhatsAppBusy(true);
     try {
       const filename = getExportFilename("pdf");
@@ -1933,29 +1959,14 @@ const PrintInvoice = ({ publicView = false }) => {
       if (!blob) {
         blob = await createExportBlob(filename);
       }
-      if (!blob) return;
-
-      const sharedFile = new File([blob], filename, { type: "application/pdf" });
-
-      // Native File Share on PC/Laptop (Windows Chrome/Edge, Mac Safari)
-      if (navigator.canShare && navigator.canShare({ files: [sharedFile] })) {
-        await navigator.share({
-          files: [sharedFile],
-          title: filename,
-        });
-        return;
+      if (blob) {
+        downloadBlob(blob, filename);
       }
-
-      // Laptop Fallback: Download PDF file & open WhatsApp chat
-      downloadBlob(blob, filename);
-      const messageText = `📄 *Invoice PDF:* ${pdfViewLink}`;
-      const url = `https://wa.me/${phone}?text=${encodeURIComponent(messageText)}`;
-      window.open(url, "_blank", "noopener,noreferrer");
+      window.open(desktopUrl, "_blank", "noopener,noreferrer");
     } catch (err) {
       if (err.name !== "AbortError") {
         console.error("WhatsApp share failed:", err);
-        const messageText = `📄 *Invoice PDF:* ${pdfViewLink}`;
-        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(messageText)}`, "_blank", "noopener,noreferrer");
+        window.open(desktopUrl, "_blank", "noopener,noreferrer");
       }
     } finally {
       setWhatsAppBusy(false);
@@ -2205,73 +2216,75 @@ const PrintInvoice = ({ publicView = false }) => {
       )}
 
       <div className="invoice-scroll">
-        <div
-          id="invoice-a4-wrapper"
-          ref={printRef}
-          className={`invoice-document ${invoiceMode === "preprinted" ? "preprinted-paper" : ""} ${invoiceMode === "bw_with_header" ? "bw-mode show-firm-active" : ""} ${invoiceMode === "color" ? "color-mode" : ""} ${isPrinting && invoiceMode === "preprinted" ? "print-preprinted-active" : ""} ${showParasmaniName ? "show-firm-active" : ""}`}
-          onClickCapture={handleDesignSelect}
-        >
-          {pages.map((pageItems, pageIndex) => {
-            const isLastPage = pageIndex === pages.length - 1;
-            const serialOffset = pageIndex * PAGE_ITEM_LIMIT;
+        <div className="invoice-scale-wrapper">
+          <div
+            id="invoice-a4-wrapper"
+            ref={printRef}
+            className={`invoice-document ${invoiceMode === "preprinted" ? "preprinted-paper" : ""} ${invoiceMode === "bw_with_header" ? "bw-mode show-firm-active" : ""} ${invoiceMode === "color" ? "color-mode" : ""} ${isPrinting && invoiceMode === "preprinted" ? "print-preprinted-active" : ""} ${showParasmaniName ? "show-firm-active" : ""}`}
+            onClickCapture={handleDesignSelect}
+          >
+            {pages.map((pageItems, pageIndex) => {
+              const isLastPage = pageIndex === pages.length - 1;
+              const serialOffset = pageIndex * PAGE_ITEM_LIMIT;
 
-            return (
-              <div
-                className="invoice-page gst-invoice-page"
-                key={`invoice-page-${pageIndex}`}
-                style={invoicePageStyle}
-              >
-                <div className="invoice-sheet">
-                  <InvoiceHeader
-                    docHeading={docHeading}
-                    invoice={invoice}
-                    isGst={isGst}
-                    pageIndex={pageIndex}
-                    pageCount={pages.length}
-                    shop={shop}
-                    showParasmaniName={showParasmaniName}
-                    invoiceMode={invoiceMode}
-                  />
+              return (
+                <div
+                  className="invoice-page gst-invoice-page"
+                  key={`invoice-page-${pageIndex}`}
+                  style={invoicePageStyle}
+                >
+                  <div className="invoice-sheet">
+                    <InvoiceHeader
+                      docHeading={docHeading}
+                      invoice={invoice}
+                      isGst={isGst}
+                      pageIndex={pageIndex}
+                      pageCount={pages.length}
+                      shop={shop}
+                      showParasmaniName={showParasmaniName}
+                      invoiceMode={invoiceMode}
+                    />
 
-                  <div className="invoice-page-body">
-                    <div className="invoice-table-area">
-                      <ItemsTable
-                        columnWidths={tableColumnWidths}
-                        designMode={designMode}
-                        invoice={invoice}
-                        isGst={true}
-                        showTax={isGst}
-                        onColumnResize={resizeTableColumns}
-                        pageItems={pageItems}
-                        serialOffset={serialOffset}
-                        showPageTotal={isLastPage}
-                      />
+                    <div className="invoice-page-body">
+                      <div className="invoice-table-area">
+                        <ItemsTable
+                          columnWidths={tableColumnWidths}
+                          designMode={designMode}
+                          invoice={invoice}
+                          isGst={true}
+                          showTax={isGst}
+                          onColumnResize={resizeTableColumns}
+                          pageItems={pageItems}
+                          serialOffset={serialOffset}
+                          showPageTotal={isLastPage}
+                        />
 
-                      {!isLastPage && (
-                        <div className="invoice-continued">
-                          Continued on next page
-                        </div>
+                        {!isLastPage && (
+                          <div className="invoice-continued">
+                            Continued on next page
+                          </div>
+                        )}
+                      </div>
+
+                      {isLastPage && (
+                        <InvoiceFooter
+                          amountInWords={amountInWords}
+                          grandTotalRounded={grandTotalRounded}
+                          invoice={invoice}
+                          isGst={isGst}
+                          roundOff={roundOff}
+                          shop={shop}
+                          taxBreakup={taxBreakup}
+                          pageCount={pages.length}
+                          showParasmaniName={showParasmaniName}
+                        />
                       )}
                     </div>
-
-                    {isLastPage && (
-                      <InvoiceFooter
-                        amountInWords={amountInWords}
-                        grandTotalRounded={grandTotalRounded}
-                        invoice={invoice}
-                        isGst={isGst}
-                        roundOff={roundOff}
-                        shop={shop}
-                        taxBreakup={taxBreakup}
-                        pageCount={pages.length}
-                        showParasmaniName={showParasmaniName}
-                      />
-                    )}
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

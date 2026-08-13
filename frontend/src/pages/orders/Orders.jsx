@@ -134,7 +134,13 @@ const Orders = () => {
       }
       const phone = String(order.customerMobile || "").replace(/\D/g, "");
       const indianPhone = phone.length === 10 ? `91${phone}` : phone;
-      window.open(`https://wa.me/${indianPhone}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+      const url = isMobile
+        ? `https://wa.me/${indianPhone}?text=${encodeURIComponent(message)}`
+        : `https://web.whatsapp.com/send?phone=${indianPhone}&text=${encodeURIComponent(message)}`;
+      window.open(url, "_blank", "noopener,noreferrer");
     } catch (error) {
       if (error.name !== "AbortError") toast.error("Could not open WhatsApp");
     }
