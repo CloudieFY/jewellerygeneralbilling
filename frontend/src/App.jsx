@@ -59,6 +59,16 @@ const App = () => {
           }
         />
 
+        {/* Public PDF Invoice view for customers — NO login required */}
+        <Route
+          path="/view-invoice/:id"
+          element={<PrintInvoice publicView={true} />}
+        />
+        <Route
+          path="/public/invoice/:id"
+          element={<PrintInvoice publicView={true} />}
+        />
+
         {/* Protected routes — require login */}
         {protectedRoutes.map((route) => (
           <Route

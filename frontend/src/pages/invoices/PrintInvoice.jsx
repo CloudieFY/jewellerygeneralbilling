@@ -84,13 +84,24 @@ const A4_PRINT_STYLE = `
 }
 
 @media screen and (max-width: 768px) {
+  .invoice-shell {
+    padding: 8px 4px !important;
+  }
   .invoice-scroll {
-    overflow-x: hidden;
-    padding: 0 8px 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    width: 100%;
   }
   .invoice-document {
-    zoom: calc((100vw - 24px) / 720);
-    min-width: unset;
+    transform-origin: top center;
+    transform: scale(calc((100vw - 16px) / 720));
+    min-width: 190.5mm;
+    margin-bottom: calc(-1 * (254mm * (1 - (100vw - 16px) / 720)));
+    zoom: normal;
   }
 }
 
@@ -1384,7 +1395,7 @@ const downloadBlob = (blob, filename) => {
   URL.revokeObjectURL(url);
 };
 
-const PrintInvoice = () => {
+const PrintInvoice = ({ publicView = false }) => {
   const { id } = useParams();
   const printRef = useRef(null);
   const [invoice, setInvoice] = useState(null);
@@ -1902,19 +1913,19 @@ const PrintInvoice = () => {
       navigator.userAgent
     );
 
-    const pdfViewLink = `${window.location.origin}/invoices/print/${invoice._id}`;
+    const pdfViewLink = `${window.location.origin}/view-invoice/${invoice._id}`;
 
     // 📱 PHONE / MOBILE DEVICE:
-    // Opens customer's direct WhatsApp chat with pre-filled PDF Link (0 share menus, just press Send!)
+    // Open direct WhatsApp chat with public standalone invoice PDF link
     if (isMobile) {
-      const message = `📄 *Invoice PDF:* ${pdfViewLink}`;
-      const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+      const messageText = `📄 *Invoice PDF:* ${pdfViewLink}`;
+      const url = `https://wa.me/${phone}?text=${encodeURIComponent(messageText)}`;
       window.open(url, "_blank", "noopener,noreferrer");
       return;
     }
 
-    // 💻 LAPTOP / PC BROWSER:
-    // Tries to share actual PDF file directly or downloads PDF file & opens WhatsApp Web/Desktop chat!
+    // 💻 LAPTOP / DESKTOP BROWSER:
+    // Generate actual PDF file & trigger native file share so PDF file attaches automatically into WhatsApp!
     setWhatsAppBusy(true);
     try {
       const filename = getExportFilename("pdf");
@@ -1926,6 +1937,7 @@ const PrintInvoice = () => {
 
       const sharedFile = new File([blob], filename, { type: "application/pdf" });
 
+      // Native File Share on PC/Laptop (Windows Chrome/Edge, Mac Safari)
       if (navigator.canShare && navigator.canShare({ files: [sharedFile] })) {
         await navigator.share({
           files: [sharedFile],
@@ -1934,8 +1946,9 @@ const PrintInvoice = () => {
         return;
       }
 
-      const messageText = `📄 *Invoice PDF:* ${pdfViewLink}`;
+      // Laptop Fallback: Download PDF file & open WhatsApp chat
       downloadBlob(blob, filename);
+      const messageText = `📄 *Invoice PDF:* ${pdfViewLink}`;
       const url = `https://wa.me/${phone}?text=${encodeURIComponent(messageText)}`;
       window.open(url, "_blank", "noopener,noreferrer");
     } catch (err) {
@@ -1969,8 +1982,24 @@ const PrintInvoice = () => {
 
   return (
     <div className="invoice-shell space-y-5 p-3 sm:p-6">
-
-      <div className="mx-auto flex max-w-5xl flex-col gap-3 rounded-2xl bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between print:hidden">
+      {publicView ? (
+        <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 print:hidden">
+          <button
+            onClick={handleDownloadFile}
+            disabled={pdfBusy}
+            className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2.5 text-xs font-black text-white shadow-xl hover:bg-slate-800 disabled:opacity-70"
+          >
+            <Download size={14} /> Download PDF
+          </button>
+          <button
+            onClick={handlePrint}
+            className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2.5 text-xs font-black text-white shadow-xl hover:bg-emerald-700"
+          >
+            <Printer size={14} /> Print
+          </button>
+        </div>
+      ) : (
+        <div className="mx-auto flex max-w-5xl flex-col gap-3 rounded-2xl bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between print:hidden">
         <Link
           to="/invoices"
           className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600"
@@ -2079,6 +2108,7 @@ const PrintInvoice = () => {
           </Link>
         </div>
       </div>
+      )}
 
       {designMode && (
         <div className="print:hidden sticky top-2 z-50 mx-auto flex max-w-5xl flex-wrap items-end gap-2 rounded-2xl border border-violet-200 bg-white p-3 shadow-xl">
