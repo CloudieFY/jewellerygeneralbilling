@@ -1889,10 +1889,11 @@ const PrintInvoice = () => {
     }
   };
 
-  const triggerWhatsAppFallback = (blob, filename, message, phone, fileTypeLabel) => {
+  const triggerWhatsAppFallback = (blob, filename, phone) => {
     downloadBlob(blob, filename);
-    const fallbackMessage = `${message}\n\n${fileTypeLabel} has been downloaded. Please attach the downloaded file in this WhatsApp chat.`;
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(fallbackMessage)}`, "_blank");
+    if (phone) {
+      window.open(`https://wa.me/${phone}`, "_blank");
+    }
     setWhatsAppBusy(false);
   };
 
@@ -1901,32 +1902,27 @@ const PrintInvoice = () => {
 
     const phone = normalizeWhatsAppPhone(invoice?.farmer?.mobileNumber);
     if (!phone) {
-      alert("Customer mobile number nahi mila.");
+      alert("Customer mobile number nahi mila. Kripya invoice mein customer phone number add karein.");
       return;
     }
-
     const extension = "pdf";
-    const fileTypeLabel = "PDF";
     const filename = getExportFilename(extension);
 
     // If PDF is already pregenerated in the background, we can trigger navigator.share
-    // completely synchronously in response to the user click event, which works on iOS!
+    // completely synchronously in response to the user click event, which works on iOS/Android!
     if (pregeneratedPdf) {
       const sharedFile = new File([pregeneratedPdf], filename, {
         type: "application/pdf",
       });
-      const date = formatDate(invoice?.createdAt);
-      const message = `${docLabel} #${invoice?.invoiceNumber}\nDate: ${date}\nCustomer: ${invoice?.farmer?.name || "-"}\nAmount: Rs ${formatNumber(grandTotalRounded)}\n\n${fileTypeLabel} invoice is attached.`;
 
       if (navigator.canShare && navigator.canShare({ files: [sharedFile] })) {
         navigator.share({
           files: [sharedFile],
           title: filename,
-          text: message,
         }).catch((shareErr) => {
           console.error("Native share failed:", shareErr);
           if (shareErr.name !== "AbortError") {
-            triggerWhatsAppFallback(pregeneratedPdf, filename, message, phone, fileTypeLabel);
+            triggerWhatsAppFallback(pregeneratedPdf, filename, phone);
           }
         });
         return;
@@ -1943,26 +1939,23 @@ const PrintInvoice = () => {
       const sharedFile = new File([blob], filename, {
         type: "application/pdf",
       });
-      const date = formatDate(invoice?.createdAt);
-      const message = `${docLabel} #${invoice?.invoiceNumber}\nDate: ${date}\nCustomer: ${invoice?.farmer?.name || "-"}\nAmount: Rs ${formatNumber(grandTotalRounded)}\n\n${fileTypeLabel} invoice is attached.`;
 
       if (navigator.canShare && navigator.canShare({ files: [sharedFile] })) {
         navigator.share({
           files: [sharedFile],
           title: filename,
-          text: message,
         }).then(() => {
           setWhatsAppBusy(false);
         }).catch((shareErr) => {
           console.error("Native share failed inside async callback:", shareErr);
           if (shareErr.name !== "AbortError") {
-            triggerWhatsAppFallback(blob, filename, message, phone, fileTypeLabel);
+            triggerWhatsAppFallback(blob, filename, phone);
           } else {
             setWhatsAppBusy(false);
           }
         });
       } else {
-        triggerWhatsAppFallback(blob, filename, message, phone, fileTypeLabel);
+        triggerWhatsAppFallback(blob, filename, phone);
       }
     }).catch((err) => {
       console.error("WhatsApp share failed:", err);
