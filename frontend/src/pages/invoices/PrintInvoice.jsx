@@ -1937,37 +1937,53 @@ const PrintInvoice = ({ publicView = false }) => {
     );
 
     const pdfViewLink = `${window.location.origin}/view-invoice/${invoice._id}`;
-    const messageText = `📄 *Invoice PDF:* ${pdfViewLink}`;
 
     // 📱 PHONE / MOBILE DEVICE:
-    // Open direct WhatsApp app with pre-filled customer chat
+    // Opens WhatsApp app directly with pre-filled view link
     if (isMobile) {
+      const messageText = `📄 *Invoice PDF:* ${pdfViewLink}`;
       const url = `https://wa.me/${phone}?text=${encodeURIComponent(messageText)}`;
       window.open(url, "_blank", "noopener,noreferrer");
       return;
     }
 
     // 💻 LAPTOP / DESKTOP BROWSER:
-    // Directly open WhatsApp Web send URL (https://web.whatsapp.com/send?phone=...)
-    // so desktop WhatsApp Web opens directly into customer's chat!
-    const desktopUrl = `https://web.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(messageText)}`;
-
+    // Generate PDF file & trigger native Web Share API so PDF file auto-attaches directly into WhatsApp!
     setWhatsAppBusy(true);
     try {
       const filename = getExportFilename("pdf");
       let blob = pregeneratedPdf;
       if (!blob) {
-        blob = await createExportBlob(filename);
+        blob = await createExportBlob();
       }
-      if (blob) {
-        downloadBlob(blob, filename);
+      if (!blob) return;
+
+      const pdfFile = new File([blob], filename, { type: "application/pdf" });
+
+      // 1. Try Windows/Mac Native Share API (Auto-attaches PDF file directly into WhatsApp app on Laptop!)
+      if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+        try {
+          await navigator.share({
+            files: [pdfFile],
+            title: filename,
+            text: `${docLabel} #${invoice?.invoiceNumber}`,
+          });
+          return;
+        } catch (shareErr) {
+          if (shareErr.name === "AbortError") return;
+          console.warn("Native file share fell back:", shareErr);
+        }
       }
+
+      // 2. WhatsApp Web Browser Fallback:
+      // Download actual PDF file to laptop & open WhatsApp Web directly into customer's chat!
+      downloadBlob(blob, filename);
+      const desktopUrl = `https://web.whatsapp.com/send?phone=${phone}`;
       window.open(desktopUrl, "_blank", "noopener,noreferrer");
     } catch (err) {
-      if (err.name !== "AbortError") {
-        console.error("WhatsApp share failed:", err);
-        window.open(desktopUrl, "_blank", "noopener,noreferrer");
-      }
+      console.error("WhatsApp share failed:", err);
+      const desktopUrl = `https://web.whatsapp.com/send?phone=${phone}`;
+      window.open(desktopUrl, "_blank", "noopener,noreferrer");
     } finally {
       setWhatsAppBusy(false);
     }
