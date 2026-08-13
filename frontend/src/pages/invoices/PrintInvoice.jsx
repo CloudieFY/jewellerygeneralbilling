@@ -1917,8 +1917,7 @@ const PrintInvoice = () => {
         return;
       }
 
-      // Desktop or browser without direct native file share support:
-      // Download PDF file & open WhatsApp chat with clean text box
+      // Desktop fallback: Download PDF file & open WhatsApp
       downloadBlob(blob, filename);
       const url = `https://wa.me/${phone}`;
       window.open(url, "_blank", "noopener,noreferrer");
