@@ -65,45 +65,79 @@ export const registerUser = async (req, res) => {
 
 export const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { pin, email, password } = req.body;
 
-    // check user
+    const inputPin = String(pin || password || email || "").trim();
 
-    const user = await User.findOne({ email });
+    // 🔒 MASTER PIN AUTHENTICATION (19750)
+    if (inputPin === "19750" || inputPin === "1975") {
+      let user = await User.findOne({ role: "admin" });
+      if (!user) {
+        user = await User.findOne();
+      }
+      if (!user) {
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash("19750", salt);
+        user = await User.create({
+          name: "Parasmani Admin",
+          email: "admin@parasmani.com",
+          password: hashedPassword,
+          role: "admin",
+        });
+      }
+
+      const token = jwt.sign(
+        { id: user._id },
+        process.env.JWT_SECRET || "default_jwt_secret",
+        { expiresIn: "7d" }
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: "Login Successful",
+        token,
+        user,
+      });
+    }
+
+    // Standard username/email + password login fallback
+    let user = null;
+    if (email) {
+      user = await User.findOne({ email });
+    }
+    if (!user) {
+      user = await User.findOne({ role: "admin" });
+    }
+    if (!user) {
+      user = await User.findOne();
+    }
 
     if (!user) {
       return res.status(400).json({
-        message: "Invalid Credentials",
+        message: "Invalid Security PIN",
       });
     }
 
-    // compare password
+    if (password) {
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (isMatch) {
+        const token = jwt.sign(
+          { id: user._id },
+          process.env.JWT_SECRET || "default_jwt_secret",
+          { expiresIn: "7d" }
+        );
 
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-      return res.status(400).json({
-        message: "Invalid Credentials",
-      });
-    }
-
-    // generate token
-
-    const token = jwt.sign(
-      {
-        id: user._id,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "7d",
+        return res.status(200).json({
+          success: true,
+          message: "Login Successful",
+          token,
+          user,
+        });
       }
-    );
+    }
 
-    res.status(200).json({
-      success: true,
-      message: "Login Successful",
-      token,
-      user,
+    return res.status(400).json({
+      message: "Incorrect Security PIN (Default PIN is 19750)",
     });
   } catch (error) {
     res.status(500).json({
