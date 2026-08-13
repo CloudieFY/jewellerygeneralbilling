@@ -1898,6 +1898,23 @@ const PrintInvoice = () => {
       return;
     }
 
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+
+    const pdfViewLink = `${window.location.origin}/invoices/print/${invoice._id}`;
+
+    // 📱 PHONE / MOBILE DEVICE:
+    // Opens customer's direct WhatsApp chat with pre-filled PDF Link (0 share menus, just press Send!)
+    if (isMobile) {
+      const message = `📄 *Invoice PDF:* ${pdfViewLink}`;
+      const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    // 💻 LAPTOP / PC BROWSER:
+    // Tries to share actual PDF file directly or downloads PDF file & opens WhatsApp Web/Desktop chat!
     setWhatsAppBusy(true);
     try {
       const filename = getExportFilename("pdf");
@@ -1917,21 +1934,15 @@ const PrintInvoice = () => {
         return;
       }
 
-      // Desktop fallback: Download PDF file & open WhatsApp
+      const messageText = `📄 *Invoice PDF:* ${pdfViewLink}`;
       downloadBlob(blob, filename);
-      const url = `https://wa.me/${phone}`;
+      const url = `https://wa.me/${phone}?text=${encodeURIComponent(messageText)}`;
       window.open(url, "_blank", "noopener,noreferrer");
     } catch (err) {
       if (err.name !== "AbortError") {
         console.error("WhatsApp share failed:", err);
-        try {
-          const filename = getExportFilename("pdf");
-          let blob = pregeneratedPdf || (await createExportBlob(filename));
-          if (blob) downloadBlob(blob, filename);
-          window.open(`https://wa.me/${phone}`, "_blank", "noopener,noreferrer");
-        } catch (fallbackErr) {
-          alert("WhatsApp open nahi ho paya. Please Save file karke WhatsApp me attach karein.");
-        }
+        const messageText = `📄 *Invoice PDF:* ${pdfViewLink}`;
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(messageText)}`, "_blank", "noopener,noreferrer");
       }
     } finally {
       setWhatsAppBusy(false);
