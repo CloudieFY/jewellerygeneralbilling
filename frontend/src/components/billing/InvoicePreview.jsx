@@ -100,7 +100,7 @@ const InvoicePreview = ({
                     Product
                   </th>
                   <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                    Purity / HUID
+                    Purity
                   </th>
                   <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500">
                     Weight (g)
@@ -146,6 +146,12 @@ const InvoicePreview = ({
                       formData.rateType,
                       gstEnabled
                     );
+                    const rawPurity = item.purity || product.purity || "-";
+                    const fineness = item.fineness || product.fineness;
+                    const purity =
+                      rawPurity !== "-" && fineness && !rawPurity.includes("/")
+                        ? `${rawPurity} / ${fineness}`
+                        : rawPurity;
 
                     return (
                       <tr key={index}>
@@ -153,7 +159,7 @@ const InvoicePreview = ({
                           {product.productName}
                         </td>
                         <td className="px-4 py-4 text-sm font-semibold text-slate-600">
-                          {product.purity || "-"}{product.huid ? ` / ${product.huid}` : ""}
+                          {purity}
                         </td>
                         <td className="px-4 py-4 text-sm font-semibold text-slate-600">
                           <span className="block">Net {line.netWeight}</span>

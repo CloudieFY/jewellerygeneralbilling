@@ -224,7 +224,7 @@ const InvoiceDetails = () => {
                 {[
                   "Product",
                   ...(isGst ? ["HSN / GST"] : []),
-                  "Purity / HUID",
+                  "Purity",
                   "Gross Wt.",
                   "Net Wt.",
                   "Metal Rate / g",
@@ -247,6 +247,12 @@ const InvoiceDetails = () => {
               {invoice.products?.map((item) => {
                 const amount = item.baseAmount ?? item.totalAmount ?? 0;
                 const hsnCode = item.hsnCode || item.product?.hsnCode || "-";
+                const rawPurity = item.purity || item.product?.purity || "-";
+                const fineness = item.fineness || item.product?.fineness;
+                const purity =
+                  rawPurity !== "-" && fineness && !rawPurity.includes("/")
+                    ? `${rawPurity} / ${fineness}`
+                    : rawPurity;
 
                 return (
                   <tr key={item._id || item.product?._id}>
@@ -259,10 +265,7 @@ const InvoiceDetails = () => {
                       </td>
                     )}
                     <td className="px-5 py-4 font-semibold text-slate-600">
-                      {item.purity || item.product?.purity || "-"}
-                      {(item.huid || item.product?.huid) && (
-                        <span className="block text-xs text-amber-700">HUID: {item.huid || item.product?.huid}</span>
-                      )}
+                      {purity}
                     </td>
                     <td className="px-5 py-4 font-semibold text-slate-600">
                       {toNumber(item.grossWeight)} g

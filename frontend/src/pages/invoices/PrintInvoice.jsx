@@ -2434,8 +2434,12 @@ const ItemsTable = ({
         {pageItems.map((item, idx) => {
           const quantity = toNumber(item.quantity, 1);
           const amount = item.baseAmount ?? item.totalAmount ?? 0;
-          const purity = item.purity || item.product?.purity || "-";
-          const huid = item.huid || item.product?.huid;
+          const rawPurity = item.purity || item.product?.purity || "-";
+          const fineness = item.fineness || item.product?.fineness;
+          const purity =
+            rawPurity !== "-" && fineness && !rawPurity.includes("/")
+              ? `${rawPurity} / ${fineness}`
+              : rawPurity;
 
           return (
             <tr key={item._id || `${item.product?._id}-${idx}`}>
@@ -2448,7 +2452,7 @@ const ItemsTable = ({
                   <td className="center-cell">{formatCompactNumber(item.grossWeight)}</td>
                   <td className="center-cell">{formatCompactNumber(item.stoneWeight)}</td>
                   <td className="center-cell">{formatCompactNumber(item.netWeight)}</td>
-                  <td className="center-cell">{purity}{huid ? ` / ${huid}` : ""}</td>
+                  <td className="center-cell">{purity}</td>
                   <td className="rate-cell numeric-highlight">
                     {formatNumber(item.selectedRate || item.metalRatePerGram)}
                   </td>
@@ -2463,7 +2467,7 @@ const ItemsTable = ({
               )}
               {!isGst && (
                 <td className="center-cell">
-                  {purity}{huid ? ` / ${huid}` : ""}
+                  {purity}
                 </td>
               )}
               {!isGst && (
